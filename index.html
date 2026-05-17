@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用醫學讀懂人生</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --cream: #f5f0e8;
+    --ink: #1a1614;
+    --ink-light: #5a4e47;
+    --ink-faint: #9a8f88;
+    --accent: #8b4513;
+    --accent-light: #d4956a;
+    --white: #ffffff;
+    --card-border: rgba(139,69,19,0.15);
+    --shadow: rgba(26,22,20,0.08);
+  }
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background-color: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  .hero {
+    position: relative;
+    padding: 80px 24px 64px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% -10%, rgba(139,69,19,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.25em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: clamp(1.8rem, 5vw, 2.8rem);
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--ink);
+    max-width: 680px;
+    margin: 0 auto 20px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    font-size: 1rem;
+    line-height: 1.9;
+    color: var(--ink-light);
+    max-width: 480px;
+    margin: 0 auto 40px;
+    font-weight: 300;
+  }
+  .hero-divider {
+    width: 40px;
+    height: 2px;
+    background: var(--accent-light);
+    margin: 0 auto;
+  }
+  .grid-section {
+    padding: 48px 24px 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--white);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 28px 22px 24px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent-light);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px var(--shadow);
+    border-color: var(--accent-light);
+  }
+  .card:hover::after { transform: scaleX(1); }
+  .card-icon { font-size: 22px; line-height: 1; }
+  .card-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .card-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.18s ease;
+  }
+  .card-title a:hover {
+    color: var(--accent);
+  }
+  .card-sub {
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+  .card-arrow {
+    margin-top: auto;
+    font-size: 0.75rem;
+    color: var(--accent-light);
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+  .card.card--expanded {
+    gap: 0;
+    cursor: default;
+  }
+  .card.card--expanded .card-icon { margin-bottom: 10px; }
+  .card.card--expanded .card-title { margin-bottom: 6px; }
+  .card.card--expanded .card-sub  { margin-bottom: 20px; }
+  .card-sub-links {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px solid var(--card-border);
+    padding-top: 16px;
+    margin-top: 4px;
+  }
+  .card-sub-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    padding: 7px 10px;
+    border-radius: 8px;
+    transition: background 0.18s ease;
+  }
+  .card-sub-link:hover { background: var(--cream); }
+  .card-sub-link-icon { font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .card-sub-link-text {
+    font-size: 0.78rem;
+    color: var(--ink-light);
+    font-weight: 400;
+    line-height: 1.4;
+    flex: 1;
+  }
+  .card-sub-link-arrow {
+    font-size: 0.7rem;
+    color: var(--accent-light);
+    flex-shrink: 0;
+  }
+  footer {
+    text-align: center;
+    padding: 32px 24px;
+    border-top: 1px solid var(--card-border);
+  }
+  footer p {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.85rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.03em;
+  }
+  @media (max-width: 560px) {
+    .grid { grid-template-columns: 1fr 1fr; }
+    .hero { padding: 60px 20px 48px; }
+  }
+  @media (max-width: 380px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<section class="hero">
+  <p class="hero-eyebrow">Medical · Psychology · Future</p>
+  <h1>用醫學讀懂人生：<br>從<span>病理變化</span>到生命規劃</h1>
+  <p>你今天的生活，正在寫你未來的診斷書。<br>這裡不是課程，是一條看見未來的路。</p>
+  <div class="hero-divider"></div>
+</section>
+<main class="grid-section">
+  <p class="section-label">選擇你的入口</p>
+  <div class="grid">
+
+    <!-- Journal Reading Club -->
+    <div class="card card--expanded">
+      <div class="card-icon">📚</div>
+      <div class="card-title"><a href="journal.html">Journal Reading Club</a></div>
+      <div class="card-sub">從醫學證據出發，讀懂生活與疾病的關聯</div>
+      <div class="card-sub-links">
+        <a class="card-sub-link" href="Article/CBT.html">
+          <span class="card-sub-link-icon">🧠</span>
+          <span class="card-sub-link-text">認知行為治療 CBT</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/CHO_FAT_Diet_Mortality.html">
+          <span class="card-sub-link-icon">🥩</span>
+          <span class="card-sub-link-text">醣脂飲食與死亡率</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/CHO_Last_Food_Order.html">
+          <span class="card-sub-link-icon">🍽️</span>
+          <span class="card-sub-link-text">進食順序與血糖控制</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/DunnigKrugStudy.html">
+          <span class="card-sub-link-icon">📊</span>
+          <span class="card-sub-link-text">Dunning–Kruger 研究</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/Eating_Order_Ghrelin.html">
+          <span class="card-sub-link-icon">⏱️</span>
+          <span class="card-sub-link-text">進食順序與飢餓素</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/Epigenetics.html">
+          <span class="card-sub-link-icon">🧬</span>
+          <span class="card-sub-link-text">表觀遺傳學</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/GoalDirectToBodyWeightReduction.html">
+          <span class="card-sub-link-icon">🎯</span>
+          <span class="card-sub-link-text">目標導向法減重</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/Intermittent_Fasting_Health_Aging.html">
+          <span class="card-sub-link-icon">⏳</span>
+          <span class="card-sub-link-text">間歇性斷食與健康老化</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/LotteryToBodyWeightReduction.html">
+          <span class="card-sub-link-icon">🎰</span>
+          <span class="card-sub-link-text">彩券法減重</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/Low_CHO_DM.html">
+          <span class="card-sub-link-icon">🩸</span>
+          <span class="card-sub-link-text">低醣飲食與糖尿病</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/MindfulnessToAnxiety.html">
+          <span class="card-sub-link-icon">🧘</span>
+          <span class="card-sub-link-text">正念減輕焦慮</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/MindfulnessToCardiovascular.html">
+          <span class="card-sub-link-icon">❤️</span>
+          <span class="card-sub-link-text">正念減少心血管疾病</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/MobileDeviceHelp.html">
+          <span class="card-sub-link-icon">📱</span>
+          <span class="card-sub-link-text">手機軟體能幫助糖尿病控制</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/Protein_WeightLoss_Maintenance.html">
+          <span class="card-sub-link-icon">💪</span>
+          <span class="card-sub-link-text">蛋白質與體重維持</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Article/Time_Restricted_Eating.html">
+          <span class="card-sub-link-icon">🕐</span>
+          <span class="card-sub-link-text">限時飲食法</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- After Reading Club -->
+    <div class="card card--expanded">
+      <div class="card-icon">🧾</div>
+      <div class="card-title"><a href="report.html">After Reading Club</a></div>
+      <div class="card-sub">輸出才能內化知識，讓學習真正改變人生</div>
+      <div class="card-sub-links">
+        <a class="card-sub-link" href="reflections/cbt.html">
+          <span class="card-sub-link-icon">🧠</span>
+          <span class="card-sub-link-text">認知行為治療 CBT</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="reflections/epigenetics.html">
+          <span class="card-sub-link-icon">🧬</span>
+          <span class="card-sub-link-text">表觀遺傳學</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Report/Report_CBT_iPA_iSED.html">
+          <span class="card-sub-link-icon">📋</span>
+          <span class="card-sub-link-text">Report：CBT iPA &amp; iSED</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Report/Report_Tirzepatide.html">
+          <span class="card-sub-link-icon">💊</span>
+          <span class="card-sub-link-text">Report：Tirzepatide</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Report/Report_MobileDeviceHelpLong.html">
+          <span class="card-sub-link-icon">📱</span>
+          <span class="card-sub-link-text">手機幫助糖尿病控制_完整版</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Report/Report_MobileDeviceHelpShort.html">
+          <span class="card-sub-link-icon">📱</span>
+          <span class="card-sub-link-text">手機幫助糖尿病控制_精簡版</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Report/Report_LoterryBWReduction_Long.html">
+          <span class="card-sub-link-icon">📱</span>
+          <span class="card-sub-link-text">樂透助減重，有效嗎?完整版</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+        <a class="card-sub-link" href="Report/Report_LoterryBWReduction_Short.html">
+          <span class="card-sub-link-icon">📱</span>
+          <span class="card-sub-link-text">樂透助減重，有效嗎?精簡版</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Psychological Club -->
+    <div class="card card--expanded">
+      <div class="card-icon">🧠</div>
+      <div class="card-title"><a href="psychology.html">Psychological Club</a></div>
+      <div class="card-sub">理解行為背後的心理機制，突破慣性</div>
+      <div class="card-sub-links">
+        <a class="card-sub-link" href="Psychology/Psycho_MobileDeviceHelp.html">
+          <span class="card-sub-link-icon">🔄</span>
+          <span class="card-sub-link-text">行為習慣的形成或改變</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Social Club -->
+    <a class="card" href="social.html">
+      <div class="card-icon">🤝</div>
+      <div class="card-title">Social Club</div>
+      <div class="card-sub">環境如何悄悄塑造你的每一個選擇</div>
+      <div class="card-arrow">環境塑造你 →</div>
+    </a>
+
+    <!-- To See the Future Club -->
+    <div class="card card--expanded">
+      <div class="card-icon">🔮</div>
+      <div class="card-title"><a href="future.html">To See the Future Club</a></div>
+      <div class="card-sub">整合所有維度，預見並設計你想要的人生</div>
+      <div class="card-sub-links">
+        <a class="card-sub-link" href="future/Future_MobileDeviceHelp.html">
+          <span class="card-sub-link-icon">📱</span>
+          <span class="card-sub-link-text">手機與螢幕時間的未來展望</span>
+          <span class="card-sub-link-arrow">→</span>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</main>
+<footer>
+  <p>你現在的選擇，正在形成未來的診斷</p>
+</footer>
+</body>
+</html>
