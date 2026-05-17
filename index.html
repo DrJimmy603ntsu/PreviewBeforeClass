@@ -1,397 +1,665 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>用醫學讀懂人生</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --cream: #f5f0e8;
-    --ink: #1a1614;
-    --ink-light: #5a4e47;
-    --ink-faint: #9a8f88;
-    --accent: #8b4513;
-    --accent-light: #d4956a;
-    --white: #ffffff;
-    --card-border: rgba(139,69,19,0.15);
-    --shadow: rgba(26,22,20,0.08);
-  }
-  body {
-    font-family: 'Noto Sans TC', sans-serif;
-    background-color: var(--cream);
-    color: var(--ink);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  .hero {
-    position: relative;
-    padding: 80px 24px 64px;
-    text-align: center;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 50% -10%, rgba(139,69,19,0.08) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .hero-eyebrow {
-    font-family: 'Noto Sans TC', sans-serif;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.25em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-  .hero h1 {
-    font-family: 'Noto Serif TC', serif;
-    font-size: clamp(1.8rem, 5vw, 2.8rem);
-    font-weight: 600;
-    line-height: 1.4;
-    color: var(--ink);
-    max-width: 680px;
-    margin: 0 auto 20px;
-  }
-  .hero h1 span { color: var(--accent); }
-  .hero p {
-    font-size: 1rem;
-    line-height: 1.9;
-    color: var(--ink-light);
-    max-width: 480px;
-    margin: 0 auto 40px;
-    font-weight: 300;
-  }
-  .hero-divider {
-    width: 40px;
-    height: 2px;
-    background: var(--accent-light);
-    margin: 0 auto;
-  }
-  .grid-section {
-    padding: 48px 24px 80px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .section-label {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    color: var(--ink-faint);
-    text-transform: uppercase;
-    margin-bottom: 28px;
-    text-align: center;
-  }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 16px;
-  }
-  .card {
-    background: var(--white);
-    border: 1px solid var(--card-border);
-    border-radius: 14px;
-    padding: 28px 22px 24px;
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  .card::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--accent-light);
-    transform: scaleX(0);
-    transform-origin: left;
-    transition: transform 0.25s ease;
-  }
-  .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px var(--shadow);
-    border-color: var(--accent-light);
-  }
-  .card:hover::after { transform: scaleX(1); }
-  .card-icon { font-size: 22px; line-height: 1; }
-  .card-title {
-    font-family: 'Noto Serif TC', serif;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--ink);
-    line-height: 1.4;
-  }
-  .card-title a {
-    color: inherit;
-    text-decoration: none;
-    transition: color 0.18s ease;
-  }
-  .card-title a:hover {
-    color: var(--accent);
-  }
-  .card-sub {
-    font-size: 0.78rem;
-    color: var(--ink-faint);
-    font-weight: 300;
-    line-height: 1.5;
-  }
-  .card-arrow {
-    margin-top: auto;
-    font-size: 0.75rem;
-    color: var(--accent-light);
-    font-weight: 500;
-    letter-spacing: 0.05em;
-  }
-  .card.card--expanded {
-    gap: 0;
-    cursor: default;
-  }
-  .card.card--expanded .card-icon { margin-bottom: 10px; }
-  .card.card--expanded .card-title { margin-bottom: 6px; }
-  .card.card--expanded .card-sub  { margin-bottom: 20px; }
-  .card-sub-links {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    border-top: 1px solid var(--card-border);
-    padding-top: 16px;
-    margin-top: 4px;
-  }
-  .card-sub-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    padding: 7px 10px;
-    border-radius: 8px;
-    transition: background 0.18s ease;
-  }
-  .card-sub-link:hover { background: var(--cream); }
-  .card-sub-link-icon { font-size: 14px; line-height: 1; flex-shrink: 0; }
-  .card-sub-link-text {
-    font-size: 0.78rem;
-    color: var(--ink-light);
-    font-weight: 400;
-    line-height: 1.4;
-    flex: 1;
-  }
-  .card-sub-link-arrow {
-    font-size: 0.7rem;
-    color: var(--accent-light);
-    flex-shrink: 0;
-  }
-  footer {
-    text-align: center;
-    padding: 32px 24px;
-    border-top: 1px solid var(--card-border);
-  }
-  footer p {
-    font-family: 'Noto Serif TC', serif;
-    font-size: 0.85rem;
-    color: var(--ink-faint);
-    letter-spacing: 0.03em;
-  }
-  @media (max-width: 560px) {
-    .grid { grid-template-columns: 1fr 1fr; }
-    .hero { padding: 60px 20px 48px; }
-  }
-  @media (max-width: 380px) {
-    .grid { grid-template-columns: 1fr; }
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>應用病理學｜運動保健醫學教育平台</title>
+  <meta name="description" content="體育大學運動保健學系應用病理學學習平台，涵蓋常見症狀、常見疾病、運動醫學與臨床推理。" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563eb',
+            secondary: '#0f172a',
+            medical: '#0891b2'
+          },
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans TC', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: #f8fafc;
+    }
+
+    .glass {
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-gradient {
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,0.25), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(8,145,178,0.2), transparent 35%),
+        linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+    }
+
+    .card-hover {
+      transition: all 0.25s ease;
+    }
+
+    .card-hover:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    }
+
+    .section-title {
+      position: relative;
+      display: inline-block;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 70px;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(to right, #2563eb, #0891b2);
+    }
+  </style>
 </head>
-<body>
-<section class="hero">
-  <p class="hero-eyebrow">Medical · Psychology · Future</p>
-  <h1>用醫學讀懂人生：<br>從<span>病理變化</span>到生命規劃</h1>
-  <p>你今天的生活，正在寫你未來的診斷書。<br>這裡不是課程，是一條看見未來的路。</p>
-  <div class="hero-divider"></div>
-</section>
-<main class="grid-section">
-  <p class="section-label">選擇你的入口</p>
-  <div class="grid">
 
-    <!-- Journal Reading Club -->
-    <div class="card card--expanded">
-      <div class="card-icon">📚</div>
-      <div class="card-title"><a href="journal.html">Journal Reading Club</a></div>
-      <div class="card-sub">從醫學證據出發，讀懂生活與疾病的關聯</div>
-      <div class="card-sub-links">
-        <a class="card-sub-link" href="Article/CBT.html">
-          <span class="card-sub-link-icon">🧠</span>
-          <span class="card-sub-link-text">認知行為治療 CBT</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/CHO_FAT_Diet_Mortality.html">
-          <span class="card-sub-link-icon">🥩</span>
-          <span class="card-sub-link-text">醣脂飲食與死亡率</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/CHO_Last_Food_Order.html">
-          <span class="card-sub-link-icon">🍽️</span>
-          <span class="card-sub-link-text">進食順序與血糖控制</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/DunnigKrugStudy.html">
-          <span class="card-sub-link-icon">📊</span>
-          <span class="card-sub-link-text">Dunning–Kruger 研究</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/Eating_Order_Ghrelin.html">
-          <span class="card-sub-link-icon">⏱️</span>
-          <span class="card-sub-link-text">進食順序與飢餓素</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/Epigenetics.html">
-          <span class="card-sub-link-icon">🧬</span>
-          <span class="card-sub-link-text">表觀遺傳學</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/GoalDirectToBodyWeightReduction.html">
-          <span class="card-sub-link-icon">🎯</span>
-          <span class="card-sub-link-text">目標導向法減重</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/Intermittent_Fasting_Health_Aging.html">
-          <span class="card-sub-link-icon">⏳</span>
-          <span class="card-sub-link-text">間歇性斷食與健康老化</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/LotteryToBodyWeightReduction.html">
-          <span class="card-sub-link-icon">🎰</span>
-          <span class="card-sub-link-text">彩券法減重</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/Low_CHO_DM.html">
-          <span class="card-sub-link-icon">🩸</span>
-          <span class="card-sub-link-text">低醣飲食與糖尿病</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/MindfulnessToAnxiety.html">
-          <span class="card-sub-link-icon">🧘</span>
-          <span class="card-sub-link-text">正念減輕焦慮</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/MindfulnessToCardiovascular.html">
-          <span class="card-sub-link-icon">❤️</span>
-          <span class="card-sub-link-text">正念減少心血管疾病</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/MobileDeviceHelp.html">
-          <span class="card-sub-link-icon">📱</span>
-          <span class="card-sub-link-text">手機軟體能幫助糖尿病控制</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/Protein_WeightLoss_Maintenance.html">
-          <span class="card-sub-link-icon">💪</span>
-          <span class="card-sub-link-text">蛋白質與體重維持</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Article/Time_Restricted_Eating.html">
-          <span class="card-sub-link-icon">🕐</span>
-          <span class="card-sub-link-text">限時飲食法</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
+<body class="font-sans text-slate-800">
+
+  <!-- Navbar -->
+  <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-lg">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg">
+          AP
+        </div>
+        <div>
+          <h1 class="font-bold text-lg">應用病理學平台</h1>
+          <p class="text-xs text-slate-500">Applied Pathology Learning Platform</p>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
+        <a href="#symptoms" class="hover:text-blue-600">常見症狀</a>
+        <a href="#diseases" class="hover:text-blue-600">常見疾病</a>
+        <a href="#cases" class="hover:text-blue-600">臨床案例</a>
+        <a href="#quiz" class="hover:text-blue-600">測驗系統</a>
+      </nav>
+
+      <button onclick="toggleDarkMode()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm">
+        深色模式
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero-gradient min-h-[88vh] flex items-center">
+    <div class="max-w-7xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-16 items-center">
+
+      <div>
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-6">
+          運動保健 × 病理學 × 臨床思考
+        </div>
+
+        <h1 class="text-5xl lg:text-7xl font-black leading-tight text-slate-900 mb-6">
+          應用病理學
+          <span class="text-blue-600 block">醫學教育平台</span>
+        </h1>
+
+        <p class="text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl">
+          專為體育大學運動保健學系學生設計，整合常見症狀、疾病、運動醫學與臨床推理，建立完整的基礎醫學思維。
+        </p>
+
+        <div class="flex flex-wrap gap-4">
+          <button class="px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+            開始學習
+          </button>
+
+          <button class="px-8 py-4 rounded-2xl border border-slate-300 bg-white font-semibold hover:bg-slate-100 transition">
+            查看課程
+          </button>
+        </div>
+
+        <div class="mt-12 flex flex-wrap gap-4">
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 min-w-[180px]">
+            <div class="text-3xl font-black text-blue-600">48+</div>
+            <div class="text-sm text-slate-500 mt-1">常見症狀</div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 min-w-[180px]">
+            <div class="text-3xl font-black text-cyan-600">32+</div>
+            <div class="text-sm text-slate-500 mt-1">常見疾病</div>
+          </div>
+
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 min-w-[180px]">
+            <div class="text-3xl font-black text-emerald-600">120+</div>
+            <div class="text-sm text-slate-500 mt-1">臨床案例</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="relative">
+
+        <div class="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-200">
+
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-xl">臨床推理流程</h3>
+            <span class="px-3 py-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold">
+              Red Flag
+            </span>
+          </div>
+
+          <div class="space-y-5">
+
+            <div class="p-5 rounded-2xl bg-blue-50 border border-blue-100">
+              <div class="font-bold text-blue-700 mb-1">症狀</div>
+              <div class="text-lg font-semibold">胸痛 Chest Pain</div>
+            </div>
+
+            <div class="text-center text-2xl text-slate-400">↓</div>
+
+            <div class="p-5 rounded-2xl bg-amber-50 border border-amber-100">
+              <div class="font-bold text-amber-700 mb-1">鑑別診斷</div>
+              <div class="space-y-2 text-sm">
+                <div>• 心肌缺血 Myocardial Ischemia</div>
+                <div>• GERD 胃食道逆流</div>
+                <div>• 肋軟骨炎 Costochondritis</div>
+                <div>• 氣胸 Pneumothorax</div>
+              </div>
+            </div>
+
+            <div class="text-center text-2xl text-slate-400">↓</div>
+
+            <div class="p-5 rounded-2xl bg-red-50 border border-red-200">
+              <div class="font-bold text-red-700 mb-2">危險警訊</div>
+              <div class="text-sm space-y-2">
+                <div>⚠️ 呼吸困難</div>
+                <div>⚠️ 冒冷汗</div>
+                <div>⚠️ 放射性疼痛</div>
+                <div>⚠️ 意識改變</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
+  </section>
 
-    <!-- After Reading Club -->
-    <div class="card card--expanded">
-      <div class="card-icon">🧾</div>
-      <div class="card-title"><a href="report.html">After Reading Club</a></div>
-      <div class="card-sub">輸出才能內化知識，讓學習真正改變人生</div>
-      <div class="card-sub-links">
-        <a class="card-sub-link" href="reflections/cbt.html">
-          <span class="card-sub-link-icon">🧠</span>
-          <span class="card-sub-link-text">認知行為治療 CBT</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="reflections/epigenetics.html">
-          <span class="card-sub-link-icon">🧬</span>
-          <span class="card-sub-link-text">表觀遺傳學</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Report/Report_CBT_iPA_iSED.html">
-          <span class="card-sub-link-icon">📋</span>
-          <span class="card-sub-link-text">Report：CBT iPA &amp; iSED</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Report/Report_Tirzepatide.html">
-          <span class="card-sub-link-icon">💊</span>
-          <span class="card-sub-link-text">Report：Tirzepatide</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Report/Report_MobileDeviceHelpLong.html">
-          <span class="card-sub-link-icon">📱</span>
-          <span class="card-sub-link-text">手機幫助糖尿病控制_完整版</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Report/Report_MobileDeviceHelpShort.html">
-          <span class="card-sub-link-icon">📱</span>
-          <span class="card-sub-link-text">手機幫助糖尿病控制_精簡版</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Report/Report_LoterryBWReduction_Long.html">
-          <span class="card-sub-link-icon">📱</span>
-          <span class="card-sub-link-text">樂透助減重，有效嗎?完整版</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
-        <a class="card-sub-link" href="Report/Report_LoterryBWReduction_Short.html">
-          <span class="card-sub-link-icon">📱</span>
-          <span class="card-sub-link-text">樂透助減重，有效嗎?精簡版</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
+  <!-- Search -->
+  <section class="py-16 bg-white border-y border-slate-200">
+    <div class="max-w-5xl mx-auto px-6 text-center">
+
+      <h2 class="text-3xl font-black mb-4">搜尋症狀與疾病</h2>
+
+      <p class="text-slate-600 mb-8">
+        快速查詢常見臨床症狀、病理機轉與疾病資訊
+      </p>
+
+      <div class="flex flex-col md:flex-row gap-4">
+        <input
+          type="text"
+          placeholder="輸入症狀，例如：胸痛、頭痛、抽筋..."
+          class="flex-1 px-6 py-5 rounded-2xl border border-slate-300 focus:outline-none focus:ring-4 focus:ring-blue-100"
+        />
+
+        <button class="px-8 py-5 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+          搜尋
+        </button>
       </div>
     </div>
+  </section>
 
-    <!-- Psychological Club -->
-    <div class="card card--expanded">
-      <div class="card-icon">🧠</div>
-      <div class="card-title"><a href="psychology.html">Psychological Club</a></div>
-      <div class="card-sub">理解行為背後的心理機制，突破慣性</div>
-      <div class="card-sub-links">
-        <a class="card-sub-link" href="Psychology/Psycho_MobileDeviceHelp.html">
-          <span class="card-sub-link-icon">🔄</span>
-          <span class="card-sub-link-text">行為習慣的形成或改變</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
+  <!-- Symptoms -->
+  <section id="symptoms" class="py-24">
+    <div class="max-w-7xl mx-auto px-6">
+
+      <div class="mb-16">
+        <h2 class="section-title text-4xl font-black mb-6">常見症狀 Symptoms</h2>
+        <p class="text-slate-600 max-w-3xl text-lg leading-relaxed">
+          以臨床常見主訴為核心，建立「症狀 → 鑑別診斷 → 疾病」的醫學思維。
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
+          <div class="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center text-3xl mb-6">
+            🧠
+          </div>
+          <h3 class="font-bold text-2xl mb-4">神經系統</h3>
+          <div class="space-y-3 text-slate-600">
+            <div>• 頭痛</div>
+            <div>• 意識不清</div>
+            <div>• 抽筋</div>
+            <div>• 暈厥</div>
+            <div>• 頭暈</div>
+          </div>
+        </div>
+
+        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
+          <div class="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center text-3xl mb-6">
+            ❤️
+          </div>
+          <h3 class="font-bold text-2xl mb-4">心肺系統</h3>
+          <div class="space-y-3 text-slate-600">
+            <div>• 胸痛</div>
+            <div>• 呼吸困難</div>
+            <div>• 心悸</div>
+            <div>• 咳嗽</div>
+            <div>• 喘鳴</div>
+          </div>
+        </div>
+
+        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
+          <div class="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl mb-6">
+            🩺
+          </div>
+          <h3 class="font-bold text-2xl mb-4">腸胃系統</h3>
+          <div class="space-y-3 text-slate-600">
+            <div>• 腹痛</div>
+            <div>• 腹瀉</div>
+            <div>• 嘔吐</div>
+            <div>• 黑便</div>
+            <div>• 噁心</div>
+          </div>
+        </div>
+
+        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center text-3xl mb-6">
+            🏃
+          </div>
+          <h3 class="font-bold text-2xl mb-4">運動醫學</h3>
+          <div class="space-y-3 text-slate-600">
+            <div>• 運動傷害</div>
+            <div>• 肌肉痠痛</div>
+            <div>• 關節痛</div>
+            <div>• 抽筋</div>
+            <div>• 下背痛</div>
+          </div>
+        </div>
+
       </div>
     </div>
+  </section>
 
-    <!-- Social Club -->
-    <a class="card" href="social.html">
-      <div class="card-icon">🤝</div>
-      <div class="card-title">Social Club</div>
-      <div class="card-sub">環境如何悄悄塑造你的每一個選擇</div>
-      <div class="card-arrow">環境塑造你 →</div>
-    </a>
+  <!-- Diseases -->
+  <section id="diseases" class="py-24 bg-white border-y border-slate-200">
+    <div class="max-w-7xl mx-auto px-6">
 
-    <!-- To See the Future Club -->
-    <div class="card card--expanded">
-      <div class="card-icon">🔮</div>
-      <div class="card-title"><a href="future.html">To See the Future Club</a></div>
-      <div class="card-sub">整合所有維度，預見並設計你想要的人生</div>
-      <div class="card-sub-links">
-        <a class="card-sub-link" href="future/Future_MobileDeviceHelp.html">
-          <span class="card-sub-link-icon">📱</span>
-          <span class="card-sub-link-text">手機與螢幕時間的未來展望</span>
-          <span class="card-sub-link-arrow">→</span>
-        </a>
+      <div class="mb-16">
+        <h2 class="section-title text-4xl font-black mb-6">常見疾病 Diseases</h2>
+        <p class="text-slate-600 max-w-3xl text-lg leading-relaxed">
+          學習疾病病理機轉、臨床症狀、診斷與運動注意事項。
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+
+        <div class="bg-slate-50 rounded-[32px] p-8 border border-slate-200">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-2xl">心血管</h3>
+            <span class="text-3xl">🫀</span>
+          </div>
+
+          <div class="space-y-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">高血壓 Hypertension</div>
+              <p class="text-sm text-slate-500 mt-2">最常見慢性疾病之一</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">冠心症 Coronary Artery Disease</div>
+              <p class="text-sm text-slate-500 mt-2">運動前風險評估重點</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">心律不整 Arrhythmia</div>
+              <p class="text-sm text-slate-500 mt-2">心悸與暈厥常見原因</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-[32px] p-8 border border-slate-200">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-2xl">代謝疾病</h3>
+            <span class="text-3xl">🧪</span>
+          </div>
+
+          <div class="space-y-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">糖尿病 Diabetes Mellitus</div>
+              <p class="text-sm text-slate-500 mt-2">運動與血糖調控</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">高血脂 Hyperlipidemia</div>
+              <p class="text-sm text-slate-500 mt-2">動脈硬化危險因子</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">肥胖症 Obesity</div>
+              <p class="text-sm text-slate-500 mt-2">代謝症候群核心問題</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-slate-50 rounded-[32px] p-8 border border-slate-200">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-2xl">呼吸系統</h3>
+            <span class="text-3xl">🫁</span>
+          </div>
+
+          <div class="space-y-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">氣喘 Asthma</div>
+              <p class="text-sm text-slate-500 mt-2">運動誘發氣喘重要性</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">肺炎 Pneumonia</div>
+              <p class="text-sm text-slate-500 mt-2">感染性疾病學習</p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200">
+              <div class="font-semibold">COVID-19 後遺症</div>
+              <p class="text-sm text-slate-500 mt-2">運動恢復重點</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
+  </section>
 
-  </div>
-</main>
-<footer>
-  <p>你現在的選擇，正在形成未來的診斷</p>
-</footer>
+  <!-- Red Flag -->
+  <section class="py-24">
+    <div class="max-w-7xl mx-auto px-6">
+
+      <div class="bg-gradient-to-r from-red-600 to-red-500 rounded-[36px] p-10 text-white shadow-2xl">
+
+        <div class="flex flex-col lg:flex-row gap-12 items-center justify-between">
+
+          <div>
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 text-sm font-semibold mb-6">
+              ⚠️ Red Flag Alert
+            </div>
+
+            <h2 class="text-4xl font-black mb-6">
+              危險症狀警示系統
+            </h2>
+
+            <p class="text-red-100 text-lg leading-relaxed max-w-3xl">
+              幫助學生快速辨識需要立即轉診與送醫的危險臨床徵象。
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 w-full lg:w-auto">
+            <div class="bg-white/10 rounded-2xl p-5">
+              <div class="font-bold text-lg mb-2">胸痛＋冒冷汗</div>
+              <div class="text-sm text-red-100">疑似急性冠心症</div>
+            </div>
+
+            <div class="bg-white/10 rounded-2xl p-5">
+              <div class="font-bold text-lg mb-2">意識不清</div>
+              <div class="text-sm text-red-100">需立即評估</div>
+            </div>
+
+            <div class="bg-white/10 rounded-2xl p-5">
+              <div class="font-bold text-lg mb-2">呼吸困難</div>
+              <div class="text-sm text-red-100">低血氧風險</div>
+            </div>
+
+            <div class="bg-white/10 rounded-2xl p-5">
+              <div class="font-bold text-lg mb-2">抽搐發作</div>
+              <div class="text-sm text-red-100">神經學急症</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cases -->
+  <section id="cases" class="py-24 bg-white border-y border-slate-200">
+    <div class="max-w-7xl mx-auto px-6">
+
+      <div class="mb-16">
+        <h2 class="section-title text-4xl font-black mb-6">臨床案例 Clinical Cases</h2>
+        <p class="text-slate-600 text-lg max-w-3xl">
+          使用 Case-Based Learning 建立臨床判讀與推理能力。
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-8">
+
+        <div class="card-hover bg-slate-50 rounded-[32px] p-8 border border-slate-200">
+          <div class="flex items-center justify-between mb-6">
+            <span class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
+              心血管案例
+            </span>
+            <span class="text-2xl">🫀</span>
+          </div>
+
+          <h3 class="text-2xl font-bold mb-4">
+            運動中胸痛
+          </h3>
+
+          <div class="space-y-4 text-slate-600 text-sm">
+            <div><strong>主訴：</strong>跑步時胸悶與呼吸困難</div>
+            <div><strong>病史：</strong>高血壓家族史</div>
+            <div><strong>Vital Signs：</strong>BP 168/96 mmHg</div>
+            <div><strong>鑑別診斷：</strong>心肌缺血、GERD、肋軟骨炎</div>
+          </div>
+
+          <button class="mt-8 w-full py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">
+            查看案例
+          </button>
+        </div>
+
+        <div class="card-hover bg-slate-50 rounded-[32px] p-8 border border-slate-200">
+          <div class="flex items-center justify-between mb-6">
+            <span class="px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold">
+              運動醫學
+            </span>
+            <span class="text-2xl">🏃</span>
+          </div>
+
+          <h3 class="text-2xl font-bold mb-4">
+            馬拉松後肌肉疼痛
+          </h3>
+
+          <div class="space-y-4 text-slate-600 text-sm">
+            <div><strong>主訴：</strong>全身痠痛與茶色尿</div>
+            <div><strong>病史：</strong>高強度耐力訓練</div>
+            <div><strong>實驗室：</strong>CK 顯著升高</div>
+            <div><strong>診斷：</strong>橫紋肌溶解症</div>
+          </div>
+
+          <button class="mt-8 w-full py-4 rounded-2xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition">
+            查看案例
+          </button>
+        </div>
+
+        <div class="card-hover bg-slate-50 rounded-[32px] p-8 border border-slate-200">
+          <div class="flex items-center justify-between mb-6">
+            <span class="px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold">
+              神經案例
+            </span>
+            <span class="text-2xl">🧠</span>
+          </div>
+
+          <h3 class="text-2xl font-bold mb-4">
+            運動後意識改變
+          </h3>
+
+          <div class="space-y-4 text-slate-600 text-sm">
+            <div><strong>主訴：</strong>比賽後意識混亂</div>
+            <div><strong>病史：</strong>高溫環境訓練</div>
+            <div><strong>可能原因：</strong>熱中暑、低血糖</div>
+            <div><strong>重點：</strong>立即降溫與急救</div>
+          </div>
+
+          <button class="mt-8 w-full py-4 rounded-2xl bg-purple-600 text-white font-semibold hover:bg-purple-700 transition">
+            查看案例
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Quiz -->
+  <section id="quiz" class="py-24">
+    <div class="max-w-5xl mx-auto px-6">
+
+      <div class="text-center mb-16">
+        <h2 class="section-title text-4xl font-black mb-6 inline-block">
+          Quiz 測驗系統
+        </h2>
+
+        <p class="text-slate-600 text-lg mt-8">
+          使用互動測驗強化病理學與臨床推理能力。
+        </p>
+      </div>
+
+      <div class="bg-white rounded-[36px] p-10 shadow-xl border border-slate-200">
+
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <div class="text-sm font-semibold text-blue-600 mb-2">
+              Clinical Reasoning Quiz
+            </div>
+            <h3 class="text-3xl font-black">
+              下列哪項為胸痛 Red Flag？
+            </h3>
+          </div>
+
+          <div class="text-right">
+            <div class="text-sm text-slate-500">題目進度</div>
+            <div class="text-2xl font-black text-blue-600">3 / 10</div>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+
+          <button class="w-full text-left p-6 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition">
+            A. 按壓胸壁疼痛
+          </button>
+
+          <button class="w-full text-left p-6 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition">
+            B. 運動後肌肉痠痛
+          </button>
+
+          <button class="w-full text-left p-6 rounded-2xl border-2 border-red-500 bg-red-50">
+            C. 胸痛伴隨呼吸困難與冒冷汗 ✓
+          </button>
+
+          <button class="w-full text-left p-6 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition">
+            D. 姿勢改變造成疼痛
+          </button>
+
+        </div>
+
+        <div class="mt-8 p-6 rounded-2xl bg-emerald-50 border border-emerald-200">
+          <div class="font-bold text-emerald-700 mb-2">解析</div>
+          <p class="text-slate-700 leading-relaxed">
+            胸痛合併呼吸困難、冒冷汗、放射痛等症狀時，需高度懷疑急性冠心症或重大心肺疾病。
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-slate-950 text-white py-16">
+    <div class="max-w-7xl mx-auto px-6">
+
+      <div class="grid md:grid-cols-4 gap-12 mb-12">
+
+        <div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center font-bold text-xl">
+              AP
+            </div>
+            <div>
+              <div class="font-bold text-lg">應用病理學平台</div>
+              <div class="text-sm text-slate-400">Applied Pathology</div>
+            </div>
+          </div>
+
+          <p class="text-slate-400 leading-relaxed">
+            專為運動保健與醫學教育打造的臨床學習平台。
+          </p>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-lg mb-5">學習系統</h4>
+          <div class="space-y-3 text-slate-400">
+            <div>常見症狀</div>
+            <div>常見疾病</div>
+            <div>臨床案例</div>
+            <div>Quiz測驗</div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-lg mb-5">課程主題</h4>
+          <div class="space-y-3 text-slate-400">
+            <div>病理學</div>
+            <div>運動醫學</div>
+            <div>臨床推理</div>
+            <div>生理學</div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-lg mb-5">教育聲明</h4>
+          <p class="text-slate-400 leading-relaxed text-sm">
+            本網站內容僅供醫學教育用途，不可取代專業醫療診斷與治療。
+          </p>
+        </div>
+
+      </div>
+
+      <div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between text-sm text-slate-500">
+        <div>
+          © 2026 Applied Pathology Learning Platform
+        </div>
+
+        <div>
+          Designed for Sports Medicine Education
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <script>
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+      document.body.classList.toggle('bg-slate-950');
+      document.body.classList.toggle('text-white');
+    }
+  </script>
+
 </body>
 </html>
