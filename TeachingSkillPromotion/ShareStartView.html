@@ -546,6 +546,53 @@
     color: #5a5040;
   }
 
+  /* ── Video Section ── */
+  .video-section {
+    position: relative;
+    z-index: 1;
+    padding: 4rem 4rem 5rem;
+    background: linear-gradient(to bottom, transparent, rgba(200,146,42,0.04), transparent);
+  }
+
+  .video-wrapper {
+    max-width: 860px;
+    margin: 2.5rem auto 0;
+    position: relative;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 16px 48px rgba(26,18,8,0.14), 0 2px 8px rgba(26,18,8,0.06);
+    border: 1px solid var(--border);
+    background: #000;
+  }
+
+  .video-wrapper::before {
+    content: '';
+    display: block;
+    padding-top: 56.25%;
+  }
+
+  .video-wrapper iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+  .video-caption {
+    text-align: center;
+    margin-top: 1.2rem;
+    font-size: 0.88rem;
+    color: var(--warm-gray);
+    letter-spacing: 0.04em;
+  }
+
+  .video-caption strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
   /* ── Footer ── */
   footer {
     position: relative;
@@ -683,6 +730,27 @@
       <p class="card-desc">創造安全的表達環境，鼓勵學生口頭或書面闡述想法，透過同儕討論與師生對話，強化溝通表達與論述組織能力。</p>
     </div>
   </div>
+</section>
+
+<!-- ── Video Divider ── -->
+<div class="section-divider">
+  <div class="section-divider-inner">
+    <div class="section-title">教學<span class="gold">影片</span>介紹</div>
+  </div>
+</div>
+
+<!-- ── Video Section ── -->
+<section class="video-section">
+  <div class="gallery-label">YouTube · 學思達課堂實錄</div>
+  <div class="video-wrapper">
+    <iframe
+      src="https://www.youtube.com/embed/8XYSA4J47uI"
+      title="學思達教學技巧影片"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen>
+    </iframe>
+  </div>
+  <p class="video-caption"><strong>學思達教學法實務示範</strong> · 點擊播放，觀看完整課堂紀錄</p>
 </section>
 
 <!-- ── Footer ── -->
