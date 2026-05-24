@@ -674,7 +674,7 @@
 
   <div class="hero-image">
     <div class="hero-image-frame">
-      <img src="ShareStartView.png" alt="學思達教學法 主視覺" onerror="this.src='https://via.placeholder.com/800x500/faf6ee/c8922a?text=學思達+教學技巧'; this.onerror=null;">
+      <img src="https://raw.githubusercontent.com/DrJimmy603ntsu/PreviewBeforeClass/main/TeachingSkillPromotion/ShareStartPPT/ShareStartView1.jpeg" alt="學思達教學法 主視覺" onerror="this.src='https://via.placeholder.com/800x500/faf6ee/c8922a?text=學思達+教學技巧'; this.onerror=null;">
     </div>
     <div class="hero-badge">學<br>思<br>達</div>
   </div>
@@ -693,7 +693,7 @@
 
   <div class="slideshow-container">
     <div class="slideshow-main" id="mainSlide">
-      <img id="mainImg" src="StareStartPPT/ShareStartView1.jpeg" alt="教學簡報第 1 頁"
+      <img id="mainImg" src="https://raw.githubusercontent.com/DrJimmy603ntsu/PreviewBeforeClass/main/TeachingSkillPromotion/ShareStartPPT/ShareStartView1.jpeg" alt="教學簡報第 1 頁"
         onerror="this.src='https://via.placeholder.com/900x506/faf6ee/c8922a?text=Slide+1'; this.onerror=null;">
       <div class="slide-counter" id="slideCounter">1 / 15</div>
       <button class="slide-nav slide-prev" id="prevBtn" aria-label="上一張">‹</button>
@@ -761,8 +761,9 @@
 
 <script>
   const total = 15;
+  const base = 'https://raw.githubusercontent.com/DrJimmy603ntsu/PreviewBeforeClass/main/TeachingSkillPromotion/ShareStartPPT/';
   const images = Array.from({length: total}, (_, i) =>
-    `StareStartPPT/ShareStartView${i+1}.jpeg`
+    `${base}ShareStartView${i+1}.jpeg`
   );
 
   let current = 0;
