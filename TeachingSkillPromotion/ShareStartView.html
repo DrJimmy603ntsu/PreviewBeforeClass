@@ -767,7 +767,6 @@
   );
 
   let current = 0;
-  let autoTimer = null;
 
   const mainImg    = document.getElementById('mainImg');
   const counter    = document.getElementById('slideCounter');
@@ -817,7 +816,6 @@
   function goTo(idx) {
     current = (idx + total) % total;
     updateUI(current);
-    restartAuto();
   }
 
   document.getElementById('prevBtn').addEventListener('click', () => goTo(current - 1));
@@ -846,18 +844,8 @@
     if (Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
   }, {passive: true});
 
-  // Auto-advance
-  function startAuto() {
-    autoTimer = setInterval(() => goTo(current + 1), 4500);
-  }
-  function restartAuto() {
-    clearInterval(autoTimer);
-    startAuto();
-  }
-
   // Init
   progressBar.style.width = `${(1/total)*100}%`;
-  startAuto();
 </script>
 </body>
 </html>
