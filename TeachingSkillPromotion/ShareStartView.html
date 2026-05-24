@@ -1,1 +1,849 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>學思達教學技巧</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;900&family=Noto+Sans+TC:wght@300;400;700&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1209;
+    --parchment: #f5efe4;
+    --gold: #c8933a;
+    --gold-light: #e8b96a;
+    --rust: #9b3a1e;
+    --sage: #4a6741;
+    --mist: #dde8e0;
+    --deep: #2c1a0e;
+    --cream: #faf6ef;
+  }
 
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Noto Sans TC', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── DECORATIVE BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 20%, rgba(200,147,58,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 90% 80%, rgba(74,103,65,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 0;
+  }
+
+  /* top bar */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.4rem 3rem;
+    border-bottom: 1px solid rgba(200,147,58,0.25);
+    background: rgba(245,239,228,0.85);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .logo-seal {
+    width: 44px; height: 44px;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--gold);
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .logo-seal::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(200,147,58,0.4);
+    border-radius: 50%;
+  }
+
+  .logo-text {
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 900;
+    font-size: 1.25rem;
+    color: var(--deep);
+    letter-spacing: 0.05em;
+  }
+
+  .logo-sub {
+    font-size: 0.7rem;
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    font-weight: 300;
+    text-transform: uppercase;
+  }
+
+  nav { display: flex; gap: 2rem; }
+  nav a {
+    font-size: 0.85rem;
+    color: var(--deep);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+    transition: opacity 0.2s, color 0.2s;
+    font-weight: 400;
+  }
+  nav a:hover { opacity: 1; color: var(--gold); }
+
+  /* hero main content */
+  .hero-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    align-items: stretch;
+    min-height: calc(100vh - 77px);
+  }
+
+  .hero-text-panel {
+    padding: 5rem 4rem 4rem 5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+  }
+
+  .hero-text-panel::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 10%; bottom: 10%;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(200,147,58,0.3), transparent);
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.8rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.2s forwards;
+  }
+
+  .eyebrow-line {
+    width: 40px; height: 1px;
+    background: var(--gold);
+  }
+
+  .eyebrow-text {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 400;
+  }
+
+  .hero-title {
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 900;
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    line-height: 1.1;
+    color: var(--deep);
+    margin-bottom: 0.4rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.35s forwards;
+  }
+
+  .hero-title .accent { color: var(--gold); }
+
+  .hero-title-en {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--rust);
+    margin-bottom: 2rem;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.5s forwards;
+  }
+
+  .hero-desc {
+    font-size: 1rem;
+    line-height: 1.9;
+    color: rgba(26,18,9,0.7);
+    max-width: 480px;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.65s forwards;
+  }
+
+  .pillars {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2.8rem;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.8s forwards;
+  }
+
+  .pillar {
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--gold);
+    border-radius: 2px;
+    font-size: 0.85rem;
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 600;
+    color: var(--deep);
+    background: rgba(200,147,58,0.06);
+    transition: all 0.2s;
+    cursor: default;
+  }
+
+  .pillar:hover {
+    background: var(--gold);
+    color: white;
+  }
+
+  .cta-row {
+    display: flex;
+    gap: 1.2rem;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.95s forwards;
+  }
+
+  .btn-primary {
+    padding: 0.85rem 2rem;
+    background: var(--deep);
+    color: var(--cream);
+    font-size: 0.9rem;
+    letter-spacing: 0.1em;
+    border: none;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    background: var(--gold);
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    font-size: 0.85rem;
+    color: var(--rust);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: gap 0.2s;
+  }
+
+  .btn-secondary:hover { gap: 0.8rem; }
+
+  /* hero image panel */
+  .hero-image-panel {
+    position: relative;
+    overflow: hidden;
+    background: var(--mist);
+    opacity: 0;
+    animation: fadeIn 1s 0.4s forwards;
+  }
+
+  .hero-image-panel img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    transition: transform 8s ease;
+  }
+
+  .hero-image-panel:hover img { transform: scale(1.03); }
+
+  .hero-image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(44,26,14,0.15) 0%, transparent 50%);
+  }
+
+  .hero-image-badge {
+    position: absolute;
+    bottom: 2rem; left: 2rem;
+    background: rgba(245,239,228,0.92);
+    backdrop-filter: blur(6px);
+    padding: 0.8rem 1.2rem;
+    border-left: 3px solid var(--gold);
+  }
+
+  .badge-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.2rem;
+  }
+
+  .badge-value {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--deep);
+  }
+
+  /* ── STATS BAND ── */
+  .stats-band {
+    position: relative;
+    z-index: 1;
+    background: var(--deep);
+    padding: 2rem 5rem;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .stat-item {
+    text-align: center;
+    color: white;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--gold-light);
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    opacity: 0.65;
+  }
+
+  .stat-divider {
+    width: 1px; height: 40px;
+    background: rgba(255,255,255,0.15);
+  }
+
+  /* ── SLIDES GALLERY ── */
+  .gallery-section {
+    position: relative;
+    z-index: 1;
+    padding: 5rem 4rem 6rem;
+    background: var(--parchment);
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .section-tag {
+    font-size: 0.72rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  .section-tag::before,
+  .section-tag::after {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--gold);
+    opacity: 0.5;
+  }
+
+  .section-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--deep);
+    margin-bottom: 0.8rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.95rem;
+    color: rgba(26,18,9,0.55);
+    font-weight: 300;
+  }
+
+  /* Slideshow */
+  .slideshow-container {
+    position: relative;
+    max-width: 900px;
+    margin: 0 auto 3rem;
+    border: 1px solid rgba(200,147,58,0.2);
+    box-shadow: 0 20px 60px rgba(44,26,14,0.15), 0 2px 8px rgba(200,147,58,0.1);
+  }
+
+  .slideshow-main {
+    position: relative;
+    background: var(--deep);
+    aspect-ratio: 16/9;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .slide.active { opacity: 1; }
+
+  .slide img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    background: #111;
+  }
+
+  /* slide placeholder if image not found */
+  .slide-placeholder {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    background: linear-gradient(135deg, #1a1209, #2c1a0e);
+    color: rgba(255,255,255,0.4);
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+  }
+
+  .slide-placeholder .slide-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    color: rgba(200,147,58,0.3);
+  }
+
+  .slideshow-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: rgba(245,239,228,0.97);
+    border-top: 1px solid rgba(200,147,58,0.15);
+  }
+
+  .slide-btn {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(200,147,58,0.4);
+    background: white;
+    color: var(--deep);
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .slide-btn:hover {
+    background: var(--gold);
+    color: white;
+    border-color: var(--gold);
+  }
+
+  .slide-counter {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--deep);
+  }
+
+  .slide-counter span { color: var(--gold); }
+
+  .slide-dots {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(200,147,58,0.3);
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .dot.active {
+    background: var(--gold);
+    width: 18px;
+    border-radius: 3px;
+  }
+
+  .auto-btn {
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(200,147,58,0.4);
+    background: transparent;
+    color: var(--rust);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.2s;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .auto-btn.playing { color: var(--sage); border-color: var(--sage); }
+  .auto-btn:hover { background: rgba(200,147,58,0.08); }
+
+  /* Thumbnails */
+  .thumbs-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.6rem;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .thumb {
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--deep);
+  }
+
+  .thumb:hover, .thumb.active {
+    border-color: var(--gold);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(200,147,58,0.25);
+  }
+
+  .thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+
+  .thumb:hover img, .thumb.active img { opacity: 1; }
+
+  .thumb-num {
+    position: absolute;
+    bottom: 3px; right: 5px;
+    font-size: 0.6rem;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Playfair Display', serif;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    background: var(--deep);
+    color: rgba(255,255,255,0.5);
+    text-align: center;
+    padding: 2rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+  }
+
+  footer strong { color: var(--gold-light); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .hero-body { grid-template-columns: 1fr; }
+    .hero-image-panel { min-height: 50vw; }
+    .hero-text-panel { padding: 3rem 2rem; }
+    .hero-text-panel::after { display: none; }
+    .stats-band { padding: 1.5rem 2rem; flex-wrap: wrap; }
+    .gallery-section { padding: 3rem 1.5rem; }
+    .thumbs-grid { grid-template-columns: repeat(5, 1fr); }
+    nav { display: none; }
+    .topbar { padding: 1rem 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="logo-mark">
+    <div class="logo-seal">學</div>
+    <div>
+      <div class="logo-text">學思達</div>
+      <div class="logo-sub">Share · Start · Learn</div>
+    </div>
+  </div>
+  <nav>
+    <a href="#">教學理念</a>
+    <a href="#">課程設計</a>
+    <a href="#">教師資源</a>
+    <a href="#">研習報名</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="hero-text-panel">
+      <div class="eyebrow">
+        <div class="eyebrow-line"></div>
+        <span class="eyebrow-text">Teaching Innovation · 教學創新</span>
+      </div>
+
+      <h1 class="hero-title">
+        <span class="accent">學</span>思達<br>教學技巧
+      </h1>
+      <div class="hero-title-en">Share · Start · Achieve</div>
+
+      <p class="hero-desc">
+        學思達教學法以「自學、思考、討論、表達、閱讀」為核心，
+        翻轉傳統課堂結構，讓學生成為學習的主體，
+        教師成為引導與激發的夥伴。
+      </p>
+
+      <div class="pillars">
+        <div class="pillar">自學</div>
+        <div class="pillar">思考</div>
+        <div class="pillar">討論</div>
+        <div class="pillar">表達</div>
+        <div class="pillar">閱讀</div>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn-primary" href="#gallery">瀏覽教學簡報</a>
+        <a class="btn-secondary" href="#">了解更多 →</a>
+      </div>
+    </div>
+
+    <div class="hero-image-panel">
+      <img src="ShareStartView.png" alt="學思達教學技巧"
+           onerror="this.parentElement.innerHTML='<div style=\'width:100%;height:100%;background:linear-gradient(135deg,#2c1a0e,#4a6741,#c8933a20);display:flex;align-items:center;justify-content:center\'><div style=\'text-align:center;color:rgba(245,239,228,0.6)\'><div style=\'font-family:Noto Serif TC,serif;font-size:4rem;font-weight:900;color:rgba(200,147,58,0.6)\'>學</div><div style=\'font-size:0.85rem;letter-spacing:0.2em;margin-top:0.5rem\'>ShareStartView.png</div></div></div>'">
+      <div class="hero-image-overlay"></div>
+      <div class="hero-image-badge">
+        <div class="badge-label">核心方法</div>
+        <div class="badge-value">翻轉式課堂設計</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS BAND -->
+<div class="stats-band">
+  <div class="stat-item">
+    <div class="stat-num">15</div>
+    <div class="stat-label">教學技巧單元</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-num">5</div>
+    <div class="stat-label">核心學習歷程</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-num">∞</div>
+    <div class="stat-label">課堂應用可能</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-num">1</div>
+    <div class="stat-label">以學生為中心</div>
+  </div>
+</div>
+
+<!-- GALLERY -->
+<section class="gallery-section" id="gallery">
+  <div class="section-header">
+    <div class="section-tag">教學簡報</div>
+    <h2 class="section-title">學思達教學技巧簡報</h2>
+    <p class="section-subtitle">完整 15 張投影片，帶您深入理解學思達的教學設計精髓</p>
+  </div>
+
+  <!-- Main Slideshow -->
+  <div class="slideshow-container">
+    <div class="slideshow-main" id="slideshowMain">
+      <!-- Slides generated by JS -->
+    </div>
+    <div class="slideshow-controls">
+      <div style="display:flex;gap:0.6rem;align-items:center">
+        <button class="slide-btn" id="prevBtn">&#8592;</button>
+        <button class="slide-btn" id="nextBtn">&#8594;</button>
+        <button class="auto-btn" id="autoBtn">▶ 自動播放</button>
+      </div>
+      <div class="slide-dots" id="slideDots"></div>
+      <div class="slide-counter">
+        <span id="curSlide">1</span> / <span>15</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thumbnails -->
+  <div class="thumbs-grid" id="thumbsGrid"></div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <strong>學思達教學技巧</strong> &nbsp;|&nbsp; Share · Start · Achieve &nbsp;|&nbsp;
+  以學生為主體的翻轉教學法
+</footer>
+
+<script>
+  const total = 15;
+  const basePath = 'StareStartPPT/ShareStartView';
+  const ext = '.png'; // adjust if needed
+
+  const main = document.getElementById('slideshowMain');
+  const dots = document.getElementById('slideDots');
+  const thumbsGrid = document.getElementById('thumbsGrid');
+  const curSlideEl = document.getElementById('curSlide');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const autoBtn = document.getElementById('autoBtn');
+
+  let current = 0;
+  let autoTimer = null;
+  let isPlaying = false;
+
+  // Build slides
+  for (let i = 1; i <= total; i++) {
+    const slide = document.createElement('div');
+    slide.className = 'slide' + (i === 1 ? ' active' : '');
+    slide.dataset.index = i - 1;
+
+    const img = document.createElement('img');
+    img.src = `${basePath}${i}${ext}`;
+    img.alt = `學思達教學技巧 第${i}張`;
+    img.loading = i <= 3 ? 'eager' : 'lazy';
+    img.onerror = function() {
+      this.parentElement.innerHTML = `
+        <div class="slide-placeholder">
+          <div class="slide-num">${i}</div>
+          <div>ShareStartView${i}.png</div>
+        </div>`;
+    };
+
+    slide.appendChild(img);
+    main.appendChild(slide);
+
+    // Dot
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === 1 ? ' active' : '');
+    dot.dataset.index = i - 1;
+    dot.addEventListener('click', () => goTo(i - 1));
+    dots.appendChild(dot);
+
+    // Thumb
+    const thumb = document.createElement('div');
+    thumb.className = 'thumb' + (i === 1 ? ' active' : '');
+    thumb.dataset.index = i - 1;
+
+    const tImg = document.createElement('img');
+    tImg.src = `${basePath}${i}${ext}`;
+    tImg.alt = `第${i}張`;
+    tImg.loading = 'lazy';
+    tImg.onerror = function() {
+      this.style.display = 'none';
+      this.parentElement.style.background = 'linear-gradient(135deg,#1a1209,#2c1a0e)';
+    };
+
+    const num = document.createElement('div');
+    num.className = 'thumb-num';
+    num.textContent = i;
+
+    thumb.appendChild(tImg);
+    thumb.appendChild(num);
+    thumb.addEventListener('click', () => goTo(i - 1));
+    thumbsGrid.appendChild(thumb);
+  }
+
+  function goTo(idx) {
+    const slides = main.querySelectorAll('.slide');
+    const allDots = dots.querySelectorAll('.dot');
+    const allThumbs = thumbsGrid.querySelectorAll('.thumb');
+
+    slides[current].classList.remove('active');
+    allDots[current].classList.remove('active');
+    allThumbs[current].classList.remove('active');
+
+    current = (idx + total) % total;
+
+    slides[current].classList.add('active');
+    allDots[current].classList.add('active');
+    allThumbs[current].classList.add('active');
+    curSlideEl.textContent = current + 1;
+
+    // scroll thumb into view
+    allThumbs[current].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  prevBtn.addEventListener('click', () => goTo(current - 1));
+  nextBtn.addEventListener('click', () => goTo(current + 1));
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') goTo(current - 1);
+    if (e.key === 'ArrowRight') goTo(current + 1);
+  });
+
+  // Auto play
+  autoBtn.addEventListener('click', () => {
+    isPlaying = !isPlaying;
+    if (isPlaying) {
+      autoBtn.textContent = '⏸ 暫停播放';
+      autoBtn.classList.add('playing');
+      autoTimer = setInterval(() => goTo(current + 1), 3000);
+    } else {
+      autoBtn.textContent = '▶ 自動播放';
+      autoBtn.classList.remove('playing');
+      clearInterval(autoTimer);
+    }
+  });
+
+  // Touch swipe
+  let touchStartX = 0;
+  main.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].clientX; }, { passive: true });
+  main.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) goTo(dx < 0 ? current + 1 : current - 1);
+  }, { passive: true });
+</script>
+</body>
+</html>
