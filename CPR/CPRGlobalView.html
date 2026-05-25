@@ -4,11 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CPR 心肺復甦術｜應用病理學平台</title>
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
-
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -27,18 +25,15 @@
       }
     }
   </script>
-
   <style>
     html { scroll-behavior: smooth; }
     body { background: #f8fafc; }
-
     .hero-gradient {
       background:
         radial-gradient(circle at top left, rgba(220,38,38,0.15), transparent 35%),
         radial-gradient(circle at bottom right, rgba(37,99,235,0.12), transparent 35%),
         linear-gradient(135deg, #fff1f2 0%, #f8fafc 100%);
     }
-
     .card-hover {
       transition: all 0.25s ease;
     }
@@ -46,7 +41,6 @@
       transform: translateY(-6px);
       box-shadow: 0 20px 40px rgba(0,0,0,0.08);
     }
-
     .section-title {
       position: relative;
       display: inline-block;
@@ -61,14 +55,12 @@
       border-radius: 999px;
       background: linear-gradient(to right, #dc2626, #2563eb);
     }
-
     .step-connector {
       width: 2px;
       height: 32px;
       background: linear-gradient(to bottom, #dc2626, #e5e7eb);
       margin: 0 auto;
     }
-
     .gallery-img {
       width: 100%;
       height: auto;
@@ -80,11 +72,78 @@
       transform: scale(1.02);
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     }
+
+    /* Kahoot banner styles */
+    .kahoot-banner {
+      background: linear-gradient(135deg, #46178f 0%, #6b21d4 40%, #8b2fc9 70%, #5f1d8a 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .kahoot-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 50%, rgba(255,255,255,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 90% 20%, rgba(255,220,0,0.15) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    .kahoot-dots {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .kahoot-dots span {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.12;
+      background: white;
+    }
+    .kahoot-btn {
+      background: #ffd600;
+      color: #1a0533;
+      font-weight: 800;
+      border-radius: 14px;
+      padding: 16px 36px;
+      font-size: 1.1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 20px rgba(255,214,0,0.4);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+    .kahoot-btn:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 8px 30px rgba(255,214,0,0.55);
+      background: #ffe033;
+    }
+    .kahoot-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 999px;
+      backdrop-filter: blur(4px);
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.7; }
+    }
+    .kahoot-icon-wrap {
+      animation: pulse-ring 2.5s ease-in-out infinite;
+    }
   </style>
 </head>
-
 <body class="font-sans text-slate-800">
-
   <!-- Navbar -->
   <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-lg">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -99,15 +158,14 @@
           </div>
         </a>
       </div>
-
       <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
+        <a href="#quiz" class="hover:text-purple-600 transition font-semibold text-purple-700">📝 課前測驗</a>
         <a href="#principles" class="hover:text-red-600 transition">核心原理</a>
         <a href="#slides" class="hover:text-red-600 transition">教學簡報</a>
         <a href="#cases" class="hover:text-red-600 transition">臨床情境</a>
         <a href="#procedure" class="hover:text-red-600 transition">處理流程</a>
         <a href="#discussion" class="hover:text-red-600 transition">深度討論</a>
       </nav>
-
       <a href="../index.html"
         class="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium hover:bg-slate-50 transition flex items-center gap-2">
         ← 返回主頁
@@ -115,15 +173,84 @@
     </div>
   </header>
 
+  <!-- ✅ Kahoot Pre-Quiz Banner -->
+  <section id="quiz" class="kahoot-banner py-14 px-6">
+    <!-- Decorative dots -->
+    <div class="kahoot-dots" aria-hidden="true">
+      <span style="width:180px;height:180px;top:-60px;left:-40px;"></span>
+      <span style="width:80px;height:80px;top:20px;right:120px;"></span>
+      <span style="width:120px;height:120px;bottom:-40px;right:-20px;"></span>
+      <span style="width:50px;height:50px;bottom:30px;left:200px;"></span>
+    </div>
+
+    <div class="max-w-7xl mx-auto relative z-10">
+      <div class="flex flex-col lg:flex-row items-center justify-between gap-10">
+
+        <!-- Left: text content -->
+        <div class="flex items-start gap-6 flex-1">
+          <div class="kahoot-icon-wrap shrink-0">
+            <div class="w-20 h-20 rounded-3xl bg-white/10 border border-white/20 flex items-center justify-center text-4xl backdrop-blur-sm shadow-lg">
+              🎮
+            </div>
+          </div>
+          <div>
+            <div class="flex flex-wrap items-center gap-3 mb-3">
+              <span class="kahoot-badge">
+                <span>⚡</span> 課前暖身
+              </span>
+              <span class="kahoot-badge">
+                <span>🧠</span> 知識測驗
+              </span>
+              <span class="kahoot-badge">
+                <span>🏆</span> Kahoot!
+              </span>
+            </div>
+            <h2 class="text-3xl lg:text-4xl font-black text-white mb-3 leading-tight">
+              課前測驗 Pre-Class Quiz
+            </h2>
+            <p class="text-purple-200 text-lg leading-relaxed max-w-xl">
+              上課前先來挑戰一下！測試你對 CPR 的既有認知，
+              看看哪些觀念需要加強。
+            </p>
+            <p class="text-purple-300 text-sm mt-2">
+              完成後保留結果，課後可以重新測驗比較進步幅度。
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: CTA -->
+        <div class="shrink-0 flex flex-col items-center gap-4">
+          <a
+            href="https://create.kahoot.it/details/02314109-4be3-4359-8502-6bb38c418362"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="kahoot-btn"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 3L16.293 6.293L10.586 12L16.293 17.707L13 21L4 12L13 3Z" fill="currentColor" opacity="0.3"/>
+              <path d="M20 3L23.293 6.293L17.586 12L23.293 17.707L20 21L11 12L20 3Z" fill="currentColor"/>
+            </svg>
+            立即開始測驗
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 17L17 7M17 7H7M17 7v10"/>
+            </svg>
+          </a>
+          <p class="text-purple-300 text-xs text-center">
+            點擊後將在新分頁開啟 Kahoot 測驗
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
   <!-- Hero -->
   <section class="hero-gradient min-h-[60vh] flex items-center">
     <div class="max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-16 items-center">
-
       <div>
         <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-100 text-red-700 text-sm font-semibold mb-6">
           🚑 急救醫學 × 運動場急救
         </div>
-
         <h1 class="text-5xl lg:text-6xl font-black leading-tight text-slate-900 mb-6">
           CPR
           <span class="text-red-600 block">心肺復甦術</span>
@@ -131,12 +258,10 @@
             運動場急救機轉
           </span>
         </h1>
-
         <p class="text-xl text-slate-600 leading-relaxed mb-8 max-w-xl">
           CPR 不是在「救心臟」，而是在<strong class="text-slate-800">「爭取大腦存活時間」</strong>。
           掌握核心原理、操作流程與運動情境應用。
         </p>
-
         <div class="flex flex-wrap gap-4">
           <a href="#procedure"
             class="px-8 py-4 rounded-2xl bg-red-600 text-white font-semibold hover:bg-red-700 transition">
@@ -148,7 +273,6 @@
           </a>
         </div>
       </div>
-
       <!-- Hero card: Clinical Reasoning -->
       <div class="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-200">
         <div class="flex items-center justify-between mb-6">
@@ -157,7 +281,6 @@
             ⚠️ Red Flag
           </span>
         </div>
-
         <div class="space-y-3">
           <div class="p-4 rounded-2xl bg-red-50 border border-red-100">
             <div class="font-bold text-red-700 text-sm mb-1">循環崩潰</div>
@@ -180,24 +303,19 @@
           </div>
         </div>
       </div>
-
     </div>
   </section>
 
   <!-- Section 1: Core Principles -->
   <section id="principles" class="py-24 bg-white border-y border-slate-200">
     <div class="max-w-7xl mx-auto px-6">
-
       <div class="mb-16">
         <h2 class="section-title text-4xl font-black mb-6">核心原理 Core Principles</h2>
         <p class="text-slate-600 max-w-3xl text-lg leading-relaxed mt-4">
           理解 CPR 的病理生理基礎，建立正確的急救醫學思維。
         </p>
       </div>
-
       <div class="grid md:grid-cols-3 gap-8">
-
-        <!-- Card 1: 正式說法 -->
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center text-2xl mb-6">📖</div>
           <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3">正式專業定義</div>
@@ -210,8 +328,6 @@
             腦部 4–6 分鐘開始不可逆損傷
           </div>
         </div>
-
-        <!-- Card 2: 白話解釋 -->
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center text-2xl mb-6">💬</div>
           <div class="text-xs font-bold text-amber-600 uppercase tracking-widest mb-3">白話解釋</div>
@@ -221,8 +337,6 @@
             讓血液繼續流向大腦，爭取等待 AED 或救護車到達的時間。
           </p>
         </div>
-
-        <!-- Card 3: Metaphor -->
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center text-2xl mb-6">🏙️</div>
           <div class="text-xs font-bold text-emerald-600 uppercase tracking-widest mb-3">比喻 Metaphor</div>
@@ -234,10 +348,7 @@
             系統當機時 CPR 就是<strong>緊急備援電源</strong>，只維持最低運作。
           </p>
         </div>
-
       </div>
-
-      <!-- Guiding Questions -->
       <div class="mt-12 bg-slate-900 rounded-[28px] p-8 text-white">
         <div class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">🤔 引導思考問題</div>
         <div class="grid md:grid-cols-2 gap-4">
@@ -247,28 +358,22 @@
           <div class="bg-white/10 rounded-2xl p-4">CPR 的真正目的是救心臟還是大腦？</div>
         </div>
       </div>
-
     </div>
   </section>
 
   <!-- Section 2: Slides Gallery -->
   <section id="slides" class="py-24">
     <div class="max-w-7xl mx-auto px-6">
-
       <div class="mb-16">
         <h2 class="section-title text-4xl font-black mb-6">教學簡報 Slides</h2>
         <p class="text-slate-600 max-w-3xl text-lg leading-relaxed mt-4">
           課堂投影片重點圖片整理，含 CPR 基本概念圖與胸外按壓示意。
         </p>
       </div>
-
-      <!-- Main CPR diagram -->
       <div class="mb-8 bg-white rounded-[28px] p-6 border border-slate-200 shadow-sm">
         <div class="text-sm font-semibold text-slate-500 mb-4">CPR 基本概念圖（胸外按壓與血流方向）</div>
         <img src="cpr.png" alt="CPR 示意圖" class="gallery-img max-h-[400px] object-contain mx-auto">
       </div>
-
-      <!-- Slides grid -->
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-[20px] p-4 border border-slate-200 shadow-sm">
           <img src="CPRPPT/CPRPPT1.jpeg" alt="Slide 1" class="gallery-img">
@@ -323,28 +428,22 @@
           <div class="mt-3 text-sm text-slate-500 text-center font-medium">Slide 13</div>
         </div>
       </div>
-
     </div>
   </section>
 
   <!-- Section 3: Clinical Cases -->
   <section id="cases" class="py-24 bg-white border-y border-slate-200">
     <div class="max-w-7xl mx-auto px-6">
-
       <div class="mb-16">
         <h2 class="section-title text-4xl font-black mb-6">臨床情境 Clinical Scenarios</h2>
         <p class="text-slate-600 max-w-3xl text-lg leading-relaxed mt-4">
           運動場常見猝死情境分析，理解共同病理機轉。
         </p>
       </div>
-
       <div class="grid lg:grid-cols-3 gap-8 mb-12">
-
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="flex items-center justify-between mb-6">
-            <span class="px-4 py-2 rounded-full bg-orange-100 text-orange-700 text-sm font-semibold">
-              球場急救
-            </span>
+            <span class="px-4 py-2 rounded-full bg-orange-100 text-orange-700 text-sm font-semibold">球場急救</span>
             <span class="text-2xl">🏀</span>
           </div>
           <h3 class="text-xl font-bold mb-4">籃球場猝倒</h3>
@@ -357,12 +456,9 @@
             </div>
           </div>
         </div>
-
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="flex items-center justify-between mb-6">
-            <span class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">
-              耐力運動
-            </span>
+            <span class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">耐力運動</span>
             <span class="text-2xl">🏃</span>
           </div>
           <h3 class="text-xl font-bold mb-4">馬拉松選手倒地</h3>
@@ -375,12 +471,9 @@
             </div>
           </div>
         </div>
-
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="flex items-center justify-between mb-6">
-            <span class="px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold">
-              重訓環境
-            </span>
+            <span class="px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold">重訓環境</span>
             <span class="text-2xl">🏋️</span>
           </div>
           <h3 class="text-xl font-bold mb-4">健身房訓練中倒下</h3>
@@ -393,10 +486,7 @@
             </div>
           </div>
         </div>
-
       </div>
-
-      <!-- Common mechanism highlight -->
       <div class="bg-gradient-to-r from-red-600 to-red-500 rounded-[28px] p-8 text-white">
         <div class="text-sm font-bold text-red-200 uppercase tracking-widest mb-3">共同病理機轉</div>
         <div class="text-2xl font-black">
@@ -406,54 +496,38 @@
           無論何種運動情境，急救邏輯一致：立即 CPR + 盡快 AED。
         </p>
       </div>
-
     </div>
   </section>
 
   <!-- Section 4: Procedure -->
   <section id="procedure" class="py-24">
     <div class="max-w-7xl mx-auto px-6">
-
       <div class="mb-16">
         <h2 class="section-title text-4xl font-black mb-6">處理流程 CPR + AED</h2>
         <p class="text-slate-600 max-w-3xl text-lg leading-relaxed mt-4">
           依序執行，中斷按壓會降低腦灌流，存活率將顯著下降。
         </p>
       </div>
-
       <div class="grid lg:grid-cols-2 gap-12 items-start">
-
-        <!-- Steps -->
         <div class="space-y-4">
-
           <div class="flex gap-5 items-start">
-            <div class="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-xl shrink-0">
-              1
-            </div>
+            <div class="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-xl shrink-0">1</div>
             <div class="bg-white rounded-2xl p-6 border border-slate-200 flex-1 shadow-sm">
               <div class="font-bold text-lg mb-1">確認意識與呼吸</div>
               <p class="text-slate-600 text-sm">拍肩大聲呼叫，觀察有無正常呼吸（不超過 10 秒）。</p>
             </div>
           </div>
-
           <div class="w-0.5 h-6 bg-slate-200 ml-6"></div>
-
           <div class="flex gap-5 items-start">
-            <div class="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-xl shrink-0">
-              2
-            </div>
+            <div class="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-xl shrink-0">2</div>
             <div class="bg-white rounded-2xl p-6 border border-slate-200 flex-1 shadow-sm">
               <div class="font-bold text-lg mb-1">呼叫急救 / 取 AED</div>
               <p class="text-slate-600 text-sm">呼叫旁人撥打 119，同時指派人取得最近的 AED。</p>
             </div>
           </div>
-
           <div class="w-0.5 h-6 bg-slate-200 ml-6"></div>
-
           <div class="flex gap-5 items-start">
-            <div class="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-xl shrink-0">
-              3
-            </div>
+            <div class="w-12 h-12 rounded-2xl bg-red-600 text-white flex items-center justify-center font-black text-xl shrink-0">3</div>
             <div class="bg-white rounded-2xl p-6 border border-red-200 bg-red-50 flex-1 shadow-sm">
               <div class="font-bold text-lg mb-1 text-red-700">立即開始胸外按壓</div>
               <p class="text-slate-600 text-sm">
@@ -462,34 +536,23 @@
               </p>
             </div>
           </div>
-
           <div class="w-0.5 h-6 bg-slate-200 ml-6"></div>
-
           <div class="flex gap-5 items-start">
-            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black text-xl shrink-0">
-              4
-            </div>
+            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black text-xl shrink-0">4</div>
             <div class="bg-white rounded-2xl p-6 border border-slate-200 flex-1 shadow-sm">
               <div class="font-bold text-lg mb-1">使用 AED</div>
               <p class="text-slate-600 text-sm">開機後依語音指示貼片、分析、電擊。電擊後立刻恢復 CPR。</p>
             </div>
           </div>
-
           <div class="w-0.5 h-6 bg-slate-200 ml-6"></div>
-
           <div class="flex gap-5 items-start">
-            <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shrink-0">
-              5
-            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black text-xl shrink-0">5</div>
             <div class="bg-white rounded-2xl p-6 border border-slate-200 flex-1 shadow-sm">
               <div class="font-bold text-lg mb-1">持續 CPR 直到救護車到達</div>
               <p class="text-slate-600 text-sm">每 2 分鐘輪換施救者，避免疲勞導致按壓品質下降。</p>
             </div>
           </div>
-
         </div>
-
-        <!-- Key principle box -->
         <div class="space-y-6">
           <div class="bg-slate-900 text-white rounded-[28px] p-8">
             <div class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4">核心原則</div>
@@ -502,7 +565,6 @@
               就像球隊換戰術：按壓 = 替補維持節奏，AED = 關鍵重啟。
             </p>
           </div>
-
           <div class="bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
             <div class="text-sm font-bold text-slate-500 uppercase tracking-widest mb-4">按壓技術要點</div>
             <div class="space-y-4">
@@ -525,7 +587,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </section>
@@ -533,16 +594,13 @@
   <!-- Section 5: Deep Discussion -->
   <section id="discussion" class="py-24 bg-white border-t border-slate-200">
     <div class="max-w-7xl mx-auto px-6">
-
       <div class="mb-16">
         <h2 class="section-title text-4xl font-black mb-6">深度討論 Discussion</h2>
         <p class="text-slate-600 max-w-3xl text-lg leading-relaxed mt-4">
           進一步思考 CPR 的臨床意義與爭議。
         </p>
       </div>
-
       <div class="grid md:grid-cols-3 gap-8">
-
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="text-3xl mb-4">💡</div>
           <h3 class="font-bold text-lg mb-3">為什麼「不中斷按壓」是關鍵？</h3>
@@ -552,7 +610,6 @@
             每次中斷都使存活率顯著下降。
           </p>
         </div>
-
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="text-3xl mb-4">🏃</div>
           <h3 class="font-bold text-lg mb-3">為什麼運動員猝死常無預警？</h3>
@@ -562,7 +619,6 @@
             可能誘發致命性心律不整。
           </p>
         </div>
-
         <div class="card-hover bg-slate-50 rounded-[28px] p-8 border border-slate-200">
           <div class="text-3xl mb-4">🧠</div>
           <h3 class="font-bold text-lg mb-3">CPR 成功的標準是心跳還是腦功能？</h3>
@@ -572,7 +628,6 @@
             即患者能夠有意義地恢復認知與功能。
           </p>
         </div>
-
       </div>
     </div>
   </section>
@@ -638,6 +693,5 @@
       </div>
     </div>
   </footer>
-
 </body>
 </html>
