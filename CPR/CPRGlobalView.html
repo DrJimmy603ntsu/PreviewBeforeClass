@@ -72,7 +72,6 @@
       transform: scale(1.02);
       box-shadow: 0 8px 24px rgba(0,0,0,0.1);
     }
-
     /* Kahoot banner styles */
     .kahoot-banner {
       background: linear-gradient(135deg, #46178f 0%, #6b21d4 40%, #8b2fc9 70%, #5f1d8a 100%);
@@ -141,9 +140,28 @@
     .kahoot-icon-wrap {
       animation: pulse-ring 2.5s ease-in-out infinite;
     }
+    /* Lesson card styles */
+    .lesson-card {
+      transition: all 0.25s ease;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .lesson-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(37,99,235,0.12);
+      border-color: #93c5fd;
+    }
+    .lesson-card:hover .lesson-arrow {
+      transform: translateX(4px);
+    }
+    .lesson-arrow {
+      transition: transform 0.2s ease;
+    }
   </style>
 </head>
 <body class="font-sans text-slate-800">
+
   <!-- Navbar -->
   <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-lg">
     <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -160,6 +178,7 @@
       </div>
       <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
         <a href="#quiz" class="hover:text-purple-600 transition font-semibold text-purple-700">📝 課前測驗</a>
+        <a href="#lesson1" class="hover:text-blue-600 transition font-semibold text-blue-600">第一堂課</a>
         <a href="#principles" class="hover:text-red-600 transition">核心原理</a>
         <a href="#slides" class="hover:text-red-600 transition">教學簡報</a>
         <a href="#cases" class="hover:text-red-600 transition">臨床情境</a>
@@ -175,18 +194,14 @@
 
   <!-- ✅ Kahoot Pre-Quiz Banner -->
   <section id="quiz" class="kahoot-banner py-14 px-6">
-    <!-- Decorative dots -->
     <div class="kahoot-dots" aria-hidden="true">
       <span style="width:180px;height:180px;top:-60px;left:-40px;"></span>
       <span style="width:80px;height:80px;top:20px;right:120px;"></span>
       <span style="width:120px;height:120px;bottom:-40px;right:-20px;"></span>
       <span style="width:50px;height:50px;bottom:30px;left:200px;"></span>
     </div>
-
     <div class="max-w-7xl mx-auto relative z-10">
       <div class="flex flex-col lg:flex-row items-center justify-between gap-10">
-
-        <!-- Left: text content -->
         <div class="flex items-start gap-6 flex-1">
           <div class="kahoot-icon-wrap shrink-0">
             <div class="w-20 h-20 rounded-3xl bg-white/10 border border-white/20 flex items-center justify-center text-4xl backdrop-blur-sm shadow-lg">
@@ -195,30 +210,21 @@
           </div>
           <div>
             <div class="flex flex-wrap items-center gap-3 mb-3">
-              <span class="kahoot-badge">
-                <span>⚡</span> 課前暖身
-              </span>
-              <span class="kahoot-badge">
-                <span>🧠</span> 知識測驗
-              </span>
-              <span class="kahoot-badge">
-                <span>🏆</span> Kahoot!
-              </span>
+              <span class="kahoot-badge"><span>⚡</span> 課前暖身</span>
+              <span class="kahoot-badge"><span>🧠</span> 知識測驗</span>
+              <span class="kahoot-badge"><span>🏆</span> Kahoot!</span>
             </div>
             <h2 class="text-3xl lg:text-4xl font-black text-white mb-3 leading-tight">
               課前測驗 Pre-Class Quiz
             </h2>
             <p class="text-purple-200 text-lg leading-relaxed max-w-xl">
-              上課前先來挑戰一下！測試你對 CPR 的既有認知，
-              看看哪些觀念需要加強。
+              上課前先來挑戰一下！測試你對 CPR 的既有認知，看看哪些觀念需要加強。
             </p>
             <p class="text-purple-300 text-sm mt-2">
               完成後保留結果，課後可以重新測驗比較進步幅度。
             </p>
           </div>
         </div>
-
-        <!-- Right: CTA -->
         <div class="shrink-0 flex flex-col items-center gap-4">
           <a
             href="https://create.kahoot.it/details/02314109-4be3-4359-8502-6bb38c418362"
@@ -235,11 +241,52 @@
               <path d="M7 17L17 7M17 7H7M17 7v10"/>
             </svg>
           </a>
-          <p class="text-purple-300 text-xs text-center">
-            點擊後將在新分頁開啟 Kahoot 測驗
-          </p>
+          <p class="text-purple-300 text-xs text-center">點擊後將在新分頁開啟 Kahoot 測驗</p>
         </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- ✅ NEW: Section - Course Units / Lesson 1 -->
+  <section id="lesson1" class="py-16 bg-slate-50 border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="mb-10">
+        <h2 class="section-title text-4xl font-black mb-6">課程單元 Course Units</h2>
+        <p class="text-slate-600 max-w-3xl text-lg leading-relaxed mt-4">
+          點選單元卡片，進入對應的課程內容頁面。
+        </p>
+      </div>
+      <div class="grid md:grid-cols-3 gap-8">
+        <!-- Lesson 1 Card -->
+        <a href="CPRAEDDNR.html" class="lesson-card card-hover bg-white rounded-[28px] p-8 border border-blue-200 shadow-sm group">
+          <div class="flex items-center justify-between mb-5">
+            <span class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">第一堂課</span>
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl">🫀</div>
+          </div>
+          <h3 class="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition mb-3">
+            課程介紹與心跳停止
+          </h3>
+          <p class="text-slate-500 text-sm leading-relaxed flex-1">
+            了解本課程架構，深入探討心跳停止的病理機轉、CPR、AED 與 DNR 的核心概念與臨床應用。
+          </p>
+          <div class="flex items-center gap-2 text-blue-600 font-semibold text-sm mt-6 pt-5 border-t border-slate-100">
+            進入課程
+            <svg class="lesson-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 17L17 7M17 7H7M17 7v10"/>
+            </svg>
+          </div>
+        </a>
+        <!-- Placeholder cards for future lessons -->
+        <div class="bg-white rounded-[28px] p-8 border border-dashed border-slate-300 flex flex-col items-center justify-center text-center opacity-50 min-h-[220px]">
+          <div class="text-3xl mb-3">➕</div>
+          <div class="text-slate-400 font-semibold">第二堂課</div>
+          <div class="text-slate-400 text-sm mt-1">即將推出</div>
+        </div>
+        <div class="bg-white rounded-[28px] p-8 border border-dashed border-slate-300 flex flex-col items-center justify-center text-center opacity-50 min-h-[220px]">
+          <div class="text-3xl mb-3">➕</div>
+          <div class="text-slate-400 font-semibold">第三堂課</div>
+          <div class="text-slate-400 text-sm mt-1">即將推出</div>
+        </div>
       </div>
     </div>
   </section>
@@ -693,5 +740,6 @@
       </div>
     </div>
   </footer>
+
 </body>
 </html>
