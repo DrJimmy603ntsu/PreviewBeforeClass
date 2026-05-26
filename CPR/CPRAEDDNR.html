@@ -1,1 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>運動場域急救互動式課程</title>
+  <style>
+    body {
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      margin: 0;
+      background: #f5f7fb;
+      color: #222;
+    }
+    header {
+      background: #1f3b57;
+      color: white;
+      padding: 16px;
+      text-align: center;
+    }
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .btn {
+      padding: 10px 14px;
+      margin: 6px 0;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: block;
+      width: 100%;
+      text-align: left;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .correct { background: #d4edda; }
+    .wrong { background: #f8d7da; }
+    .neutral { background: #e2e3e5; }
+    .section-title {
+      font-size: 20px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    .small {
+      font-size: 13px;
+      color: #555;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
 
+<header>
+  <h2>運動場域急救互動式情境課程</h2>
+  <div class="small">CPR / AED / DNR × Clinical Reasoning × Counterintuitive Training</div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <div class="section-title">🧠 教學模式說明</div>
+    <ul>
+      <li>所有題目為「反直覺臨床決策」設計</li>
+      <li>不考記憶，考判斷與優先順序</li>
+      <li>強調 Human Factors 與 Teamwork</li>
+      <li>每題包含 Cognitive Bias 分析</li>
+    </ul>
+  </div>
+
+  <!-- CASE 1 -->
+  <div class="card">
+    <div class="section-title">🏃 Case 1：籃球場倒地</div>
+    <p>一名 19 歲男性球員，在比賽後突然倒地，意識喪失。</p>
+    <p><b>現場資訊：</b>旁人說他只是抽筋，仍有呼吸「看起來正常」。</p>
+    
+    <div class="small">⏱ 你會怎麼做？（反直覺題）</div>
+
+    <button class="btn neutral" onclick="answer(false,this)">A. 等待救護車，避免誤判</button>
+    <button class="btn neutral" onclick="answer(false,this)">B. 先讓他側躺觀察</button>
+    <button class="btn neutral" onclick="answer(true,this)">C. 立即檢查反應與呼吸，無正常呼吸即啟動 CPR + AED</button>
+    <button class="btn neutral" onclick="answer(false,this)">D. 判斷可能抽筋，按摩肌肉</button>
+
+    <div class="hidden" id="fb1">
+      <hr>
+      <p><b>正確答案：</b> C</p>
+      <p><b>Cognitive Bias：</b> Normalcy Bias（誤以為只是抽筋）</p>
+      <p><b>解析：</b> 年輕運動員倒地＝高風險心因性猝死，需立即 CPR + AED。</p>
+    </div>
+  </div>
+
+  <!-- CASE 2 -->
+  <div class="card">
+    <div class="section-title">⚡ Case 2：健身房胸痛</div>
+    <p>45 歲男性重訓後胸痛，自述「應該是拉傷」。</p>
+    <p>生命徵象穩定，但持續冒冷汗。</p>
+
+    <div class="small">⏱ 最優先判斷？</div>
+
+    <button class="btn neutral" onclick="answer(false,this)">A. 肌肉拉傷，冰敷即可</button>
+    <button class="btn neutral" onclick="answer(true,this)">B. 視為 ACS，立即啟動 EMS</button>
+    <button class="btn neutral" onclick="answer(false,this)">C. 等疼痛加劇再處理</button>
+    <button class="btn neutral" onclick="answer(false,this)">D. 讓患者自行回家休息</button>
+
+    <div class="hidden" id="fb2">
+      <hr>
+      <p><b>正確答案：</b> B</p>
+      <p><b>Cognitive Bias：</b> Anchoring Bias（被「拉傷」說法誤導）</p>
+      <p><b>解析：</b> 出汗 + 胸痛＝需優先排除 AMI</p>
+    </div>
+  </div>
+
+  <!-- CASE 3 -->
+  <div class="card">
+    <div class="section-title">⚖️ Case 3：DNR 不確定</div>
+    <p>運動場邊 70 歲觀眾倒地，家屬說「他有 DNR」，但沒有文件。</p>
+
+    <div class="small">⏱ 你會怎麼做？</div>
+
+    <button class="btn neutral" onclick="answer(true,this)">A. 立即開始 CPR</button>
+    <button class="btn neutral" onclick="answer(false,this)">B. 等文件確認</button>
+    <button class="btn neutral" onclick="answer(false,this)">C. 不處置</button>
+    <button class="btn neutral" onclick="answer(false,this)">D. 只給氧氣不做 CPR</button>
+
+    <div class="hidden" id="fb3">
+      <hr>
+      <p><b>正確答案：</b> A</p>
+      <p><b>Cognitive Bias：</b> Authority Bias（過度相信家屬說法）</p>
+      <p><b>解析：</b> 無正式 DNR 文件＝應啟動 CPR</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function answer(isCorrect, btn) {
+  const parent = btn.parentElement;
+  const fb = parent.querySelector("div.hidden");
+  fb.style.display = "block";
+
+  const buttons = parent.querySelectorAll("button");
+  buttons.forEach(b => {
+    b.disabled = true;
+    if (b === btn) {
+      b.classList.add(isCorrect ? "correct" : "wrong");
+    }
+  });
+}
+</script>
+
+</body>
+</html>
