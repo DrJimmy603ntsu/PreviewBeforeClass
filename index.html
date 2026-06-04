@@ -3,550 +3,969 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>應用病理學｜運動保健醫學教育平台</title>
-  <meta name="description" content="體育大學運動保健學系應用病理學學習平台，涵蓋常見症狀、常見疾病、運動醫學與臨床推理。" />
+  <title>應用病理學｜問題導向醫學教育平台</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: '#2563eb',
-            secondary: '#0f172a',
-            medical: '#0891b2'
-          },
-          fontFamily: {
-            sans: ['Inter', 'Noto Sans TC', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
   <style>
+    :root {
+      --c-ink: #0f172a;
+      --c-cream: #f9f6f0;
+      --c-warm: #f4ede0;
+      --c-red: #b91c1c;
+      --c-red-light: #fef2f2;
+      --c-amber: #92400e;
+      --c-amber-light: #fffbeb;
+      --c-blue: #1d4ed8;
+      --c-blue-light: #eff6ff;
+      --c-teal: #0f766e;
+      --c-teal-light: #f0fdfa;
+    }
     html { scroll-behavior: smooth; }
-    body { background: #f8fafc; }
-    .glass { background: rgba(255,255,255,0.75); backdrop-filter: blur(10px); }
-    .hero-gradient {
-      background:
-        radial-gradient(circle at top left, rgba(37,99,235,0.25), transparent 30%),
-        radial-gradient(circle at bottom right, rgba(8,145,178,0.2), transparent 35%),
-        linear-gradient(135deg, #eff6ff 0%, #f8fafc 100%);
+    body {
+      font-family: 'DM Sans', 'Noto Sans TC', sans-serif;
+      background: var(--c-cream);
+      color: var(--c-ink);
     }
-    .card-hover { transition: all 0.25s ease; }
-    .card-hover:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
-    .section-title { position: relative; display: inline-block; }
-    .section-title::after {
+    .display { font-family: 'DM Serif Display', serif; }
+    .display-italic { font-family: 'DM Serif Display', serif; font-style: italic; }
+
+    /* Grain texture */
+    body::before {
       content: '';
-      position: absolute;
-      bottom: -8px; left: 0;
-      width: 70px; height: 4px;
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+    * { position: relative; z-index: 1; }
+
+    /* Divider rule */
+    .rule { border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 0; }
+
+    /* Question card style */
+    .q-card {
+      border: 1.5px solid rgba(0,0,0,0.08);
+      background: white;
+      border-radius: 20px;
+      transition: all 0.25s ease;
+    }
+    .q-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.07); }
+
+    /* Think step */
+    .think-step {
+      border-left: 3px solid transparent;
+      padding-left: 20px;
+      transition: border-color 0.2s;
+    }
+    .think-step.active { border-left-color: var(--c-red); }
+
+    /* Pill badge */
+    .pill {
+      display: inline-block;
+      padding: 4px 14px;
       border-radius: 999px;
-      background: linear-gradient(to right, #2563eb, #0891b2);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
-    .lesson-badge {
-      background: linear-gradient(135deg, #dc2626, #b91c1c);
+    .pill-red { background: var(--c-red); color: white; }
+    .pill-amber { background: #d97706; color: white; }
+    .pill-blue { background: var(--c-blue); color: white; }
+    .pill-teal { background: var(--c-teal); color: white; }
+    .pill-gray { background: #374151; color: white; }
+
+    /* Accordion */
+    .accord-body { display: none; }
+    .accord-body.open { display: block; }
+    .accord-icon { transition: transform 0.2s; }
+    .accord-icon.open { transform: rotate(45deg); }
+
+    /* Facilitation dialog */
+    .chat-bubble-q {
+      background: var(--c-ink);
       color: white;
-      font-size: 0.7rem; font-weight: 700;
-      padding: 3px 10px; border-radius: 999px;
-      letter-spacing: 0.05em;
-      display: inline-block; margin-bottom: 8px;
+      border-radius: 18px 18px 18px 4px;
+      padding: 14px 20px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-width: 85%;
     }
-    .lesson-badge-amber {
-      background: linear-gradient(135deg, #d97706, #b45309);
-      color: white;
-      font-size: 0.7rem; font-weight: 700;
-      padding: 3px 10px; border-radius: 999px;
-      letter-spacing: 0.05em;
-      display: inline-block; margin-bottom: 8px;
+    .chat-bubble-a {
+      background: white;
+      border: 1.5px solid rgba(0,0,0,0.1);
+      border-radius: 18px 18px 4px 18px;
+      padding: 14px 20px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-width: 85%;
+      margin-left: auto;
     }
-    .featured-card {
-      border: 2px solid #fca5a5;
-      background: linear-gradient(135deg, #fff5f5 0%, #fff 60%);
-      position: relative; overflow: hidden;
+    .chat-typing {
+      display: flex; gap: 5px; align-items: center; padding: 16px 20px;
+      background: var(--c-ink); border-radius: 18px 18px 18px 4px;
+      max-width: 80px;
     }
-    .featured-card::before {
+    .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      animation: blink 1.2s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%,80%,100%{opacity:0.3} 40%{opacity:1} }
+
+    /* Red flag pulse */
+    @keyframes pulse-ring {
+      0% { transform: scale(1); opacity: 0.4; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    .pulse-dot {
+      position: relative; display: inline-block;
+      width: 10px; height: 10px;
+    }
+    .pulse-dot::before {
       content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 4px;
-      background: linear-gradient(to right, #dc2626, #f97316);
+      position: absolute; inset: 0;
+      border-radius: 50%; background: #ef4444;
+      animation: pulse-ring 1.5s ease-out infinite;
     }
-    .teaching-card {
-      border: 2px solid #fde68a;
-      background: linear-gradient(135deg, #fffbeb 0%, #fff 60%);
-      position: relative; overflow: hidden;
-    }
-    .teaching-card::before {
+    .pulse-dot::after {
       content: '';
-      position: absolute; top: 0; left: 0; right: 0; height: 4px;
-      background: linear-gradient(to right, #d97706, #f59e0b, #10b981);
+      position: absolute; inset: 0;
+      border-radius: 50%; background: #ef4444;
+    }
+
+    /* Sticky nav */
+    header { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+    /* Progress bar */
+    .progress-track {
+      height: 4px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, #b91c1c, #f59e0b);
+      transition: width 0.4s ease;
+    }
+
+    /* Scenario reveal animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.5s ease forwards; }
+
+    /* Quiz option */
+    .quiz-opt {
+      border: 1.5px solid rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 14px 18px;
+      cursor: pointer;
+      transition: all 0.18s;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .quiz-opt:hover { border-color: var(--c-blue); background: var(--c-blue-light); }
+    .quiz-opt.correct { border-color: var(--c-teal); background: var(--c-teal-light); }
+    .quiz-opt.wrong { border-color: var(--c-red); background: var(--c-red-light); }
+    .quiz-opt.disabled { pointer-events: none; opacity: 0.6; }
+
+    /* Section divider with label */
+    .section-label {
+      display: flex; align-items: center; gap: 16px; margin-bottom: 40px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: rgba(0,0,0,0.1);
     }
   </style>
 </head>
-<body class="font-sans text-slate-800">
-  <!-- Navbar -->
-  <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-lg">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+<body>
+
+  <!-- ─── NAVBAR ─────────────────────────────────────────── -->
+  <header class="sticky top-0 z-50 border-b border-black/10 bg-[#f9f6f0]/90">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg">AP</div>
-        <div>
-          <h1 class="font-bold text-lg">應用病理學平台</h1>
-          <p class="text-xs text-slate-500">Applied Pathology Learning Platform</p>
-        </div>
+        <div class="w-9 h-9 rounded-xl bg-[#0f172a] text-white flex items-center justify-center font-bold text-sm tracking-tight">AP</div>
+        <span class="font-semibold text-base">應用病理學平台</span>
+        <span class="pill pill-red ml-2 hidden sm:inline-block">PBL 問題導向</span>
       </div>
-      <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
-        <a href="#symptoms" class="hover:text-blue-600">常見症狀</a>
-        <a href="#diseases" class="hover:text-blue-600">常見疾病</a>
-        <a href="#cases" class="hover:text-blue-600">臨床案例</a>
-        <a href="#quiz" class="hover:text-blue-600">測驗系統</a>
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-slate-600">
+        <a href="#scenario" class="hover:text-black transition">臨床情境</a>
+        <a href="#pbl" class="hover:text-black transition">問題探索</a>
+        <a href="#facilitation" class="hover:text-black transition">引導討論</a>
+        <a href="#quiz" class="hover:text-black transition">反思測驗</a>
       </nav>
-      <button onclick="toggleDarkMode()" class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm">深色模式</button>
     </div>
   </header>
 
-  <!-- Hero -->
-  <section class="hero-gradient min-h-[88vh] flex items-center">
-    <div class="max-w-7xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-16 items-center">
-      <div>
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-6">
-          運動保健 × 病理學 × 臨床思考
-        </div>
-        <h1 class="text-5xl lg:text-7xl font-black leading-tight text-slate-900 mb-6">
-          應用病理學
-          <span class="text-blue-600 block">醫學教育平台</span>
-        </h1>
-        <p class="text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl">
-          專為體育大學運動保健學系學生設計，整合常見症狀、疾病、運動醫學與臨床推理，建立完整的基礎醫學思維。
-        </p>
-        <div class="flex flex-wrap gap-4">
-          <button class="px-8 py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">開始學習</button>
-          <button class="px-8 py-4 rounded-2xl border border-slate-300 bg-white font-semibold hover:bg-slate-100 transition">查看課程</button>
-        </div>
-        <div class="mt-12 flex flex-wrap gap-4">
-          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 min-w-[180px]">
-            <div class="text-3xl font-black text-blue-600">48+</div>
-            <div class="text-sm text-slate-500 mt-1">常見症狀</div>
-          </div>
-          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 min-w-[180px]">
-            <div class="text-3xl font-black text-cyan-600">32+</div>
-            <div class="text-sm text-slate-500 mt-1">常見疾病</div>
-          </div>
-          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 min-w-[180px]">
-            <div class="text-3xl font-black text-emerald-600">120+</div>
-            <div class="text-sm text-slate-500 mt-1">臨床案例</div>
-          </div>
-        </div>
-      </div>
-      <div class="relative">
-        <div class="bg-white rounded-[32px] p-8 shadow-2xl border border-slate-200">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="font-bold text-xl">臨床推理流程</h3>
-            <span class="px-3 py-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold">Red Flag</span>
-          </div>
-          <div class="space-y-5">
-            <div class="p-5 rounded-2xl bg-blue-50 border border-blue-100">
-              <div class="font-bold text-blue-700 mb-1">症狀</div>
-              <div class="text-lg font-semibold">胸痛 Chest Pain</div>
-            </div>
-            <div class="text-center text-2xl text-slate-400">↓</div>
-            <div class="p-5 rounded-2xl bg-amber-50 border border-amber-100">
-              <div class="font-bold text-amber-700 mb-1">鑑別診斷</div>
-              <div class="space-y-2 text-sm">
-                <div>• 心肌缺血 Myocardial Ischemia</div>
-                <div>• GERD 胃食道逆流</div>
-                <div>• 肋軟骨炎 Costochondritis</div>
-                <div>• 氣胸 Pneumothorax</div>
-              </div>
-            </div>
-            <div class="text-center text-2xl text-slate-400">↓</div>
-            <div class="p-5 rounded-2xl bg-red-50 border border-red-200">
-              <div class="font-bold text-red-700 mb-2">危險警訊</div>
-              <div class="text-sm space-y-2">
-                <div>⚠️ 呼吸困難</div>
-                <div>⚠️ 冒冷汗</div>
-                <div>⚠️ 放射性疼痛</div>
-                <div>⚠️ 意識改變</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <!-- ─── HERO ───────────────────────────────────────────── -->
+  <section class="max-w-6xl mx-auto px-6 pt-20 pb-12">
+    <div class="max-w-3xl">
+      <div class="pill pill-gray mb-6">運動保健學系 × 問題導向學習</div>
+      <h1 class="display text-6xl lg:text-8xl leading-[1.0] text-[#0f172a] mb-6">
+        學習，<br>
+        從一個<br>
+        <span class="display-italic text-[#b91c1c]">好問題</span><br>
+        開始。
+      </h1>
+      <p class="text-lg text-slate-500 leading-relaxed max-w-xl mt-8">
+        不是記憶知識，而是解決問題。每一個臨床情境都是你的起點——透過提問、思考、討論，建立真正屬於你的醫學判斷。
+      </p>
+    </div>
+
+    <!-- 三個核心問題預覽 -->
+    <div class="mt-16 grid md:grid-cols-3 gap-5">
+      <a href="#scenario" class="q-card p-7 block group">
+        <div class="pill pill-red mb-4">今日情境</div>
+        <p class="display text-xl leading-snug mb-3">一位運動員在比賽後倒地，你看到了什麼？</p>
+        <p class="text-sm text-slate-500">點擊進入情境，開始你的臨床推理</p>
+        <div class="mt-4 text-sm font-semibold text-red-700 flex items-center gap-1 group-hover:gap-2 transition-all">進入情境 →</div>
+      </a>
+      <a href="#pbl" class="q-card p-7 block group">
+        <div class="pill pill-amber mb-4">關鍵問題</div>
+        <p class="display text-xl leading-snug mb-3">這個症狀的背後，有哪些可能？</p>
+        <p class="text-sm text-slate-500">用鑑別診斷的框架，系統地拆解問題</p>
+        <div class="mt-4 text-sm font-semibold text-amber-700 flex items-center gap-1 group-hover:gap-2 transition-all">開始探索 →</div>
+      </a>
+      <a href="#facilitation" class="q-card p-7 block group">
+        <div class="pill pill-teal mb-4">深入討論</div>
+        <p class="display text-xl leading-snug mb-3">如果你是現場的醫護人員，你的第一步是？</p>
+        <p class="text-sm text-slate-500">透過 Socratic 引導，找到你的決策邏輯</p>
+        <div class="mt-4 text-sm font-semibold text-teal-700 flex items-center gap-1 group-hover:gap-2 transition-all">參與討論 →</div>
+      </a>
     </div>
   </section>
 
-  <!-- Search -->
-  <section class="py-16 bg-white border-y border-slate-200">
-    <div class="max-w-5xl mx-auto px-6 text-center">
-      <h2 class="text-3xl font-black mb-4">搜尋症狀與疾病</h2>
-      <p class="text-slate-600 mb-8">快速查詢常見臨床症狀、病理機轉與疾病資訊</p>
-      <div class="flex flex-col md:flex-row gap-4">
-        <input type="text" placeholder="輸入症狀，例如：胸痛、頭痛、抽筋..."
-          class="flex-1 px-6 py-5 rounded-2xl border border-slate-300 focus:outline-none focus:ring-4 focus:ring-blue-100" />
-        <button class="px-8 py-5 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">搜尋</button>
-      </div>
+  <hr class="rule max-w-6xl mx-auto">
+
+  <!-- ─── CLINICAL SCENARIO ───────────────────────────────── -->
+  <section id="scenario" class="max-w-6xl mx-auto px-6 py-20">
+    <div class="section-label">
+      <span class="pill pill-red">第一步</span>
+      <span class="font-semibold text-xl">臨床情境 Clinical Scenario</span>
     </div>
-  </section>
 
-  <!-- Symptoms -->
-  <section id="symptoms" class="py-24">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="mb-16">
-        <h2 class="section-title text-4xl font-black mb-6">常見症狀 Symptoms</h2>
-        <p class="text-slate-600 max-w-3xl text-lg leading-relaxed">
-          以臨床常見主訴為核心，建立「症狀 → 鑑別診斷 → 疾病」的醫學思維。
-        </p>
-      </div>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-
-        <!-- 第一課之一：CPR -->
-        <a href="CPR/CPRGlobalView.html" class="card-hover featured-card rounded-[28px] p-8 shadow-sm block group">
-          <div class="lesson-badge">第一課之一</div>
-          <div class="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center text-3xl mb-4">🫀</div>
-          <h3 class="font-bold text-2xl mb-4 group-hover:text-red-600 transition-colors">CPR 心肺復甦術</h3>
-          <div class="space-y-3 text-slate-600">
-            <div>• 胸外按壓技巧</div>
-            <div>• 人工呼吸步驟</div>
-            <div>• AED 操作流程</div>
-            <div>• 成人 / 兒童 CPR</div>
-            <div>• 急救判斷時機</div>
-          </div>
-          <div class="mt-6 text-xs font-semibold text-red-500 flex items-center gap-1">
-            進入專區 <span class="group-hover:translate-x-1 transition-transform inline-block">→</span>
-          </div>
-        </a>
-
-        <!-- 神經系統 -->
-        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
-          <div class="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center text-3xl mb-6">🧠</div>
-          <h3 class="font-bold text-2xl mb-4">神經系統</h3>
-          <div class="space-y-3 text-slate-600">
-            <div>• 頭痛</div>
-            <div>• 意識不清</div>
-            <div>• 抽筋</div>
-            <div>• 暈厥</div>
-            <div>• 頭暈</div>
-          </div>
-        </div>
-
-        <!-- 心肺系統 -->
-        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
-          <div class="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center text-3xl mb-6">❤️</div>
-          <h3 class="font-bold text-2xl mb-4">心肺系統</h3>
-          <div class="space-y-3 text-slate-600">
-            <div>• 胸痛</div>
-            <div>• 呼吸困難</div>
-            <div>• 心悸</div>
-            <div>• 咳嗽</div>
-            <div>• 喘鳴</div>
-          </div>
-        </div>
-
-        <!-- 腸胃系統 -->
-        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
-          <div class="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl mb-6">🩺</div>
-          <h3 class="font-bold text-2xl mb-4">腸胃系統</h3>
-          <div class="space-y-3 text-slate-600">
-            <div>• 腹痛</div>
-            <div>• 腹瀉</div>
-            <div>• 嘔吐</div>
-            <div>• 黑便</div>
-            <div>• 噁心</div>
-          </div>
-        </div>
-
-        <!-- 運動醫學 -->
-        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
-          <div class="w-16 h-16 rounded-2xl bg-emerald-100 flex items-center justify-center text-3xl mb-6">🏃</div>
-          <h3 class="font-bold text-2xl mb-4">運動醫學</h3>
-          <div class="space-y-3 text-slate-600">
-            <div>• 運動傷害</div>
-            <div>• 肌肉痠痛</div>
-            <div>• 關節痛</div>
-            <div>• 抽筋</div>
-            <div>• 下背痛</div>
-          </div>
-        </div>
-
-        <!-- 急救醫學 -->
-        <div class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm">
-          <div class="w-16 h-16 rounded-2xl bg-rose-100 flex items-center justify-center text-3xl mb-6">🚑</div>
-          <h3 class="font-bold text-2xl mb-4">急救醫學</h3>
-          <div class="space-y-3 text-slate-600">
-            <div>• CPR 心肺復甦術</div>
-            <div>• 新版哈姆立克法</div>
-            <div>• AED 使用</div>
-            <div>• 異物梗塞處理</div>
-            <div>• 運動場急救</div>
-          </div>
-        </div>
-
-        <!-- 安寧緩和醫療 -->
-        <a href="Hospice/HospiceGlobalView.html" class="card-hover bg-white rounded-[28px] p-8 border border-slate-200 shadow-sm block group">
-          <div class="w-16 h-16 rounded-2xl bg-violet-100 flex items-center justify-center text-3xl mb-6">🕊️</div>
-          <h3 class="font-bold text-2xl mb-4 group-hover:text-violet-600 transition-colors">安寧緩和醫療</h3>
-          <div class="space-y-3 text-slate-600">
-            <div>• 疼痛控制</div>
-            <div>• 症狀緩解</div>
-            <div>• 心理支持</div>
-            <div>• 預立醫囑</div>
-            <div>• 臨終照護</div>
-          </div>
-          <div class="mt-6 text-xs font-semibold text-violet-500 flex items-center gap-1">
-            進入專區 <span class="group-hover:translate-x-1 transition-transform inline-block">→</span>
-          </div>
-        </a>
-
-        <!-- ★ 學思達教學技巧（新增） -->
-        <a href="TeachingSkillPromotion/ShareStartView.html" class="card-hover teaching-card rounded-[28px] p-8 shadow-sm block group">
-          <div class="lesson-badge-amber">教學方法</div>
-          <div class="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl mb-4">📚</div>
-          <h3 class="font-bold text-2xl mb-4 group-hover:text-amber-600 transition-colors">學思達教學技巧</h3>
-          <div class="space-y-3 text-slate-600">
-            <div>• 自學引導策略</div>
-            <div>• 思考提問設計</div>
-            <div>• 小組討論技巧</div>
-            <div>• 表達與呈現</div>
-            <div>• 閱讀素養培養</div>
-          </div>
-          <div class="mt-6 text-xs font-semibold text-amber-600 flex items-center gap-1">
-            進入專區 <span class="group-hover:translate-x-1 transition-transform inline-block">→</span>
-          </div>
-        </a>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- Diseases -->
-  <section id="diseases" class="py-24 bg-white border-y border-slate-200">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="mb-16">
-        <h2 class="section-title text-4xl font-black mb-6">常見疾病 Diseases</h2>
-        <p class="text-slate-600 max-w-3xl text-lg leading-relaxed">學習疾病病理機轉、臨床症狀、診斷與運動注意事項。</p>
-      </div>
-      <div class="grid lg:grid-cols-3 gap-8">
-        <div class="bg-slate-50 rounded-[32px] p-8 border border-slate-200">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="font-bold text-2xl">心血管</h3>
-            <span class="text-3xl">🫀</span>
-          </div>
-          <div class="space-y-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">高血壓 Hypertension</div>
-              <p class="text-sm text-slate-500 mt-2">最常見慢性疾病之一</p>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">冠心症 Coronary Artery Disease</div>
-              <p class="text-sm text-slate-500 mt-2">運動前風險評估重點</p>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">心律不整 Arrhythmia</div>
-              <p class="text-sm text-slate-500 mt-2">心悸與暈厥常見原因</p>
-            </div>
-          </div>
-        </div>
-        <div class="bg-slate-50 rounded-[32px] p-8 border border-slate-200">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="font-bold text-2xl">代謝疾病</h3>
-            <span class="text-3xl">🧪</span>
-          </div>
-          <div class="space-y-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">糖尿病 Diabetes Mellitus</div>
-              <p class="text-sm text-slate-500 mt-2">運動與血糖調控</p>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">高血脂 Hyperlipidemia</div>
-              <p class="text-sm text-slate-500 mt-2">動脈硬化危險因子</p>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">肥胖症 Obesity</div>
-              <p class="text-sm text-slate-500 mt-2">代謝症候群核心問題</p>
-            </div>
-          </div>
-        </div>
-        <div class="bg-slate-50 rounded-[32px] p-8 border border-slate-200">
-          <div class="flex items-center justify-between mb-6">
-            <h3 class="font-bold text-2xl">呼吸系統</h3>
-            <span class="text-3xl">🫁</span>
-          </div>
-          <div class="space-y-4">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">氣喘 Asthma</div>
-              <p class="text-sm text-slate-500 mt-2">運動誘發氣喘重要性</p>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">肺炎 Pneumonia</div>
-              <p class="text-sm text-slate-500 mt-2">感染性疾病學習</p>
-            </div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200">
-              <div class="font-semibold">COVID-19 後遺症</div>
-              <p class="text-sm text-slate-500 mt-2">運動恢復重點</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Red Flag -->
-  <section class="py-24">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="bg-gradient-to-r from-red-600 to-red-500 rounded-[36px] p-10 text-white shadow-2xl">
-        <div class="flex flex-col lg:flex-row gap-12 items-center justify-between">
+    <!-- Scenario card -->
+    <div class="bg-[#0f172a] text-white rounded-3xl overflow-hidden">
+      <div class="p-8 md:p-12">
+        <div class="flex items-start justify-between mb-8">
           <div>
-            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 text-sm font-semibold mb-6">⚠️ Red Flag Alert</div>
-            <h2 class="text-4xl font-black mb-6">危險症狀警示系統</h2>
-            <p class="text-red-100 text-lg leading-relaxed max-w-3xl">幫助學生快速辨識需要立即轉診與送醫的危險臨床徵象。</p>
+            <div class="text-slate-400 text-sm mb-2">今日情境 · 運動醫學</div>
+            <h2 class="display text-3xl md:text-4xl">馬拉松賽場上的緊急狀況</h2>
           </div>
-          <div class="grid grid-cols-2 gap-4 w-full lg:w-auto">
-            <div class="bg-white/10 rounded-2xl p-5"><div class="font-bold text-lg mb-2">胸痛＋冒冷汗</div><div class="text-sm text-red-100">疑似急性冠心症</div></div>
-            <div class="bg-white/10 rounded-2xl p-5"><div class="font-bold text-lg mb-2">意識不清</div><div class="text-sm text-red-100">需立即評估</div></div>
-            <div class="bg-white/10 rounded-2xl p-5"><div class="font-bold text-lg mb-2">呼吸困難</div><div class="text-sm text-red-100">低血氧風險</div></div>
-            <div class="bg-white/10 rounded-2xl p-5"><div class="font-bold text-lg mb-2">抽搐發作</div><div class="text-sm text-red-100">神經學急症</div></div>
+          <div class="flex items-center gap-2 bg-red-600/20 text-red-400 rounded-full px-4 py-2 text-sm font-semibold">
+            <span class="pulse-dot"></span>
+            <span>緊急情境</span>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Cases -->
-  <section id="cases" class="py-24 bg-white border-y border-slate-200">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="mb-16">
-        <h2 class="section-title text-4xl font-black mb-6">臨床案例 Clinical Cases</h2>
-        <p class="text-slate-600 text-lg max-w-3xl">使用 Case-Based Learning 建立臨床判讀與推理能力。</p>
-      </div>
-      <div class="grid lg:grid-cols-3 gap-8">
-        <div class="card-hover bg-slate-50 rounded-[32px] p-8 border border-slate-200">
-          <div class="flex items-center justify-between mb-6">
-            <span class="px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold">心血管案例</span>
-            <span class="text-2xl">🫀</span>
+        <div class="bg-white/5 rounded-2xl p-6 mb-8 border border-white/10">
+          <p class="text-slate-200 text-base leading-relaxed">
+            一位 <strong class="text-white">28 歲男性馬拉松選手</strong>，在距終點線 500 公尺處突然停步、搖晃，接著倒地。旁觀者立即呼叫你（運動保健人員）前往協助。
+          </p>
+          <div class="mt-5 grid sm:grid-cols-3 gap-4 text-sm">
+            <div class="bg-white/8 rounded-xl p-4">
+              <div class="text-slate-400 mb-1">環境條件</div>
+              <div class="font-semibold">氣溫 33°C，濕度 82%</div>
+            </div>
+            <div class="bg-white/8 rounded-xl p-4">
+              <div class="text-slate-400 mb-1">比賽距離</div>
+              <div class="font-semibold">全程馬拉松 42km</div>
+            </div>
+            <div class="bg-white/8 rounded-xl p-4">
+              <div class="text-slate-400 mb-1">現場條件</div>
+              <div class="font-semibold">無 AED，救護車 8 分鐘</div>
+            </div>
           </div>
-          <h3 class="text-2xl font-bold mb-4">運動中胸痛</h3>
-          <div class="space-y-4 text-slate-600 text-sm">
-            <div><strong>主訴：</strong>跑步時胸悶與呼吸困難</div>
-            <div><strong>病史：</strong>高血壓家族史</div>
-            <div><strong>Vital Signs：</strong>BP 168/96 mmHg</div>
-            <div><strong>鑑別診斷：</strong>心肌缺血、GERD、肋軟骨炎</div>
-          </div>
-          <button class="mt-8 w-full py-4 rounded-2xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition">查看案例</button>
         </div>
-        <div class="card-hover bg-slate-50 rounded-[32px] p-8 border border-slate-200">
-          <div class="flex items-center justify-between mb-6">
-            <span class="px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-sm font-semibold">運動醫學</span>
-            <span class="text-2xl">🏃</span>
-          </div>
-          <h3 class="text-2xl font-bold mb-4">馬拉松後肌肉疼痛</h3>
-          <div class="space-y-4 text-slate-600 text-sm">
-            <div><strong>主訴：</strong>全身痠痛與茶色尿</div>
-            <div><strong>病史：</strong>高強度耐力訓練</div>
-            <div><strong>實驗室：</strong>CK 顯著升高</div>
-            <div><strong>診斷：</strong>橫紋肌溶解症</div>
-          </div>
-          <button class="mt-8 w-full py-4 rounded-2xl bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition">查看案例</button>
-        </div>
-        <div class="card-hover bg-slate-50 rounded-[32px] p-8 border border-slate-200">
-          <div class="flex items-center justify-between mb-6">
-            <span class="px-4 py-2 rounded-full bg-purple-100 text-purple-700 text-sm font-semibold">神經案例</span>
-            <span class="text-2xl">🧠</span>
-          </div>
-          <h3 class="text-2xl font-bold mb-4">運動後意識改變</h3>
-          <div class="space-y-4 text-slate-600 text-sm">
-            <div><strong>主訴：</strong>比賽後意識混亂</div>
-            <div><strong>病史：</strong>高溫環境訓練</div>
-            <div><strong>可能原因：</strong>熱中暑、低血糖</div>
-            <div><strong>重點：</strong>立即降溫與急救</div>
-          </div>
-          <button class="mt-8 w-full py-4 rounded-2xl bg-purple-600 text-white font-semibold hover:bg-purple-700 transition">查看案例</button>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Quiz -->
-  <section id="quiz" class="py-24">
-    <div class="max-w-5xl mx-auto px-6">
-      <div class="text-center mb-16">
-        <h2 class="section-title text-4xl font-black mb-6 inline-block">Quiz 測驗系統</h2>
-        <p class="text-slate-600 text-lg mt-8">使用互動測驗強化病理學與臨床推理能力。</p>
-      </div>
-      <div class="bg-white rounded-[36px] p-10 shadow-xl border border-slate-200">
-        <div class="flex items-center justify-between mb-8">
-          <div>
-            <div class="text-sm font-semibold text-blue-600 mb-2">Clinical Reasoning Quiz</div>
-            <h3 class="text-3xl font-black">下列哪項為胸痛 Red Flag？</h3>
-          </div>
-          <div class="text-right">
-            <div class="text-sm text-slate-500">題目進度</div>
-            <div class="text-2xl font-black text-blue-600">3 / 10</div>
-          </div>
-        </div>
+        <!-- Facilitation questions -->
         <div class="space-y-4">
-          <button class="w-full text-left p-6 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition">A. 按壓胸壁疼痛</button>
-          <button class="w-full text-left p-6 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition">B. 運動後肌肉痠痛</button>
-          <button class="w-full text-left p-6 rounded-2xl border-2 border-red-500 bg-red-50">C. 胸痛伴隨呼吸困難與冒冷汗 ✓</button>
-          <button class="w-full text-left p-6 rounded-2xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition">D. 姿勢改變造成疼痛</button>
+          <p class="text-slate-300 text-sm font-semibold uppercase tracking-widest mb-4">在繼續之前，請先思考：</p>
+
+          <div class="think-step active" id="step1">
+            <div class="text-slate-400 text-sm mb-1">問題 1 / 觀察</div>
+            <p class="text-lg font-medium">你抵達現場的<span class="text-yellow-300">第一眼</span>，你會觀察什麼？為什麼？</p>
+          </div>
+          <div class="think-step" id="step2">
+            <div class="text-slate-400 text-sm mb-1">問題 2 / 假設</div>
+            <p class="text-lg font-medium">這個情境中，你認為<span class="text-yellow-300">最可能的診斷</span>是什麼？你的根據是？</p>
+          </div>
+          <div class="think-step" id="step3">
+            <div class="text-slate-400 text-sm mb-1">問題 3 / 行動</div>
+            <p class="text-lg font-medium">你的<span class="text-yellow-300">第一個行動</span>會是什麼？順序是否重要？</p>
+          </div>
         </div>
-        <div class="mt-8 p-6 rounded-2xl bg-emerald-50 border border-emerald-200">
-          <div class="font-bold text-emerald-700 mb-2">解析</div>
-          <p class="text-slate-700 leading-relaxed">胸痛合併呼吸困難、冒冷汗、放射痛等症狀時，需高度懷疑急性冠心症或重大心肺疾病。</p>
+
+        <button onclick="revealScenario()" class="mt-10 px-8 py-4 rounded-2xl bg-white text-[#0f172a] font-semibold hover:bg-slate-100 transition text-sm">
+          我已思考完畢，查看情境展開 →
+        </button>
+      </div>
+
+      <!-- Revealed content (hidden initially) -->
+      <div id="scenario-reveal" class="hidden border-t border-white/10 p-8 md:p-12">
+        <div class="pill pill-amber mb-6">情境展開</div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="bg-amber-500/10 border border-amber-400/20 rounded-2xl p-6">
+            <h4 class="font-bold text-amber-300 mb-4">初步評估發現</h4>
+            <div class="space-y-2 text-sm text-slate-300">
+              <div>• 意識：呼之能應，但意識混亂，無法正確回答問題</div>
+              <div>• 呼吸：費力，每分鐘 24 次</div>
+              <div>• 脈搏：每分鐘 130 次，微弱</div>
+              <div>• 皮膚：乾燥、燙熱、無汗</div>
+              <div>• 體溫（觸感）：極高溫</div>
+            </div>
+          </div>
+          <div class="bg-red-500/10 border border-red-400/20 rounded-2xl p-6">
+            <h4 class="font-bold text-red-300 mb-4">你現在需要回答</h4>
+            <div class="space-y-3 text-sm text-slate-300">
+              <div class="flex items-start gap-2">
+                <span class="text-red-400 mt-0.5">→</span>
+                <span>「乾燥無汗」與「高溫環境中的意識改變」告訴你什麼病理機轉？</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-red-400 mt-0.5">→</span>
+                <span>熱衰竭 vs 熱中暑，如何鑑別？鑑別的臨床意義是什麼？</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-red-400 mt-0.5">→</span>
+                <span>你的即刻處置優先順序是？理由為何？</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
-  <footer class="bg-slate-950 text-white py-16">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="grid md:grid-cols-4 gap-12 mb-12">
-        <div>
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center font-bold text-xl">AP</div>
-            <div>
-              <div class="font-bold text-lg">應用病理學平台</div>
-              <div class="text-sm text-slate-400">Applied Pathology</div>
+  <!-- ─── PBL PROBLEM EXPLORATION ────────────────────────── -->
+  <section id="pbl" class="bg-white border-y border-black/8 py-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="section-label">
+        <span class="pill pill-amber">第二步</span>
+        <span class="font-semibold text-xl">問題探索 Problem Exploration</span>
+      </div>
+
+      <div class="max-w-2xl mb-12">
+        <h2 class="display text-4xl mb-4">從症狀出發，<span class="display-italic text-amber-700">問對問題</span></h2>
+        <p class="text-slate-500 leading-relaxed">每個症狀卡片不提供答案，而是提供你需要問的問題。真正的學習，在於你自己找到答案的過程。</p>
+      </div>
+
+      <!-- Symptom cards with guided questions -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- 胸痛 -->
+        <div class="q-card p-7">
+          <div class="flex items-start justify-between mb-4">
+            <span class="pill pill-red">高危症狀</span>
+            <a href="CPR/CPRGlobalView.html" class="text-xs text-slate-400 hover:text-red-600 transition font-medium">CPR 專區 →</a>
+          </div>
+          <h3 class="display text-2xl mb-5">胸痛</h3>
+          <div class="space-y-3">
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你會問病人什麼？</div>
+              <div>疼痛是「壓迫感」還是「刺痛」？有何差異？</div>
+            </div>
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你的假設是？</div>
+              <div>列出 3 個以上的鑑別診斷，並說明你的優先順序</div>
+            </div>
+            <div class="text-sm border-l-2 border-red-400 pl-3 py-1 bg-red-50 rounded-r-lg">
+              <div class="text-red-600 text-xs font-semibold mb-1">⚠ 批判性思考</div>
+              <div>哪些合併症狀會讓你「立刻撥打 119」而不等待？</div>
             </div>
           </div>
-          <p class="text-slate-400 leading-relaxed">專為運動保健與醫學教育打造的臨床學習平台。</p>
-        </div>
-        <div>
-          <h4 class="font-bold text-lg mb-5">學習系統</h4>
-          <div class="space-y-3 text-slate-400">
-            <div>常見症狀</div>
-            <div>常見疾病</div>
-            <div>臨床案例</div>
-            <div>Quiz測驗</div>
+          <button onclick="toggleAccord(this)" class="mt-5 w-full text-left text-sm text-slate-400 flex items-center justify-between hover:text-black transition">
+            <span>查看引導提示</span>
+            <span class="accord-icon text-lg">+</span>
+          </button>
+          <div class="accord-body mt-3 text-sm text-slate-600 bg-slate-50 rounded-xl p-4 space-y-2">
+            <p>• 「壓迫感」常見於缺血性；「刺痛」多見於胸壁或胸膜</p>
+            <p>• OPQRST 問診框架：Onset / Provocation / Quality / Radiation / Severity / Time</p>
+            <p>• 合併冒冷汗、放射痛、呼吸困難 → 急性冠心症，立即啟動急救流程</p>
           </div>
         </div>
-        <div>
-          <h4 class="font-bold text-lg mb-5">課程主題</h4>
-          <div class="space-y-3 text-slate-400">
-            <div>病理學</div>
-            <div>運動醫學</div>
-            <div>臨床推理</div>
-            <div>生理學</div>
+
+        <!-- 意識不清 -->
+        <div class="q-card p-7">
+          <div class="mb-4">
+            <span class="pill pill-red">神經急症</span>
+          </div>
+          <h3 class="display text-2xl mb-5">意識改變</h3>
+          <div class="space-y-3">
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你如何評估？</div>
+              <div>你會用什麼工具快速評估意識狀態？</div>
+            </div>
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你的假設是？</div>
+              <div>同樣「意識改變」，熱中暑 vs 低血糖 vs 腦震盪，如何快速鑑別？</div>
+            </div>
+            <div class="text-sm border-l-2 border-amber-400 pl-3 py-1 bg-amber-50 rounded-r-lg">
+              <div class="text-amber-700 text-xs font-semibold mb-1">💭 延伸思考</div>
+              <div>這位運動員的「高溫環境」資訊，如何改變你的判斷？</div>
+            </div>
+          </div>
+          <button onclick="toggleAccord(this)" class="mt-5 w-full text-left text-sm text-slate-400 flex items-center justify-between hover:text-black transition">
+            <span>查看引導提示</span>
+            <span class="accord-icon text-lg">+</span>
+          </button>
+          <div class="accord-body mt-3 text-sm text-slate-600 bg-slate-50 rounded-xl p-4 space-y-2">
+            <p>• GCS（格拉斯哥昏迷量表）：眼睛 / 語言 / 運動反應，滿分 15</p>
+            <p>• AVPU：Alert / Voice / Pain / Unresponsive — 快速現場評估工具</p>
+            <p>• 熱中暑特徵：高溫 + 無汗 + 意識改變，屬於醫療緊急狀況</p>
           </div>
         </div>
-        <div>
-          <h4 class="font-bold text-lg mb-5">教育聲明</h4>
-          <p class="text-slate-400 leading-relaxed text-sm">本網站內容僅供醫學教育用途，不可取代專業醫療診斷與治療。</p>
+
+        <!-- 呼吸困難 -->
+        <div class="q-card p-7">
+          <div class="mb-4">
+            <span class="pill pill-blue">呼吸系統</span>
+          </div>
+          <h3 class="display text-2xl mb-5">呼吸困難</h3>
+          <div class="space-y-3">
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你的觀察是？</div>
+              <div>「喘」是運動後正常反應，還是病理徵象？你如何判斷？</div>
+            </div>
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你的假設是？</div>
+              <div>氣喘 vs 運動誘發支氣管痙攣 vs 過度換氣，有何異同？</div>
+            </div>
+            <div class="text-sm border-l-2 border-blue-400 pl-3 py-1 bg-blue-50 rounded-r-lg">
+              <div class="text-blue-700 text-xs font-semibold mb-1">🔍 深化問題</div>
+              <div>若此患者有氣喘病史，你的處置會改變嗎？為什麼？</div>
+            </div>
+          </div>
+          <button onclick="toggleAccord(this)" class="mt-5 w-full text-left text-sm text-slate-400 flex items-center justify-between hover:text-black transition">
+            <span>查看引導提示</span>
+            <span class="accord-icon text-lg">+</span>
+          </button>
+          <div class="accord-body mt-3 text-sm text-slate-600 bg-slate-50 rounded-xl p-4 space-y-2">
+            <p>• 正常運動後呼吸 → 停止運動後 5–10 分鐘內恢復</p>
+            <p>• EIB（運動誘發支氣管痙攣）：運動中或運動後出現喘鳴、胸緊</p>
+            <p>• 過度換氣：手腳麻木、頭暈、無法深吸氣，心理因素常見</p>
+          </div>
+        </div>
+
+        <!-- 關節痛 -->
+        <div class="q-card p-7">
+          <div class="mb-4">
+            <span class="pill pill-teal">運動醫學</span>
+          </div>
+          <h3 class="display text-2xl mb-5">關節疼痛</h3>
+          <div class="space-y-3">
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你的問診重點？</div>
+              <div>急性受傷 vs 慢性過度使用，問診上如何區分？</div>
+            </div>
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你的假設是？</div>
+              <div>膝關節疼痛，可能的結構損傷有哪些？各自的特徵是？</div>
+            </div>
+            <div class="text-sm border-l-2 border-teal-400 pl-3 py-1 bg-teal-50 rounded-r-lg">
+              <div class="text-teal-700 text-xs font-semibold mb-1">⚡ 應用思考</div>
+              <div>RICE 原則你真的理解嗎？每個步驟背後的生理機轉是什麼？</div>
+            </div>
+          </div>
+          <button onclick="toggleAccord(this)" class="mt-5 w-full text-left text-sm text-slate-400 flex items-center justify-between hover:text-black transition">
+            <span>查看引導提示</span>
+            <span class="accord-icon text-lg">+</span>
+          </button>
+          <div class="accord-body mt-3 text-sm text-slate-600 bg-slate-50 rounded-xl p-4 space-y-2">
+            <p>• 急性：明確受傷機轉、腫脹快速、疼痛劇烈</p>
+            <p>• 慢性：無特定受傷事件、反覆使用特定動作、晨僵</p>
+            <p>• RICE = Rest（休息）/ Ice（冰敷）/ Compression（加壓）/ Elevation（抬高）</p>
+          </div>
+        </div>
+
+        <!-- 安寧緩和 -->
+        <a href="Hospice/HospiceGlobalView.html" class="q-card p-7 block group">
+          <div class="mb-4">
+            <span class="pill pill-gray">末期照護</span>
+          </div>
+          <h3 class="display text-2xl mb-5 group-hover:text-violet-700 transition-colors">安寧緩和醫療</h3>
+          <div class="space-y-3">
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">你的思考框架？</div>
+              <div>「治癒疾病」和「緩解痛苦」，這兩個目標有時會衝突——你如何取捨？</div>
+            </div>
+            <div class="text-sm border-l-2 border-slate-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">倫理議題</div>
+              <div>病人有自主決定拒絕治療的權利嗎？你的立場是什麼？</div>
+            </div>
+          </div>
+          <div class="mt-5 text-xs font-semibold text-violet-600 flex items-center gap-1 group-hover:gap-2 transition-all">進入專區 →</div>
+        </a>
+
+        <!-- 學思達 -->
+        <a href="TeachingSkillPromotion/ShareStartView.html" class="q-card p-7 block group border-amber-200">
+          <div class="mb-4">
+            <span class="pill pill-amber">教學方法</span>
+          </div>
+          <h3 class="display text-2xl mb-5 group-hover:text-amber-700 transition-colors">學思達教學法</h3>
+          <div class="space-y-3">
+            <div class="text-sm border-l-2 border-amber-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">反思問題</div>
+              <div>你更喜歡主動探索，還是被動接受知識？為什麼？</div>
+            </div>
+            <div class="text-sm border-l-2 border-amber-200 pl-3 py-1">
+              <div class="text-slate-400 text-xs mb-1">方法論</div>
+              <div>「自學→思考→討論→達成共識」——你在哪個環節最有挑戰？</div>
+            </div>
+          </div>
+          <div class="mt-5 text-xs font-semibold text-amber-600 flex items-center gap-1 group-hover:gap-2 transition-all">進入專區 →</div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FACILITATION / SOCRATIC DIALOG ─────────────────── -->
+  <section id="facilitation" class="max-w-6xl mx-auto px-6 py-20">
+    <div class="section-label">
+      <span class="pill pill-teal">第三步</span>
+      <span class="font-semibold text-xl">引導討論 Socratic Facilitation</span>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-12 items-start">
+      <div>
+        <h2 class="display text-4xl mb-4">好的老師，<br><span class="display-italic text-teal-700">不給答案，給問題</span></h2>
+        <p class="text-slate-500 leading-relaxed mb-8">
+          Socratic 教學法的核心：透過層層追問，幫助學生發現自己已有的知識，並找出邏輯上的盲點。
+        </p>
+
+        <!-- Facilitation layers -->
+        <div class="space-y-4">
+          <div class="bg-white border border-black/8 rounded-2xl p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-[#0f172a] text-white flex items-center justify-center text-xs font-bold">1</div>
+              <span class="font-semibold">開放性提問（Open Questions）</span>
+            </div>
+            <p class="text-sm text-slate-500 ml-11">「你觀察到了什麼？」「你的第一個想法是什麼？」——沒有標準答案，鼓勵自由思考</p>
+          </div>
+          <div class="bg-white border border-black/8 rounded-2xl p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-[#0f172a] text-white flex items-center justify-center text-xs font-bold">2</div>
+              <span class="font-semibold">挑戰假設（Challenge Assumptions）</span>
+            </div>
+            <p class="text-sm text-slate-500 ml-11">「你確定嗎？有沒有相反的證據？」——引導學生檢視自己的推理</p>
+          </div>
+          <div class="bg-white border border-black/8 rounded-2xl p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-[#0f172a] text-white flex items-center justify-center text-xs font-bold">3</div>
+              <span class="font-semibold">深化探究（Probe Evidence）</span>
+            </div>
+            <p class="text-sm text-slate-500 ml-11">「這個判斷的根據是什麼？如果是不同的情況，答案會改變嗎？」</p>
+          </div>
+          <div class="bg-white border border-black/8 rounded-2xl p-5">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-8 h-8 rounded-full bg-[#0f172a] text-white flex items-center justify-center text-xs font-bold">4</div>
+              <span class="font-semibold">整合應用（Synthesis）</span>
+            </div>
+            <p class="text-sm text-slate-500 ml-11">「所以，根據你剛才說的，你的最終判斷是什麼？你有多少把握？」</p>
+          </div>
         </div>
       </div>
-      <div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between text-sm text-slate-500">
-        <div>© 2026 Applied Pathology Learning Platform</div>
-        <div>Designed for Sports Medicine Education</div>
+
+      <!-- Interactive Facilitation Demo -->
+      <div>
+        <div class="bg-[#f4ede0] rounded-3xl p-6">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 rounded-full bg-[#0f172a] text-white flex items-center justify-center text-xs font-bold">師</div>
+            <span class="text-sm font-semibold">引導討論示範</span>
+            <span class="ml-auto text-xs text-slate-400">互動模擬</span>
+          </div>
+
+          <div class="space-y-4" id="chat-container">
+            <div class="fade-up">
+              <div class="chat-bubble-q">
+                剛才那位馬拉松選手，你第一眼注意到的是什麼徵象？
+              </div>
+              <div class="text-xs text-slate-400 mt-1 ml-1">引導者</div>
+            </div>
+          </div>
+
+          <div class="mt-6 space-y-2" id="response-options">
+            <p class="text-xs text-slate-500 mb-3 font-medium">選擇你的回應：</p>
+            <button onclick="chooseResponse(0)" class="w-full text-left text-sm bg-white border border-black/10 rounded-xl px-4 py-3 hover:border-teal-400 hover:bg-teal-50 transition">
+              皮膚乾燥、高溫，懷疑熱中暑
+            </button>
+            <button onclick="chooseResponse(1)" class="w-full text-left text-sm bg-white border border-black/10 rounded-xl px-4 py-3 hover:border-teal-400 hover:bg-teal-50 transition">
+              意識改變，需要立刻呼叫 119
+            </button>
+            <button onclick="chooseResponse(2)" class="w-full text-left text-sm bg-white border border-black/10 rounded-xl px-4 py-3 hover:border-teal-400 hover:bg-teal-50 transition">
+              先確認呼吸和脈搏，評估 ABCD
+            </button>
+          </div>
+
+          <div id="followup-area" class="hidden mt-4"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── DISEASE KNOWLEDGE (Question-driven) ────────────── -->
+  <section class="bg-white border-y border-black/8 py-20">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="section-label">
+        <span class="pill pill-blue">知識建構</span>
+        <span class="font-semibold text-xl">疾病框架 Disease Framework</span>
+      </div>
+
+      <div class="max-w-2xl mb-12">
+        <h2 class="display text-4xl mb-4">用<span class="display-italic text-blue-700">問題</span>框架疾病，而非記憶條列</h2>
+        <p class="text-slate-500">每個疾病，先問自己這三個問題：Why（為什麼發生）/ What（症狀表現）/ How（如何處置）</p>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-6">
+        <!-- Disease card 1 -->
+        <div class="q-card overflow-hidden">
+          <div class="p-6 border-b border-black/6">
+            <span class="pill pill-red mb-3 inline-block">心血管</span>
+            <h3 class="display text-2xl">高血壓</h3>
+            <p class="text-sm text-slate-500 mt-1">Hypertension</p>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Why 為什麼發生？</div>
+              <div class="text-sm p-3 bg-slate-50 rounded-xl">你能解釋「心輸出量 × 周邊血管阻力」的關係嗎？哪些因素會讓這個等式失衡？</div>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">What 有什麼症狀？</div>
+              <div class="text-sm p-3 bg-slate-50 rounded-xl">高血壓常被稱為「沉默殺手」——這個稱呼告訴你什麼？臨床上你如何發現？</div>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">How 如何應對？</div>
+              <div class="text-sm p-3 bg-red-50 rounded-xl">高血壓患者能做運動嗎？什麼強度是合適的？你的理由是什麼？</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disease card 2 -->
+        <div class="q-card overflow-hidden">
+          <div class="p-6 border-b border-black/6">
+            <span class="pill pill-amber mb-3 inline-block">代謝疾病</span>
+            <h3 class="display text-2xl">糖尿病</h3>
+            <p class="text-sm text-slate-500 mt-1">Diabetes Mellitus</p>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Why 為什麼發生？</div>
+              <div class="text-sm p-3 bg-slate-50 rounded-xl">第一型 vs 第二型的病理機轉根本上不同——你能用自己的話解釋這個差異嗎？</div>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">What 有什麼症狀？</div>
+              <div class="text-sm p-3 bg-slate-50 rounded-xl">「三多一少」是什麼？這些症狀背後的生理機轉分別是什麼？</div>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">How 如何應對？</div>
+              <div class="text-sm p-3 bg-amber-50 rounded-xl">運動對血糖的影響是正面還是負面？這個問題的答案，你認為「看情況」嗎？</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disease card 3 -->
+        <div class="q-card overflow-hidden">
+          <div class="p-6 border-b border-black/6">
+            <span class="pill pill-blue mb-3 inline-block">呼吸系統</span>
+            <h3 class="display text-2xl">氣喘</h3>
+            <p class="text-sm text-slate-500 mt-1">Asthma</p>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">Why 為什麼發生？</div>
+              <div class="text-sm p-3 bg-slate-50 rounded-xl">氣喘是「過敏」還是「發炎」？還是兩者都是？你能說清楚兩者的關係嗎？</div>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">What 有什麼症狀？</div>
+              <div class="text-sm p-3 bg-slate-50 rounded-xl">喘鳴音（wheezing）和正常的呼吸聲有什麼不同？你會如何描述它？</div>
+            </div>
+            <div>
+              <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-2">How 如何應對？</div>
+              <div class="text-sm p-3 bg-blue-50 rounded-xl">一個有氣喘的學生想參加體育課，你的建議是「不能參加」嗎？你的理由是什麼？</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── REFLECTIVE QUIZ ─────────────────────────────────── -->
+  <section id="quiz" class="max-w-6xl mx-auto px-6 py-20">
+    <div class="section-label">
+      <span class="pill pill-gray">第四步</span>
+      <span class="font-semibold text-xl">反思測驗 Reflective Assessment</span>
+    </div>
+
+    <div class="max-w-2xl mb-10">
+      <h2 class="display text-4xl mb-4">測驗不是考試，<br><span class="display-italic text-slate-500">是反思的起點</span></h2>
+      <p class="text-slate-500">選完答案後，最重要的問題是：「我為什麼這樣選？」</p>
+    </div>
+
+    <div class="bg-white border border-black/8 rounded-3xl overflow-hidden">
+      <!-- Quiz header -->
+      <div class="p-8 border-b border-black/6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="pill pill-red">臨床推理</div>
+          <div class="text-sm text-slate-500" id="quiz-progress">題目 <span id="q-num">1</span> / 3</div>
+        </div>
+        <div class="progress-track mt-3">
+          <div class="progress-fill" id="progress-bar" style="width: 33%"></div>
+        </div>
+      </div>
+
+      <!-- Question area -->
+      <div class="p-8" id="quiz-body">
+        <div id="q1">
+          <p class="text-sm text-slate-400 mb-2">在你回答之前，先問自己：你對這個問題的直覺判斷是什麼？</p>
+          <h3 class="display text-2xl md:text-3xl mb-8">一位運動員在高溫環境運動後出現「高體溫、皮膚乾燥、意識改變」——這三個症狀共同指向哪個緊急狀況？</h3>
+          <div class="space-y-3" id="q1-opts">
+            <button onclick="selectAnswer(this, false, 'q1')" class="quiz-opt w-full">
+              <span class="w-7 h-7 rounded-full border-2 border-black/20 flex items-center justify-center text-xs flex-shrink-0 font-bold">A</span>
+              <span>熱衰竭（Heat Exhaustion）——需補水，讓患者休息</span>
+            </button>
+            <button onclick="selectAnswer(this, true, 'q1')" class="quiz-opt w-full">
+              <span class="w-7 h-7 rounded-full border-2 border-black/20 flex items-center justify-center text-xs flex-shrink-0 font-bold">B</span>
+              <span>熱中暑（Heat Stroke）——體溫調節系統失調，醫療緊急</span>
+            </button>
+            <button onclick="selectAnswer(this, false, 'q1')" class="quiz-opt w-full">
+              <span class="w-7 h-7 rounded-full border-2 border-black/20 flex items-center justify-center text-xs flex-shrink-0 font-bold">C</span>
+              <span>低血糖（Hypoglycemia）——需立即補充葡萄糖</span>
+            </button>
+            <button onclick="selectAnswer(this, false, 'q1')" class="quiz-opt w-full">
+              <span class="w-7 h-7 rounded-full border-2 border-black/20 flex items-center justify-center text-xs flex-shrink-0 font-bold">D</span>
+              <span>橫紋肌溶解症（Rhabdomyolysis）——CK 升高，茶色尿</span>
+            </button>
+          </div>
+          <div id="q1-explain" class="hidden mt-6 bg-teal-50 border border-teal-200 rounded-2xl p-6">
+            <div class="font-bold text-teal-800 mb-3">引導反思 ↓</div>
+            <p class="text-sm text-teal-900 mb-3">熱中暑的核心特徵是「無汗（皮膚乾燥）+ 意識改變」，這與熱衰竭（有大量出汗）不同。「無汗」意味著身體的散熱機制已經崩潰，是器官損害的前兆。</p>
+            <div class="bg-white rounded-xl p-4 border border-teal-100">
+              <p class="text-sm font-semibold text-teal-700 mb-2">現在問問自己：</p>
+              <p class="text-sm text-slate-600">如果我當初選錯了答案，我的處置會有什麼不同？那些不同會導致什麼後果？</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-8 border-t border-black/6 flex items-center justify-between">
+        <p class="text-sm text-slate-400">答題後，花 30 秒思考：「我為什麼選這個？」</p>
+        <button onclick="nextQuestion()" id="next-btn" class="hidden px-6 py-3 rounded-xl bg-[#0f172a] text-white text-sm font-semibold hover:bg-slate-700 transition">
+          下一題 →
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ──────────────────────────────────────────── -->
+  <footer class="bg-[#0f172a] text-white">
+    <div class="max-w-6xl mx-auto px-6 py-16">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12">
+        <div>
+          <div class="display text-3xl mb-3">應用病理學平台</div>
+          <p class="text-slate-400 max-w-sm">問題導向，引導思考。不給答案，而是給你找到答案的方法。</p>
+        </div>
+        <div class="grid grid-cols-2 gap-8 text-sm">
+          <div>
+            <h4 class="font-semibold mb-4 text-slate-300">教學方法</h4>
+            <div class="space-y-2 text-slate-400">
+              <div>問題導向學習 PBL</div>
+              <div>Socratic Questioning</div>
+              <div>學思達教學法</div>
+              <div>Case-Based Learning</div>
+            </div>
+          </div>
+          <div>
+            <h4 class="font-semibold mb-4 text-slate-300">學習主題</h4>
+            <div class="space-y-2 text-slate-400">
+              <div>臨床推理</div>
+              <div>運動醫學</div>
+              <div>急救醫學</div>
+              <div>安寧緩和</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row gap-4 justify-between text-sm text-slate-500">
+        <div>© 2026 Applied Pathology Learning Platform — PBL Edition</div>
+        <div>本網站內容僅供醫學教育用途，不可取代專業醫療診斷</div>
       </div>
     </div>
   </footer>
 
   <script>
-    function toggleDarkMode() {
-      document.documentElement.classList.toggle('dark');
-      document.body.classList.toggle('bg-slate-950');
-      document.body.classList.toggle('text-white');
+    function revealScenario() {
+      const el = document.getElementById('scenario-reveal');
+      el.classList.remove('hidden');
+      el.classList.add('fade-up');
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      ['step1','step2','step3'].forEach(id => {
+        document.getElementById(id).classList.add('active');
+      });
+    }
+
+    function toggleAccord(btn) {
+      const body = btn.nextElementSibling;
+      const icon = btn.querySelector('.accord-icon');
+      body.classList.toggle('open');
+      icon.classList.toggle('open');
+    }
+
+    const followUps = [
+      {
+        response: "皮膚乾燥、高溫，懷疑熱中暑",
+        next: "很好的觀察。那「乾燥無汗」這個細節，為什麼重要？在正常高溫運動下，皮膚應該是什麼狀態？",
+        deeper: "對，有汗是身體還在努力散熱。無汗意味著散熱機制失效——這改變你對緊急程度的判斷嗎？"
+      },
+      {
+        response: "意識改變，需要立刻呼叫 119",
+        next: "呼叫 119 是正確方向。但在救護車到達前的 8 分鐘，你會做什麼？什麼都不做，還是有優先處置？",
+        deeper: "等待並非被動——立即降溫（轉移陰涼處、冷水浸泡）可以在救護到來前大幅改善預後。這告訴你什麼？"
+      },
+      {
+        response: "先確認呼吸和脈搏，評估 ABCD",
+        next: "系統性評估是好習慣。ABCD 代表什麼？在這個案例中，你認為哪個環節最需要立即關注？",
+        deeper: "A（氣道）、B（呼吸）、C（循環）、D（殘疾/意識）。在熱中暑中，C 和 D 都有問題——你的處置順序怎麼排？"
+      }
+    ];
+
+    function chooseResponse(idx) {
+      const container = document.getElementById('chat-container');
+      const options = document.getElementById('response-options');
+      const followup = document.getElementById('followup-area');
+      const data = followUps[idx];
+
+      options.innerHTML = '';
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'flex justify-end fade-up';
+      userBubble.innerHTML = `<div><div class="chat-bubble-a">${data.response}</div><div class="text-xs text-slate-400 mt-1 text-right mr-1">你</div></div>`;
+      container.appendChild(userBubble);
+
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'fade-up';
+      typingDiv.innerHTML = `<div class="chat-typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+      container.appendChild(typingDiv);
+
+      setTimeout(() => {
+        container.removeChild(typingDiv);
+        const qBubble = document.createElement('div');
+        qBubble.className = 'fade-up';
+        qBubble.innerHTML = `<div class="chat-bubble-q">${data.next}</div><div class="text-xs text-slate-400 mt-1 ml-1">引導者</div>`;
+        container.appendChild(qBubble);
+
+        followup.classList.remove('hidden');
+        followup.innerHTML = `
+          <p class="text-xs text-slate-500 mb-3 font-medium">繼續思考：</p>
+          <button onclick="showDeeper(this, '${data.deeper.replace(/'/g, "\\'")}', '${data.response.replace(/'/g, "\\'")}'); this.parentNode.innerHTML=''" class="w-full text-left text-sm bg-white border border-black/10 rounded-xl px-4 py-3 hover:border-teal-400 hover:bg-teal-50 transition">
+            我理解了，繼續深入 →
+          </button>
+        `;
+      }, 1500);
+    }
+
+    function showDeeper(btn, text, prev) {
+      const container = document.getElementById('chat-container');
+      const followup = document.getElementById('followup-area');
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'flex justify-end fade-up';
+      userBubble.innerHTML = `<div><div class="chat-bubble-a">我理解了，繼續深入</div><div class="text-xs text-slate-400 mt-1 text-right mr-1">你</div></div>`;
+      container.appendChild(userBubble);
+
+      setTimeout(() => {
+        const qBubble = document.createElement('div');
+        qBubble.className = 'fade-up';
+        qBubble.innerHTML = `<div class="chat-bubble-q">${text}</div><div class="text-xs text-slate-400 mt-1 ml-1">引導者</div>`;
+        container.appendChild(qBubble);
+        followup.innerHTML = `<p class="text-sm text-slate-500 mt-3 italic">繼續在課堂上討論這個問題，或點擊上方「臨床情境」查看完整案例分析。</p>`;
+      }, 1000);
+    }
+
+    let currentQ = 1;
+    function selectAnswer(btn, isCorrect, qId) {
+      const allOpts = document.querySelectorAll(`#${qId}-opts .quiz-opt`);
+      allOpts.forEach(o => o.classList.add('disabled'));
+      btn.classList.add(isCorrect ? 'correct' : 'wrong');
+      if (!isCorrect) {
+        allOpts.forEach(o => {
+          if (o.querySelector('span:last-child') && o.getAttribute('onclick').includes('true')) {
+            o.classList.add('correct');
+          }
+        });
+      }
+      document.getElementById(`${qId}-explain`).classList.remove('hidden');
+      document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQ++;
+      if (currentQ > 3) {
+        document.getElementById('quiz-body').innerHTML = `
+          <div class="text-center py-12">
+            <div class="display text-4xl mb-4">測驗完成</div>
+            <p class="text-slate-500 text-lg mb-2">但真正的學習，才剛要開始。</p>
+            <p class="text-slate-400 mb-8">回顧每一題：你選擇答案的理由是什麼？<br>如果你的理由是正確的，那才是真正的理解。</p>
+            <button onclick="location.href='#scenario'" class="px-8 py-4 rounded-2xl bg-[#0f172a] text-white font-semibold hover:bg-slate-700 transition">回到臨床情境，再思考一次</button>
+          </div>
+        `;
+        document.getElementById('next-btn').classList.add('hidden');
+        document.querySelector('.progress-fill').style.width = '100%';
+        return;
+      }
+      document.getElementById('q-num').textContent = currentQ;
+      document.querySelector('.progress-fill').style.width = (currentQ / 3 * 100) + '%';
+      document.getElementById('next-btn').classList.add('hidden');
+
+      const questions = [null,
+        null,
+        {
+          id: 'q2', badge: '問診技巧', text: '用 OPQRST 問診一位胸痛患者，其中「R — Radiation 放射痛」最重要的臨床意義是什麼？',
+          opts: [
+            { text: '確認疼痛的嚴重程度', correct: false },
+            { text: '幫助鑑別心臟來源的疼痛（放射至左肩、左臂、下巴）', correct: true },
+            { text: '判斷是否需要 X 光', correct: false },
+            { text: '評估患者的疼痛閾值', correct: false },
+          ],
+          explain: '心肌缺血的疼痛常放射至左側（肩膀、手臂、下巴），原因是心臟傳入神經與這些部位共用同一脊髓節段（C8-T1）。這是「牽涉痛（Referred Pain）」的典型範例——你能解釋這個神經機轉嗎？'
+        },
+        {
+          id: 'q3', badge: '急救判斷', text: '你在運動場邊遇到無反應、無呼吸的患者，AED 尚未抵達。根據 BLS 流程，你的第一個行動應是？',
+          opts: [
+            { text: '立即進行人工呼吸', correct: false },
+            { text: '打電話叫人拿 AED', correct: false },
+            { text: '開始胸外按壓（CAB：先 Compression）', correct: true },
+            { text: '等待 AED 再開始任何處置', correct: false },
+          ],
+          explain: '新版 BLS 流程（2020年 AHA 指引）強調「C-A-B」——先胸外按壓，再氣道和呼吸。原因是停止循環比停止呼吸更危急。思考看看：為什麼這個順序的改變很重要？'
+        }
+      ];
+
+      const q = questions[currentQ];
+      const optsHtml = q.opts.map((o, i) =>
+        `<button onclick="selectAnswer(this, ${o.correct}, '${q.id}')" class="quiz-opt w-full">
+          <span class="w-7 h-7 rounded-full border-2 border-black/20 flex items-center justify-center text-xs flex-shrink-0 font-bold">${String.fromCharCode(65+i)}</span>
+          <span>${o.text}</span>
+        </button>`
+      ).join('');
+
+      document.getElementById('quiz-body').innerHTML = `
+        <div id="${q.id}" class="fade-up">
+          <p class="text-sm text-slate-400 mb-2">在你回答之前，先問自己：你對這個問題的直覺判斷是什麼？</p>
+          <h3 class="display text-2xl md:text-3xl mb-8">${q.text}</h3>
+          <div class="space-y-3" id="${q.id}-opts">${optsHtml}</div>
+          <div id="${q.id}-explain" class="hidden mt-6 bg-teal-50 border border-teal-200 rounded-2xl p-6">
+            <div class="font-bold text-teal-800 mb-3">引導反思 ↓</div>
+            <p class="text-sm text-teal-900 mb-3">${q.explain}</p>
+            <div class="bg-white rounded-xl p-4 border border-teal-100">
+              <p class="text-sm font-semibold text-teal-700 mb-2">現在問問自己：</p>
+              <p class="text-sm text-slate-600">如果我當初選錯了答案，我的處置會有什麼不同？那些不同會導致什麼後果？</p>
+            </div>
+          </div>
+        </div>
+      `;
     }
   </script>
 </body>
