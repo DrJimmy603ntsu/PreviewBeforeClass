@@ -30,7 +30,6 @@
     }
     .display { font-family: 'DM Serif Display', serif; }
     .display-italic { font-family: 'DM Serif Display', serif; font-style: italic; }
-
     /* Grain texture */
     body::before {
       content: '';
@@ -39,10 +38,8 @@
       opacity: 0.4;
     }
     * { position: relative; z-index: 1; }
-
     /* Divider rule */
     .rule { border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 0; }
-
     /* Question card style */
     .q-card {
       border: 1.5px solid rgba(0,0,0,0.08);
@@ -51,7 +48,6 @@
       transition: all 0.25s ease;
     }
     .q-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.07); }
-
     /* Think step */
     .think-step {
       border-left: 3px solid transparent;
@@ -59,7 +55,6 @@
       transition: border-color 0.2s;
     }
     .think-step.active { border-left-color: var(--c-red); }
-
     /* Pill badge */
     .pill {
       display: inline-block;
@@ -75,13 +70,11 @@
     .pill-blue { background: var(--c-blue); color: white; }
     .pill-teal { background: var(--c-teal); color: white; }
     .pill-gray { background: #374151; color: white; }
-
     /* Accordion */
     .accord-body { display: none; }
     .accord-body.open { display: block; }
     .accord-icon { transition: transform 0.2s; }
     .accord-icon.open { transform: rotate(45deg); }
-
     /* Facilitation dialog */
     .chat-bubble-q {
       background: var(--c-ink);
@@ -115,7 +108,6 @@
     .dot:nth-child(2) { animation-delay: 0.2s; }
     .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes blink { 0%,80%,100%{opacity:0.3} 40%{opacity:1} }
-
     /* Red flag pulse */
     @keyframes pulse-ring {
       0% { transform: scale(1); opacity: 0.4; }
@@ -136,10 +128,8 @@
       position: absolute; inset: 0;
       border-radius: 50%; background: #ef4444;
     }
-
     /* Sticky nav */
     header { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-
     /* Progress bar */
     .progress-track {
       height: 4px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden;
@@ -149,14 +139,12 @@
       background: linear-gradient(90deg, #b91c1c, #f59e0b);
       transition: width 0.4s ease;
     }
-
     /* Scenario reveal animation */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .fade-up { animation: fadeUp 0.5s ease forwards; }
-
     /* Quiz option */
     .quiz-opt {
       border: 1.5px solid rgba(0,0,0,0.1);
@@ -170,7 +158,6 @@
     .quiz-opt.correct { border-color: var(--c-teal); background: var(--c-teal-light); }
     .quiz-opt.wrong { border-color: var(--c-red); background: var(--c-red-light); }
     .quiz-opt.disabled { pointer-events: none; opacity: 0.6; }
-
     /* Section divider with label */
     .section-label {
       display: flex; align-items: center; gap: 16px; margin-bottom: 40px;
@@ -181,7 +168,6 @@
   </style>
 </head>
 <body>
-
   <!-- ─── NAVBAR ─────────────────────────────────────────── -->
   <header class="sticky top-0 z-50 border-b border-black/10 bg-[#f9f6f0]/90">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -198,7 +184,6 @@
       </nav>
     </div>
   </header>
-
   <!-- ─── HERO ───────────────────────────────────────────── -->
   <section class="max-w-6xl mx-auto px-6 pt-20 pb-12">
     <div class="max-w-3xl">
@@ -213,9 +198,14 @@
         不是記憶知識，而是解決問題。每一個臨床情境都是你的起點——透過提問、思考、討論，建立真正屬於你的醫學判斷。
       </p>
     </div>
-
-    <!-- 三個核心問題預覽 -->
-    <div class="mt-16 grid md:grid-cols-3 gap-5">
+    <!-- 核心問題預覽 -->
+    <div class="mt-16 grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <a href="WaygroundFollowUp/WaygroundMoniter.html" class="q-card p-7 block group">
+        <div class="pill pill-blue mb-4">場域追蹤</div>
+        <p class="display text-xl leading-snug mb-3">你的學習軌跡，正在發生什麼？</p>
+        <p class="text-sm text-slate-500">即時場域監測，回顧你的學習歷程</p>
+        <div class="mt-4 text-sm font-semibold text-blue-700 flex items-center gap-1 group-hover:gap-2 transition-all">進入場域 →</div>
+      </a>
       <a href="#scenario" class="q-card p-7 block group">
         <div class="pill pill-red mb-4">今日情境</div>
         <p class="display text-xl leading-snug mb-3">一位運動員在比賽後倒地，你看到了什麼？</p>
@@ -236,16 +226,13 @@
       </a>
     </div>
   </section>
-
   <hr class="rule max-w-6xl mx-auto">
-
   <!-- ─── CLINICAL SCENARIO ───────────────────────────────── -->
   <section id="scenario" class="max-w-6xl mx-auto px-6 py-20">
     <div class="section-label">
       <span class="pill pill-red">第一步</span>
       <span class="font-semibold text-xl">臨床情境 Clinical Scenario</span>
     </div>
-
     <!-- Scenario card -->
     <div class="bg-[#0f172a] text-white rounded-3xl overflow-hidden">
       <div class="p-8 md:p-12">
@@ -259,7 +246,6 @@
             <span>緊急情境</span>
           </div>
         </div>
-
         <div class="bg-white/5 rounded-2xl p-6 mb-8 border border-white/10">
           <p class="text-slate-200 text-base leading-relaxed">
             一位 <strong class="text-white">28 歲男性馬拉松選手</strong>，在距終點線 500 公尺處突然停步、搖晃，接著倒地。旁觀者立即呼叫你（運動保健人員）前往協助。
@@ -279,11 +265,9 @@
             </div>
           </div>
         </div>
-
         <!-- Facilitation questions -->
         <div class="space-y-4">
           <p class="text-slate-300 text-sm font-semibold uppercase tracking-widest mb-4">在繼續之前，請先思考：</p>
-
           <div class="think-step active" id="step1">
             <div class="text-slate-400 text-sm mb-1">問題 1 / 觀察</div>
             <p class="text-lg font-medium">你抵達現場的<span class="text-yellow-300">第一眼</span>，你會觀察什麼？為什麼？</p>
@@ -297,12 +281,10 @@
             <p class="text-lg font-medium">你的<span class="text-yellow-300">第一個行動</span>會是什麼？順序是否重要？</p>
           </div>
         </div>
-
         <button onclick="revealScenario()" class="mt-10 px-8 py-4 rounded-2xl bg-white text-[#0f172a] font-semibold hover:bg-slate-100 transition text-sm">
           我已思考完畢，查看情境展開 →
         </button>
       </div>
-
       <!-- Revealed content (hidden initially) -->
       <div id="scenario-reveal" class="hidden border-t border-white/10 p-8 md:p-12">
         <div class="pill pill-amber mb-6">情境展開</div>
@@ -338,7 +320,6 @@
       </div>
     </div>
   </section>
-
   <!-- ─── PBL PROBLEM EXPLORATION ────────────────────────── -->
   <section id="pbl" class="bg-white border-y border-black/8 py-20">
     <div class="max-w-6xl mx-auto px-6">
@@ -346,15 +327,12 @@
         <span class="pill pill-amber">第二步</span>
         <span class="font-semibold text-xl">問題探索 Problem Exploration</span>
       </div>
-
       <div class="max-w-2xl mb-12">
         <h2 class="display text-4xl mb-4">從症狀出發，<span class="display-italic text-amber-700">問對問題</span></h2>
         <p class="text-slate-500 leading-relaxed">每個症狀卡片不提供答案，而是提供你需要問的問題。真正的學習，在於你自己找到答案的過程。</p>
       </div>
-
       <!-- Symptom cards with guided questions -->
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
         <!-- 胸痛 -->
         <div class="q-card p-7">
           <div class="flex items-start justify-between mb-4">
@@ -386,7 +364,6 @@
             <p>• 合併冒冷汗、放射痛、呼吸困難 → 急性冠心症，立即啟動急救流程</p>
           </div>
         </div>
-
         <!-- 意識不清 -->
         <div class="q-card p-7">
           <div class="mb-4">
@@ -417,7 +394,6 @@
             <p>• 熱中暑特徵：高溫 + 無汗 + 意識改變，屬於醫療緊急狀況</p>
           </div>
         </div>
-
         <!-- 呼吸困難 -->
         <div class="q-card p-7">
           <div class="mb-4">
@@ -448,7 +424,6 @@
             <p>• 過度換氣：手腳麻木、頭暈、無法深吸氣，心理因素常見</p>
           </div>
         </div>
-
         <!-- 關節痛 -->
         <div class="q-card p-7">
           <div class="mb-4">
@@ -479,7 +454,6 @@
             <p>• RICE = Rest（休息）/ Ice（冰敷）/ Compression（加壓）/ Elevation（抬高）</p>
           </div>
         </div>
-
         <!-- 安寧緩和 -->
         <a href="Hospice/HospiceGlobalView.html" class="q-card p-7 block group">
           <div class="mb-4">
@@ -498,7 +472,6 @@
           </div>
           <div class="mt-5 text-xs font-semibold text-violet-600 flex items-center gap-1 group-hover:gap-2 transition-all">進入專區 →</div>
         </a>
-
         <!-- 學思達 -->
         <a href="TeachingSkillPromotion/ShareStartView.html" class="q-card p-7 block group border-amber-200">
           <div class="mb-4">
@@ -517,25 +490,21 @@
           </div>
           <div class="mt-5 text-xs font-semibold text-amber-600 flex items-center gap-1 group-hover:gap-2 transition-all">進入專區 →</div>
         </a>
-
       </div>
     </div>
   </section>
-
   <!-- ─── FACILITATION / SOCRATIC DIALOG ─────────────────── -->
   <section id="facilitation" class="max-w-6xl mx-auto px-6 py-20">
     <div class="section-label">
       <span class="pill pill-teal">第三步</span>
       <span class="font-semibold text-xl">引導討論 Socratic Facilitation</span>
     </div>
-
     <div class="grid lg:grid-cols-2 gap-12 items-start">
       <div>
         <h2 class="display text-4xl mb-4">好的老師，<br><span class="display-italic text-teal-700">不給答案，給問題</span></h2>
         <p class="text-slate-500 leading-relaxed mb-8">
           Socratic 教學法的核心：透過層層追問，幫助學生發現自己已有的知識，並找出邏輯上的盲點。
         </p>
-
         <!-- Facilitation layers -->
         <div class="space-y-4">
           <div class="bg-white border border-black/8 rounded-2xl p-5">
@@ -568,7 +537,6 @@
           </div>
         </div>
       </div>
-
       <!-- Interactive Facilitation Demo -->
       <div>
         <div class="bg-[#f4ede0] rounded-3xl p-6">
@@ -577,7 +545,6 @@
             <span class="text-sm font-semibold">引導討論示範</span>
             <span class="ml-auto text-xs text-slate-400">互動模擬</span>
           </div>
-
           <div class="space-y-4" id="chat-container">
             <div class="fade-up">
               <div class="chat-bubble-q">
@@ -586,7 +553,6 @@
               <div class="text-xs text-slate-400 mt-1 ml-1">引導者</div>
             </div>
           </div>
-
           <div class="mt-6 space-y-2" id="response-options">
             <p class="text-xs text-slate-500 mb-3 font-medium">選擇你的回應：</p>
             <button onclick="chooseResponse(0)" class="w-full text-left text-sm bg-white border border-black/10 rounded-xl px-4 py-3 hover:border-teal-400 hover:bg-teal-50 transition">
@@ -599,13 +565,11 @@
               先確認呼吸和脈搏，評估 ABCD
             </button>
           </div>
-
           <div id="followup-area" class="hidden mt-4"></div>
         </div>
       </div>
     </div>
   </section>
-
   <!-- ─── DISEASE KNOWLEDGE (Question-driven) ────────────── -->
   <section class="bg-white border-y border-black/8 py-20">
     <div class="max-w-6xl mx-auto px-6">
@@ -613,12 +577,10 @@
         <span class="pill pill-blue">知識建構</span>
         <span class="font-semibold text-xl">疾病框架 Disease Framework</span>
       </div>
-
       <div class="max-w-2xl mb-12">
         <h2 class="display text-4xl mb-4">用<span class="display-italic text-blue-700">問題</span>框架疾病，而非記憶條列</h2>
         <p class="text-slate-500">每個疾病，先問自己這三個問題：Why（為什麼發生）/ What（症狀表現）/ How（如何處置）</p>
       </div>
-
       <div class="grid lg:grid-cols-3 gap-6">
         <!-- Disease card 1 -->
         <div class="q-card overflow-hidden">
@@ -642,7 +604,6 @@
             </div>
           </div>
         </div>
-
         <!-- Disease card 2 -->
         <div class="q-card overflow-hidden">
           <div class="p-6 border-b border-black/6">
@@ -665,7 +626,6 @@
             </div>
           </div>
         </div>
-
         <!-- Disease card 3 -->
         <div class="q-card overflow-hidden">
           <div class="p-6 border-b border-black/6">
@@ -691,19 +651,16 @@
       </div>
     </div>
   </section>
-
   <!-- ─── REFLECTIVE QUIZ ─────────────────────────────────── -->
   <section id="quiz" class="max-w-6xl mx-auto px-6 py-20">
     <div class="section-label">
       <span class="pill pill-gray">第四步</span>
       <span class="font-semibold text-xl">反思測驗 Reflective Assessment</span>
     </div>
-
     <div class="max-w-2xl mb-10">
       <h2 class="display text-4xl mb-4">測驗不是考試，<br><span class="display-italic text-slate-500">是反思的起點</span></h2>
       <p class="text-slate-500">選完答案後，最重要的問題是：「我為什麼這樣選？」</p>
     </div>
-
     <div class="bg-white border border-black/8 rounded-3xl overflow-hidden">
       <!-- Quiz header -->
       <div class="p-8 border-b border-black/6">
@@ -715,7 +672,6 @@
           <div class="progress-fill" id="progress-bar" style="width: 33%"></div>
         </div>
       </div>
-
       <!-- Question area -->
       <div class="p-8" id="quiz-body">
         <div id="q1">
@@ -749,7 +705,6 @@
           </div>
         </div>
       </div>
-
       <div class="p-8 border-t border-black/6 flex items-center justify-between">
         <p class="text-sm text-slate-400">答題後，花 30 秒思考：「我為什麼選這個？」</p>
         <button onclick="nextQuestion()" id="next-btn" class="hidden px-6 py-3 rounded-xl bg-[#0f172a] text-white text-sm font-semibold hover:bg-slate-700 transition">
@@ -758,7 +713,6 @@
       </div>
     </div>
   </section>
-
   <!-- ─── FOOTER ──────────────────────────────────────────── -->
   <footer class="bg-[#0f172a] text-white">
     <div class="max-w-6xl mx-auto px-6 py-16">
@@ -794,7 +748,6 @@
       </div>
     </div>
   </footer>
-
   <script>
     function revealScenario() {
       const el = document.getElementById('scenario-reveal');
@@ -805,14 +758,12 @@
         document.getElementById(id).classList.add('active');
       });
     }
-
     function toggleAccord(btn) {
       const body = btn.nextElementSibling;
       const icon = btn.querySelector('.accord-icon');
       body.classList.toggle('open');
       icon.classList.toggle('open');
     }
-
     const followUps = [
       {
         response: "皮膚乾燥、高溫，懷疑熱中暑",
@@ -830,32 +781,26 @@
         deeper: "A（氣道）、B（呼吸）、C（循環）、D（殘疾/意識）。在熱中暑中，C 和 D 都有問題——你的處置順序怎麼排？"
       }
     ];
-
     function chooseResponse(idx) {
       const container = document.getElementById('chat-container');
       const options = document.getElementById('response-options');
       const followup = document.getElementById('followup-area');
       const data = followUps[idx];
-
       options.innerHTML = '';
-
       const userBubble = document.createElement('div');
       userBubble.className = 'flex justify-end fade-up';
       userBubble.innerHTML = `<div><div class="chat-bubble-a">${data.response}</div><div class="text-xs text-slate-400 mt-1 text-right mr-1">你</div></div>`;
       container.appendChild(userBubble);
-
       const typingDiv = document.createElement('div');
       typingDiv.className = 'fade-up';
       typingDiv.innerHTML = `<div class="chat-typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
       container.appendChild(typingDiv);
-
       setTimeout(() => {
         container.removeChild(typingDiv);
         const qBubble = document.createElement('div');
         qBubble.className = 'fade-up';
         qBubble.innerHTML = `<div class="chat-bubble-q">${data.next}</div><div class="text-xs text-slate-400 mt-1 ml-1">引導者</div>`;
         container.appendChild(qBubble);
-
         followup.classList.remove('hidden');
         followup.innerHTML = `
           <p class="text-xs text-slate-500 mb-3 font-medium">繼續思考：</p>
@@ -865,16 +810,13 @@
         `;
       }, 1500);
     }
-
     function showDeeper(btn, text, prev) {
       const container = document.getElementById('chat-container');
       const followup = document.getElementById('followup-area');
-
       const userBubble = document.createElement('div');
       userBubble.className = 'flex justify-end fade-up';
       userBubble.innerHTML = `<div><div class="chat-bubble-a">我理解了，繼續深入</div><div class="text-xs text-slate-400 mt-1 text-right mr-1">你</div></div>`;
       container.appendChild(userBubble);
-
       setTimeout(() => {
         const qBubble = document.createElement('div');
         qBubble.className = 'fade-up';
@@ -883,7 +825,6 @@
         followup.innerHTML = `<p class="text-sm text-slate-500 mt-3 italic">繼續在課堂上討論這個問題，或點擊上方「臨床情境」查看完整案例分析。</p>`;
       }, 1000);
     }
-
     let currentQ = 1;
     function selectAnswer(btn, isCorrect, qId) {
       const allOpts = document.querySelectorAll(`#${qId}-opts .quiz-opt`);
@@ -899,7 +840,6 @@
       document.getElementById(`${qId}-explain`).classList.remove('hidden');
       document.getElementById('next-btn').classList.remove('hidden');
     }
-
     function nextQuestion() {
       currentQ++;
       if (currentQ > 3) {
@@ -918,7 +858,6 @@
       document.getElementById('q-num').textContent = currentQ;
       document.querySelector('.progress-fill').style.width = (currentQ / 3 * 100) + '%';
       document.getElementById('next-btn').classList.add('hidden');
-
       const questions = [null,
         null,
         {
@@ -942,7 +881,6 @@
           explain: '新版 BLS 流程（2020年 AHA 指引）強調「C-A-B」——先胸外按壓，再氣道和呼吸。原因是停止循環比停止呼吸更危急。思考看看：為什麼這個順序的改變很重要？'
         }
       ];
-
       const q = questions[currentQ];
       const optsHtml = q.opts.map((o, i) =>
         `<button onclick="selectAnswer(this, ${o.correct}, '${q.id}')" class="quiz-opt w-full">
@@ -950,7 +888,6 @@
           <span>${o.text}</span>
         </button>`
       ).join('');
-
       document.getElementById('quiz-body').innerHTML = `
         <div id="${q.id}" class="fade-up">
           <p class="text-sm text-slate-400 mb-2">在你回答之前，先問自己：你對這個問題的直覺判斷是什麼？</p>
