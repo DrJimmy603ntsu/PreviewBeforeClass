@@ -1,0 +1,251 @@
+/**
+ * dashboard.js
+ * 負責把資料模型 (Wayground.Students.buildModel 的輸出) 畫成 DOM。
+ * 純渲染函式，不持有狀態；狀態與事件綁定交給 app.js。
+ */
+window.Wayground = window.Wayground || {};
+
+(function (W) {
+  'use strict';
+
+  const META = W.Students ? W.Students.STATUS_META : {};
+
+  function el(tag, attrs, children) {
+    const node = document.createElement(tag);
+    Object.entries(attrs || {}).forEach(([k, v]) => {
+      if (k === 'class') node.className = v;
+      else if (k === 'html') node.innerHTML = v;
+      else if (k.startsWith('on') && typeof v === 'function') node.addEventListener(k.slice(2), v);
+      else node.setAttribute(k, v);
+    });
+    (children || []).forEach(c => {
+      if (c === null || c === undefined) return;
+      node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return node;
+  }
+
+  /* ---------------- Stat cards ---------------- */
+  function renderStatCards(model) {
+    const grid = document.getElementById('statGrid');
+    if (!grid) return;
+    const o = model.overall;
+
+    const cards = [
+      {
+        label: '全班完成率', value: o.completionRate + '%',
+        icon: '✓', bg: 'var(--status-complete-bg)', fg: 'var(--status-complete)',
+        sub: o.counts.completed + ' / ' + (o.studentCount * o.taskCount) + ' 項任務'
+      },
+      {
+        label: '學生人數', value: String(o.studentCount),
+        icon: '👥', bg: 'var(--md-primary-container)', fg: 'var(--md-on-primary-container)',
+        sub: '目前追蹤中'
+      },
+      {
+        label: 'Wayground 任務數', value: String(o.taskCount),
+        icon: '📋', bg: 'var(--md-tertiary-container)', fg: 'var(--md-on-tertiary-container)',
+        sub: '已建立的任務'
+      },
+      {
+        label: '逾期未完成', value: String(o.counts.overdue),
+        icon: '!', bg: 'var(--status-overdue-bg)', fg: 'var(--status-overdue)',
+        sub: '需要關注的項目'
+      }
+    ];
+
+    grid.innerHTML = '';
+    cards.forEach(c => {
+      grid.appendChild(el('div', { class: 'stat-card' }, [
+        el('div', { class: 'stat-card__icon', style: `background:${c.bg};color:${c.fg}` }, [c.icon]),
+        el('div', { class: 'stat-card__label' }, [c.label]),
+        el('div', { class: 'stat-card__value' }, [c.value]),
+        el('div', { class: 'stat-card__delta', style: 'color:var(--md-on-surface-variant);font-weight:500;' }, [c.sub])
+      ]));
+    });
+  }
+
+  /* ---------------- Status chips (reusable filter toolbar) ---------------- */
+  function renderStatusChips(container, activeStatus, onSelect, includeAll) {
+    if (!container) return;
+    container.innerHTML = '';
+    const options = [];
+    if (includeAll !== false) options.push(['all', '全部']);
+    Object.keys(META).forEach(key => options.push([key, META[key].label]));
+
+    options.forEach(([key, label]) => {
+      const isActive = activeStatus === key || (key === 'all' && !activeStatus);
+      const chip = el('button', {
+        class: 'chip' + (isActive ? ' active' : ''),
+        onclick: () => onSelect(key === 'all' ? null : key)
+      }, [
+        key !== 'all' ? el('span', { class: 'dot', style: `background:${META[key].color}` }) : null,
+        label
+      ]);
+      container.appendChild(chip);
+    });
+  }
+
+  function renderLegend(container) {
+    if (!container) return;
+    container.innerHTML = '';
+    Object.keys(META).forEach(key => {
+      container.appendChild(el('span', { class: 'legend__item' }, [
+        el('span', { class: 'dot', style: `background:${META[key].color}` }),
+        META[key].label
+      ]));
+    });
+  }
+
+  /* ---------------- Progress matrix ---------------- */
+  function renderMatrix(model, filterState) {
+    const table = document.getElementById('matrixTable');
+    if (!table) return;
+    const thead = table.querySelector('thead tr');
+    const tbody = table.querySelector('tbody');
+
+    thead.innerHTML = '<th>學生</th>';
+    model.tasks.forEach(task => {
+      thead.appendChild(el('th', { class: 'task-col', title: task.name }, [truncate(task.name, 14)]));
+    });
+
+    const rows = W.Students.filterGridRows(model.grid, filterState.query, filterState.status);
+
+    tbody.innerHTML = '';
+    if (rows.length === 0) {
+      const tr = el('tr', {}, [
+        el('td', { colspan: String(model.tasks.length + 1), style: 'text-align:center;padding:32px;color:var(--md-on-surface-variant);' },
+          ['找不到符合條件的學生'])
+      ]);
+      tbody.appendChild(tr);
+      return;
+    }
+
+    rows.forEach(row => {
+      const tr = el('tr', {}, [
+        el('td', {}, [
+          el('div', { class: 'student-name-cell' }, [
+            el('span', { class: 'avatar' }, [W.Students.getInitials(row.student.name)]),
+            el('span', {}, [row.student.name])
+          ])
+        ])
+      ]);
+      row.cells.forEach(cell => {
+        const meta = META[cell.status];
+        tr.appendChild(el('td', {}, [
+          el('span', {
+            class: 'cell-pill',
+            'data-status': cell.status,
+            title: `${cell.taskName} — ${meta.label}` + (cell.score ? `（${cell.score} 分）` : '')
+          }, [meta.icon])
+        ]));
+      });
+      tbody.appendChild(tr);
+    });
+  }
+
+  /* ---------------- Task cards ---------------- */
+  function renderTaskGrid(model, sortState) {
+    const grid = document.getElementById('taskGrid');
+    if (!grid) return;
+
+    let stats = [...model.taskStats];
+    const sortBy = (sortState && sortState.sortBy) || 'dueDate';
+    if (sortBy === 'completionRate') stats.sort((a, b) => a.completionRate - b.completionRate);
+    else if (sortBy === 'completionRateDesc') stats.sort((a, b) => b.completionRate - a.completionRate);
+    else stats.sort((a, b) => (a.task.dueDate || '').localeCompare(b.task.dueDate || ''));
+
+    grid.innerHTML = '';
+    if (stats.length === 0) {
+      grid.appendChild(el('div', { class: 'state-block' }, [el('p', {}, ['尚無任務資料'])]));
+      return;
+    }
+
+    stats.forEach(ts => {
+      const rateColor = ts.completionRate >= 70 ? 'var(--status-complete)' :
+        ts.completionRate >= 40 ? 'var(--status-progress)' : 'var(--status-overdue)';
+      grid.appendChild(el('div', { class: 'task-card' }, [
+        el('div', { class: 'task-card__title' }, [ts.task.name]),
+        el('div', { class: 'task-card__meta' }, [
+          el('span', {}, ['截止：' + (ts.task.dueDate || '未設定')]),
+          el('span', {}, [ts.studentCount + ' 位學生'])
+        ]),
+        el('div', { class: 'progress-track' }, [
+          el('div', { class: 'progress-track__fill', style: `width:${ts.completionRate}%;background:${rateColor}` })
+        ]),
+        el('div', { class: 'task-card__stats' }, [
+          el('span', {}, ['完成率 ', el('b', {}, [ts.completionRate + '%'])]),
+          el('span', {}, ['已完成 ', el('b', {}, [String(ts.counts.completed)])]),
+          el('span', {}, ['逾期 ', el('b', { style: ts.counts.overdue ? 'color:var(--status-overdue)' : '' }, [String(ts.counts.overdue)])])
+        ])
+      ]));
+    });
+  }
+
+  /* ---------------- Students table ---------------- */
+  function renderStudentsTable(model, filterState) {
+    const table = document.getElementById('studentsTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody');
+    tbody.innerHTML = '';
+
+    const rows = W.Students.filterStudentStats(model.studentStats, filterState.query, filterState.status);
+
+    if (rows.length === 0) {
+      tbody.appendChild(el('tr', {}, [
+        el('td', { colspan: '7', style: 'text-align:center;padding:32px;color:var(--md-on-surface-variant);' },
+          ['找不到符合條件的學生'])
+      ]));
+      return;
+    }
+
+    rows.sort((a, b) => b.completionRate - a.completionRate);
+
+    rows.forEach(row => {
+      const overallStatus = row.completionRate === 100 ? 'completed' :
+        row.counts.overdue > 0 ? 'overdue' :
+        row.completionRate === 0 ? 'not_started' : 'in_progress';
+      const meta = META[overallStatus];
+
+      tbody.appendChild(el('tr', {}, [
+        el('td', {}, [
+          el('div', { class: 'student-name-cell' }, [
+            el('span', { class: 'avatar' }, [W.Students.getInitials(row.student.name)]),
+            el('span', {}, [row.student.name])
+          ])
+        ]),
+        el('td', {}, [
+          el('div', { style: 'display:flex;align-items:center;gap:8px;min-width:140px;' }, [
+            el('div', { class: 'progress-track thin', style: 'flex:1' }, [
+              el('div', { class: 'progress-track__fill', style: `width:${row.completionRate}%` })
+            ]),
+            el('span', { class: 'mono', style: 'font-size:12px;min-width:34px;text-align:right;' }, [row.completionRate + '%'])
+          ])
+        ]),
+        el('td', {}, [String(row.counts.completed)]),
+        el('td', {}, [String(row.counts.in_progress)]),
+        el('td', {}, [String(row.counts.overdue)]),
+        el('td', {}, [String(row.counts.not_started)]),
+        el('td', {}, [
+          el('span', { class: 'status-badge', 'data-status': overallStatus }, [
+            el('span', { class: 'dot', style: `background:${meta.color}` }),
+            meta.label
+          ])
+        ])
+      ]));
+    });
+  }
+
+  function truncate(str, n) {
+    return str.length > n ? str.slice(0, n) + '…' : str;
+  }
+
+  W.Dashboard = {
+    renderStatCards,
+    renderStatusChips,
+    renderLegend,
+    renderMatrix,
+    renderTaskGrid,
+    renderStudentsTable
+  };
+})(window.Wayground);
