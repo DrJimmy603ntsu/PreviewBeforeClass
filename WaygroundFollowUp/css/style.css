@@ -687,7 +687,7 @@ table.students-table tbody tr:hover td { background: var(--md-surface-container)
 .modal p.hint { font-size: 12px; color: var(--md-on-surface-variant); margin-bottom: 16px; }
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--md-on-surface-variant); }
-.field input[type="text"], .field input[type="url"], .field input[type="date"], .field input[type="number"] {
+.field input[type="text"], .field input[type="url"], .field input[type="date"], .field input[type="number"], .field input[type="password"] {
   width: 100%; height: 42px; border-radius: var(--radius-xs);
   border: 1px solid var(--md-outline); background: var(--md-surface-container-lowest);
   color: var(--md-on-surface); padding: 0 12px; font-size: 14px; font-family: inherit;
@@ -747,6 +747,19 @@ table.students-table tbody tr:hover td { background: var(--md-surface-container)
   color: var(--md-on-surface); padding: 0 10px; font-size: 13px; font-family: inherit;
 }
 .portal-btn-sm { height: 34px; padding: 0 14px; font-size: 13px; }
+.portal-iframe-wrap {
+  margin-top: 4px;
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--md-surface-container-lowest);
+  height: 70vh;
+  min-height: 420px;
+}
+.portal-iframe-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 720px) {
+  .portal-iframe-wrap { height: 60vh; min-height: 320px; }
+}
 .modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
 .switch { position: relative; width: 44px; height: 24px; }
