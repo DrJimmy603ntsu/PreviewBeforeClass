@@ -12,7 +12,8 @@
   const LS_KEYS = {
     apiUrl: 'wayground.apiUrl',
     theme: 'wayground.theme',
-    autoRefresh: 'wayground.autoRefresh'
+    autoRefresh: 'wayground.autoRefresh',
+    portalStudent: 'wayground.portalStudent'
   };
 
   const state = {
@@ -22,6 +23,7 @@
     apiUrl: localStorage.getItem(LS_KEYS.apiUrl) || window.Wayground.DEFAULT_API_URL || '',
     autoRefresh: localStorage.getItem(LS_KEYS.autoRefresh) === 'true',
     autoRefreshTimer: null,
+    portalStudent: localStorage.getItem(LS_KEYS.portalStudent) || null,
     filters: {
       global: { query: '', status: null },
       matrix: { query: '', status: null },
@@ -38,7 +40,8 @@
     matrix: $('#view-matrix'),
     tasks: $('#view-tasks'),
     students: $('#view-students'),
-    input: $('#view-input')
+    input: $('#view-input'),
+    portal: $('#view-portal')
   };
   const stateLoading = $('#stateLoading');
   const stateEmpty = $('#stateEmpty');
@@ -55,6 +58,7 @@
     bindStateActions();
     bindInputForms();
     bindStudentBatchImport();
+    bindPortal();
     renderInputView();
 
     if (state.apiUrl) {
@@ -112,6 +116,7 @@
     });
     closeMobileNav();
     if (viewName === 'input') renderInputView();
+    if (viewName === 'portal') renderPortalView();
     if (state.model) renderCurrentView();
   }
 
@@ -456,6 +461,80 @@
     }[c]));
   }
 
+  /* ============== Student portal (login + self-report score) ============== */
+  function renderPortalView() {
+    const container = $('#portalContent');
+    if (!container) return;
+    if (!state.model) {
+      container.innerHTML = '<p style="font-size:14px;color:var(--md-on-surface-variant);">請先於右上角「設定」連接 Google Sheet，或載入示範資料，才能登入查看任務。</p>';
+      return;
+    }
+    if (state.portalStudent) {
+      Dashboard.renderPortalDashboard(container, state.model, state.portalStudent);
+    } else {
+      Dashboard.renderPortalLogin(container, state.model);
+    }
+  }
+
+  function bindPortal() {
+    const container = $('#portalContent');
+    if (!container) return;
+
+    container.addEventListener('click', (e) => {
+      if (e.target.id === 'portalLoginBtn') {
+        const select = $('#portalStudentSelect');
+        const name = select ? select.value : '';
+        if (!name) {
+          showSnackbar('請選擇你的姓名');
+          return;
+        }
+        state.portalStudent = name;
+        localStorage.setItem(LS_KEYS.portalStudent, name);
+        renderPortalView();
+        return;
+      }
+
+      if (e.target.id === 'portalLogoutBtn') {
+        state.portalStudent = null;
+        localStorage.removeItem(LS_KEYS.portalStudent);
+        renderPortalView();
+        return;
+      }
+
+      const taskName = e.target.getAttribute && e.target.getAttribute('data-report-task');
+      if (taskName) {
+        handlePortalReport(taskName, e.target);
+      }
+    });
+  }
+
+  async function handlePortalReport(taskName, btn) {
+    if (!state.apiUrl) {
+      showSnackbar('尚未連接 Google Sheet，無法回報成績');
+      return;
+    }
+    const actionsRow = btn.closest('.portal-task-card__actions');
+    const scoreInput = actionsRow ? actionsRow.querySelector('.portal-score-input') : null;
+    const scoreRaw = scoreInput ? scoreInput.value.trim() : '';
+
+    setBusy(btn, true);
+    try {
+      await postToApi({
+        action: 'updateRecord',
+        studentName: state.portalStudent,
+        taskName: taskName,
+        status: 'completed',
+        score: scoreRaw === '' ? '' : Number(scoreRaw)
+      });
+      showSnackbar('已回報成績：' + taskName);
+      await fetchFromApi(state.apiUrl);
+    } catch (err) {
+      showSnackbar('回報失敗：' + err.message);
+    } finally {
+      setBusy(btn, false);
+    }
+  }
+
   /* ============== API ============== */
   async function fetchFromApi(url) {
     showLoading();
@@ -528,6 +607,7 @@
     renderMatrixView();
     renderTasksView();
     renderStudentsView();
+    renderPortalView();
   }
 
   function renderCurrentView() {
@@ -541,6 +621,8 @@
       renderTasksView();
     } else if (state.view === 'students') {
       renderStudentsView();
+    } else if (state.view === 'portal') {
+      renderPortalView();
     }
   }
 

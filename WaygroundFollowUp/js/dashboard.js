@@ -251,12 +251,102 @@ window.Wayground = window.Wayground || {};
     return str.length > n ? str.slice(0, n) + '…' : str;
   }
 
+  /* ---------------- Student portal ---------------- */
+  function renderPortalLogin(container, model) {
+    container.innerHTML = '';
+    if (!model || !model.students.length) {
+      container.appendChild(el('div', { class: 'state-block' }, [
+        el('p', {}, ['尚無學生資料，請先請老師連接 Google Sheet 或新增學生名單。'])
+      ]));
+      return;
+    }
+
+    const options = [el('option', { value: '' }, ['請選擇你的姓名…'])];
+    model.students.forEach(s => options.push(el('option', { value: s.name }, [s.name])));
+    const select = el('select', { class: 'portal-select', id: 'portalStudentSelect' }, options);
+
+    container.appendChild(el('div', { class: 'card card--elevated', style: 'max-width:420px;' }, [
+      el('div', { class: 'field' }, [
+        el('label', { for: 'portalStudentSelect' }, ['選擇你的姓名']),
+        select
+      ]),
+      el('div', { class: 'form-actions' }, [
+        el('button', { class: 'btn btn-filled', id: 'portalLoginBtn' }, ['登入'])
+      ])
+    ]));
+  }
+
+  function renderPortalDashboard(container, model, loggedInName) {
+    container.innerHTML = '';
+    const row = model.grid.find(r => r.student.name === loggedInName);
+    if (!row) {
+      container.appendChild(el('div', { class: 'state-block' }, [
+        el('p', {}, ['找不到你的資料，可能已被移除，請重新登入或聯絡老師。']),
+        el('button', { class: 'btn btn-tonal', id: 'portalLogoutBtn' }, ['重新登入'])
+      ]));
+      return;
+    }
+    const stat = model.studentStats.find(s => s.student.name === loggedInName);
+
+    container.appendChild(el('div', { class: 'portal-header' }, [
+      el('div', {}, [
+        el('div', { style: 'font-size:20px;font-weight:700;font-family:var(--font-display);' }, ['歡迎回來，' + loggedInName]),
+        el('div', { style: 'font-size:13px;color:var(--md-on-surface-variant);margin-top:2px;' },
+          ['整體完成率 ' + (stat ? stat.completionRate : 0) + '%'])
+      ]),
+      el('button', { class: 'btn btn-text', id: 'portalLogoutBtn' }, ['登出'])
+    ]));
+
+    const list = el('div', { class: 'portal-task-list' });
+    row.cells.forEach(cell => {
+      const task = model.tasks.find(t => t.name === cell.taskName);
+      const meta = META[cell.status];
+      const metaLine = '截止：' + (task && task.dueDate ? task.dueDate : '未設定') +
+        (cell.score !== null && cell.score !== undefined && cell.score !== '' ? '　已回報成績：' + cell.score : '');
+
+      const actions = el('div', { class: 'portal-task-card__actions' });
+      if (task && task.link) {
+        actions.appendChild(el('a', {
+          class: 'btn btn-outlined portal-btn-sm',
+          href: task.link, target: '_blank', rel: 'noopener noreferrer'
+        }, ['前往 Wayground ↗']));
+      }
+      if (cell.status !== 'completed') {
+        actions.appendChild(el('input', {
+          type: 'number', min: '0', class: 'portal-score-input', placeholder: '分數（選填）'
+        }));
+        actions.appendChild(el('button', {
+          class: 'btn btn-filled portal-btn-sm', 'data-report-task': cell.taskName
+        }, ['回報完成']));
+      }
+
+      list.appendChild(el('div', { class: 'portal-task-card' }, [
+        el('div', { class: 'portal-task-card__top' }, [
+          el('span', { class: 'status-badge', 'data-status': cell.status }, [
+            el('span', { class: 'dot', style: `background:${meta.color}` }),
+            meta.label
+          ]),
+          el('span', { class: 'portal-task-card__title' }, [cell.taskName])
+        ]),
+        el('div', { class: 'portal-task-card__meta' }, [metaLine]),
+        actions
+      ]));
+    });
+
+    if (row.cells.length === 0) {
+      list.appendChild(el('div', { class: 'state-block' }, [el('p', {}, ['目前還沒有指派任何任務。'])]));
+    }
+    container.appendChild(list);
+  }
+
   W.Dashboard = {
     renderStatCards,
     renderStatusChips,
     renderLegend,
     renderMatrix,
     renderTaskGrid,
-    renderStudentsTable
+    renderStudentsTable,
+    renderPortalLogin,
+    renderPortalDashboard
   };
 })(window.Wayground);
