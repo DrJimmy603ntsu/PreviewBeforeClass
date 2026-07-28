@@ -60,6 +60,10 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       新增資料
     </button>
+    <button class="nav-item" data-view="portal">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10 17l5-5-5-5M15 12H3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      學生登入
+    </button>
     <div class="nav-rail__footer" id="lastSync">尚未連接資料來源</div>
   </nav>
   <!-- ================= Main Content ================= -->
@@ -231,6 +235,16 @@
         </div>
       </div>
       <p class="input-hint" id="inputModeHint"></p>
+    </section>
+    <!-- ---------- Student Portal View ---------- -->
+    <section id="view-portal" class="view hidden">
+      <div class="page-header">
+        <div>
+          <h1>學生登入</h1>
+          <p>選擇你的姓名登入，查看自己的任務並回報 Wayground 成績</p>
+        </div>
+      </div>
+      <div id="portalContent"></div>
     </section>
     <!-- ---------- Empty / Loading states ---------- -->
     <div id="stateLoading" class="state-block hidden">
