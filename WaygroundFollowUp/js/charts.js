@@ -187,6 +187,10 @@ window.Wayground = window.Wayground || {};
   }
 
   function renderAll(model) {
+    if (typeof Chart === 'undefined') {
+      console.error('Chart.js 尚未載入，圖表無法顯示（請確認 CDN 連線正常）。');
+      return;
+    }
     renderTrendChart(model);
     renderStatusDonut(model);
     renderTaskBarChart(model);
