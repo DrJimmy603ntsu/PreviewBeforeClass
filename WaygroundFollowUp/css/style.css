@@ -698,6 +698,26 @@ table.students-table tbody tr:hover td { background: var(--md-surface-container)
 .form-actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
 .form-actions .btn { width: 100%; justify-content: center; }
 .input-hint { font-size: 12px; color: var(--md-on-surface-variant); margin: -6px 0 16px; }
+.batch-import { margin-top: 4px; }
+.batch-import__divider { border-top: 1px solid var(--md-outline-variant); margin: 18px 0 16px; }
+.batch-import input[type="file"] {
+  width: 100%; font-size: 13px; color: var(--md-on-surface-variant);
+  padding: 8px 0;
+}
+.batch-import__preview {
+  background: var(--md-surface-container-lowest);
+  border: 1px solid var(--md-outline-variant);
+  border-radius: var(--radius-xs);
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--md-on-surface-variant);
+  margin-bottom: 12px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.batch-import__preview strong { color: var(--md-on-surface); }
+.batch-import__preview ul { margin: 6px 0 0; padding-left: 18px; }
+.batch-import__preview li { line-height: 1.6; }
 .modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 .switch-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
 .switch { position: relative; width: 44px; height: 24px; }
