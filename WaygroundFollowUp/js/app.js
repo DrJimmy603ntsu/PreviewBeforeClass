@@ -19,7 +19,7 @@
     view: 'dashboard',
     model: null,
     rawData: null,
-    apiUrl: localStorage.getItem(LS_KEYS.apiUrl) || '',
+    apiUrl: localStorage.getItem(LS_KEYS.apiUrl) || window.Wayground.DEFAULT_API_URL || '',
     autoRefresh: localStorage.getItem(LS_KEYS.autoRefresh) === 'true',
     autoRefreshTimer: null,
     filters: {
@@ -37,7 +37,8 @@
     dashboard: $('#view-dashboard'),
     matrix: $('#view-matrix'),
     tasks: $('#view-tasks'),
-    students: $('#view-students')
+    students: $('#view-students'),
+    input: $('#view-input')
   };
   const stateLoading = $('#stateLoading');
   const stateEmpty = $('#stateEmpty');
@@ -52,6 +53,8 @@
     bindTopBar();
     bindModal();
     bindStateActions();
+    bindInputForms();
+    renderInputView();
 
     if (state.apiUrl) {
       fetchFromApi(state.apiUrl);
@@ -107,6 +110,7 @@
       btn.classList.toggle('active', btn.dataset.view === viewName);
     });
     closeMobileNav();
+    if (viewName === 'input') renderInputView();
     if (state.model) renderCurrentView();
   }
 
@@ -158,6 +162,7 @@
       localStorage.setItem(LS_KEYS.apiUrl, url);
       closeModal();
       fetchFromApi(url);
+      renderInputView();
       auto ? startAutoRefresh() : stopAutoRefresh();
     });
 
@@ -184,7 +189,129 @@
     state.apiUrl = '';
     localStorage.removeItem(LS_KEYS.apiUrl);
     applyData(demo);
+    renderInputView();
     showSnackbar('已載入示範資料');
+  }
+
+  /* ============== Add Data (students / tasks) ============== */
+  function bindInputForms() {
+    const studentForm = $('#addStudentForm');
+    const taskForm = $('#addTaskForm');
+    if (!studentForm || !taskForm) return;
+
+    studentForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleAddSubmit({
+        errorEl: $('#addStudentError'),
+        submitBtn: $('#addStudentSubmit'),
+        buildPayload: () => {
+          const name = $('#newStudentName').value.trim();
+          if (!name) throw new Error('請輸入學生姓名');
+          return {
+            action: 'addStudent',
+            name: name,
+            studentId: $('#newStudentId').value.trim()
+          };
+        },
+        onSuccess: (name) => {
+          studentForm.reset();
+          showSnackbar('已新增學生：' + name);
+        }
+      });
+    });
+
+    taskForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      handleAddSubmit({
+        errorEl: $('#addTaskError'),
+        submitBtn: $('#addTaskSubmit'),
+        buildPayload: () => {
+          const name = $('#newTaskName').value.trim();
+          if (!name) throw new Error('請輸入任務名稱');
+          const scoreRaw = $('#newTaskScore').value;
+          return {
+            action: 'addTask',
+            name: name,
+            dueDate: $('#newTaskDue').value,
+            totalScore: scoreRaw === '' ? '' : Number(scoreRaw)
+          };
+        },
+        onSuccess: (name) => {
+          taskForm.reset();
+          showSnackbar('已新增任務：' + name);
+        }
+      });
+    });
+  }
+
+  async function handleAddSubmit({ buildPayload, errorEl, submitBtn, onSuccess }) {
+    hideFieldError(errorEl);
+
+    if (!state.apiUrl) {
+      showFieldError(errorEl, '尚未連接 Google Sheet，請先點選右上角「設定」貼上 Apps Script 網址。');
+      return;
+    }
+
+    let payload;
+    try {
+      payload = buildPayload();
+    } catch (err) {
+      showFieldError(errorEl, err.message);
+      return;
+    }
+
+    setBusy(submitBtn, true);
+    try {
+      await postToApi(payload);
+      onSuccess(payload.name);
+      fetchFromApi(state.apiUrl);
+    } catch (err) {
+      showFieldError(errorEl, err.message);
+    } finally {
+      setBusy(submitBtn, false);
+    }
+  }
+
+  async function postToApi(payload) {
+    // 使用 text/plain 避免瀏覽器對 Apps Script 發出 CORS 預檢 (preflight) 請求
+    const res = await fetch(state.apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || '新增失敗，請稍後再試');
+    return json.result;
+  }
+
+  function renderInputView() {
+    const hint = $('#inputModeHint');
+    if (!hint) return;
+    hint.textContent = state.apiUrl
+      ? '目前已連接 Google Sheet，新增後會直接寫入並自動重新整理資料。'
+      : '目前為示範資料模式，尚未連接 Google Sheet，請先點選右上角「設定」連接後才能新增資料。';
+  }
+
+  function showFieldError(el, msg) {
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+  function hideFieldError(el) {
+    if (!el) return;
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+  function setBusy(btn, busy) {
+    if (!btn) return;
+    btn.disabled = busy;
+    if (busy) {
+      btn.dataset.originalLabel = btn.textContent;
+      btn.textContent = '處理中…';
+    } else if (btn.dataset.originalLabel) {
+      btn.textContent = btn.dataset.originalLabel;
+    }
   }
 
   /* ============== API ============== */
