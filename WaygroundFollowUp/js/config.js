@@ -6,4 +6,4 @@
  */
 window.Wayground = window.Wayground || {};
 window.Wayground.DEFAULT_API_URL =
-  'https://script.google.com/macros/s/AKfycbwRfaOw_L97bKUkEdEY2QvWdD9URaJSSaFLgCtNkZ6UvWouv23p3CSJv3-5tzD0RTlT/exec';
+  'https://script.google.com/macros/s/AKfycbzBMwVkkEpoAaTatAaPLvFcivccyPrOVc3lRORLiimxhv6R_CZHlBvu1CXqGFAnBTh5/exec';
