@@ -13,7 +13,9 @@
     apiUrl: 'wayground.apiUrl',
     theme: 'wayground.theme',
     autoRefresh: 'wayground.autoRefresh',
-    portalStudent: 'wayground.portalStudent'
+    portalStudent: 'wayground.portalStudent',
+    teacherAuthed: 'wayground.teacherAuthed',
+    teacherUsername: 'wayground.teacherUsername'
   };
 
   const state = {
@@ -27,6 +29,9 @@
     portalLoginError: '',
     portalIframeTask: null,
     portalChangePw: { open: false, error: '' },
+    teacherAuthed: localStorage.getItem(LS_KEYS.teacherAuthed) === 'true',
+    teacherUsername: localStorage.getItem(LS_KEYS.teacherUsername) || '',
+    teacherLoginError: '',
     filters: {
       global: { query: '', status: null },
       matrix: { query: '', status: null },
@@ -60,6 +65,7 @@
     bindModal();
     bindStateActions();
     bindInputForms();
+    bindInputAuth();
     bindStudentBatchImport();
     bindStudentsTable();
     bindPortal();
@@ -170,6 +176,7 @@
       }
       state.apiUrl = url;
       localStorage.setItem(LS_KEYS.apiUrl, url);
+      resetTeacherAuth();
       closeModal();
       fetchFromApi(url);
       renderInputView();
@@ -198,6 +205,7 @@
     const demo = Students.generateDemoData();
     state.apiUrl = '';
     localStorage.removeItem(LS_KEYS.apiUrl);
+    resetTeacherAuth();
     applyData(demo);
     renderInputView();
     showSnackbar('已載入示範資料');
@@ -301,11 +309,82 @@
   }
 
   function renderInputView() {
+    const gate = $('#inputAuthGate');
+    const forms = $('#inputForms');
+    if (!gate || !forms) return;
+
+    gate.classList.toggle('hidden', state.teacherAuthed);
+    forms.classList.toggle('hidden', !state.teacherAuthed);
+
     const hint = $('#inputModeHint');
-    if (!hint) return;
-    hint.textContent = state.apiUrl
-      ? '目前已連接 Google Sheet，新增後會直接寫入並自動重新整理資料。'
-      : '目前為示範資料模式，尚未連接 Google Sheet，請先點選右上角「設定」連接後才能新增資料。';
+    if (hint) {
+      hint.textContent = state.apiUrl
+        ? '目前已連接 Google Sheet，新增後會直接寫入並自動重新整理資料。'
+        : '目前為示範資料模式，尚未連接 Google Sheet，請先點選右上角「設定」連接後才能新增資料。';
+    }
+  }
+
+  function resetTeacherAuth() {
+    state.teacherAuthed = false;
+    state.teacherUsername = '';
+    state.teacherLoginError = '';
+    localStorage.removeItem(LS_KEYS.teacherAuthed);
+    localStorage.removeItem(LS_KEYS.teacherUsername);
+  }
+
+  function bindInputAuth() {
+    const form = $('#inputAuthForm');
+    const errorEl = $('#inputAuthError');
+    const submitBtn = $('#inputAuthSubmit');
+    const logoutBtn = $('#inputLogoutBtn');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideFieldError(errorEl);
+
+      const username = $('#inputAuthUsername').value.trim();
+      const password = $('#inputAuthPassword').value;
+      if (!username || !password) {
+        showFieldError(errorEl, '請輸入帳號與密碼');
+        return;
+      }
+
+      setBusy(submitBtn, true);
+      try {
+        if (state.apiUrl) {
+          // 已連接 Google Sheet：帳密驗證交給後端的 teacherLogin action，
+          // 密碼不會留在前端或被存進瀏覽器可讀的資料模型中。
+          await postToApi({ action: 'teacherLogin', username, password });
+        } else {
+          // 尚未連接 Google Sheet（示範資料模式）：退回使用本機預設帳密，
+          // 純粹讓老師能先預覽「新增資料」頁的操作流程。
+          const def = window.Wayground.DEFAULT_TEACHER_CREDENTIALS || {};
+          if (username !== def.username || password !== def.password) {
+            throw new Error('帳號或密碼不正確');
+          }
+        }
+        state.teacherAuthed = true;
+        state.teacherUsername = username;
+        localStorage.setItem(LS_KEYS.teacherAuthed, 'true');
+        localStorage.setItem(LS_KEYS.teacherUsername, username);
+        form.reset();
+        renderInputView();
+        showSnackbar('教師登入成功');
+      } catch (err) {
+        showFieldError(errorEl, err.message || '帳號或密碼不正確');
+      } finally {
+        setBusy(submitBtn, false);
+      }
+    });
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        resetTeacherAuth();
+        renderInputView();
+        showSnackbar('已登出教師帳號');
+      });
+    }
   }
 
   function showFieldError(el, msg) {
