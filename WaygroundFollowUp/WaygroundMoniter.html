@@ -138,7 +138,7 @@
       <div class="page-header">
         <div>
           <h1>學生清單</h1>
-          <p>搜尋、篩選並檢視每位學生的整體進度</p>
+          <p>搜尋、篩選並檢視每位學生的整體進度，並可重設學生登入密碼</p>
         </div>
       </div>
       <div class="toolbar" id="studentFilters"></div>
@@ -153,6 +153,7 @@
               <th>逾期</th>
               <th>未開始</th>
               <th>狀態</th>
+              <th>登入密碼</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -167,81 +168,110 @@
           <p>新增學生姓名或 Wayground 任務，資料會直接寫入你連接的 Google Sheet</p>
         </div>
       </div>
-      <div class="two-col">
-        <div class="card card--elevated">
-          <div class="section__header">
-            <span class="section__title">新增學生</span>
-          </div>
-          <form id="addStudentForm" novalidate>
-            <div class="field">
-              <label for="newStudentName">學生姓名 *</label>
-              <input type="text" id="newStudentName" name="name" placeholder="例如：王小明" autocomplete="off" required>
-            </div>
-            <div class="field">
-              <label for="newStudentId">學號（選填）</label>
-              <input type="text" id="newStudentId" name="studentId" placeholder="例如：S1001" autocomplete="off">
-            </div>
-            <div class="field__error" id="addStudentError"></div>
-            <div class="form-actions">
-              <button type="submit" class="btn btn-filled" id="addStudentSubmit">新增學生</button>
-            </div>
-          </form>
 
-          <div class="batch-import">
-            <div class="batch-import__divider"></div>
-            <div class="section__header" style="margin-bottom:6px;">
-              <span class="section__title" style="font-size:14px;">批次匯入（CSV / Excel）</span>
+      <!-- 教師登入關卡：需先驗證帳號密碼才能看到下方新增表單 -->
+      <div id="inputAuthGate" class="card card--elevated" style="max-width:420px;">
+        <div class="section__header">
+          <span class="section__title">教師登入</span>
+        </div>
+        <p class="input-hint" style="margin-top:0;">此頁僅限老師使用，請先輸入帳號密碼。</p>
+        <form id="inputAuthForm" novalidate>
+          <div class="field">
+            <label for="inputAuthUsername">帳號</label>
+            <input type="text" id="inputAuthUsername" name="username" autocomplete="off" required>
+          </div>
+          <div class="field">
+            <label for="inputAuthPassword">密碼</label>
+            <input type="password" id="inputAuthPassword" name="password" autocomplete="off" required>
+          </div>
+          <div class="field__error" id="inputAuthError"></div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-filled" id="inputAuthSubmit">登入</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="inputForms" class="hidden">
+        <div class="two-col">
+          <div class="card card--elevated">
+            <div class="section__header">
+              <span class="section__title">新增學生</span>
             </div>
-            <p class="input-hint" style="margin-top:0;">
-              第一欄為學生姓名、第二欄為學號（選填）。若第一列是標題（例如「姓名」或 name）會自動略過。
-            </p>
-            <div class="field">
-              <label for="studentBatchFile">選擇檔案（.csv / .xlsx / .xls）</label>
-              <input type="file" id="studentBatchFile" accept=".csv,.xlsx,.xls">
+            <form id="addStudentForm" novalidate>
+              <div class="field">
+                <label for="newStudentName">學生姓名 *</label>
+                <input type="text" id="newStudentName" name="name" placeholder="例如：王小明" autocomplete="off" required>
+              </div>
+              <div class="field">
+                <label for="newStudentId">學號（選填）</label>
+                <input type="text" id="newStudentId" name="studentId" placeholder="例如：S1001" autocomplete="off">
+              </div>
+              <p class="input-hint" style="margin-top:-4px;">新增後，學生登入的預設密碼即為此學號；學生登入後可自行更改密碼。</p>
+              <div class="field__error" id="addStudentError"></div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-filled" id="addStudentSubmit">新增學生</button>
+              </div>
+            </form>
+            <div class="batch-import">
+              <div class="batch-import__divider"></div>
+              <div class="section__header" style="margin-bottom:6px;">
+                <span class="section__title" style="font-size:14px;">批次匯入（CSV / Excel）</span>
+              </div>
+              <p class="input-hint" style="margin-top:0;">
+                第一欄為學生姓名、第二欄為學號（選填）。若第一列是標題（例如「姓名」或 name）會自動略過。
+              </p>
+              <div class="field">
+                <label for="studentBatchFile">選擇檔案（.csv / .xlsx / .xls）</label>
+                <input type="file" id="studentBatchFile" accept=".csv,.xlsx,.xls">
+              </div>
+              <div class="batch-import__preview hidden" id="studentBatchPreview"></div>
+              <div class="field__error" id="addStudentBatchError"></div>
+              <div class="form-actions">
+                <button type="button" class="btn btn-outlined" id="addStudentBatchSubmit" disabled>匯入學生名單</button>
+              </div>
             </div>
-            <div class="batch-import__preview hidden" id="studentBatchPreview"></div>
-            <div class="field__error" id="addStudentBatchError"></div>
-            <div class="form-actions">
-              <button type="button" class="btn btn-outlined" id="addStudentBatchSubmit" disabled>匯入學生名單</button>
+          </div>
+          <div class="card card--elevated">
+            <div class="section__header">
+              <span class="section__title">新增 Wayground 任務</span>
             </div>
+            <form id="addTaskForm" novalidate>
+              <div class="field">
+                <label for="newTaskName">任務名稱 *</label>
+                <input type="text" id="newTaskName" name="name" placeholder="例如：Ch6 生態保育測驗" autocomplete="off" required>
+              </div>
+              <div class="field">
+                <label for="newTaskDue">截止日期（選填）</label>
+                <input type="date" id="newTaskDue" name="dueDate">
+              </div>
+              <div class="field">
+                <label for="newTaskScore">總分（選填）</label>
+                <input type="number" id="newTaskScore" name="totalScore" min="0" step="1" placeholder="例如：100">
+              </div>
+              <div class="field">
+                <label for="newTaskLink">Wayground 連結（選填）</label>
+                <input type="url" id="newTaskLink" name="link" placeholder="https://wayground.com/join/quiz/6a50750e48be57e29ba3f9ca/start?studentShare=true" autocomplete="off">
+              </div>
+              <p class="input-hint" style="margin-top:-4px;">此連結會在「學生登入」頁以內嵌視窗開啟，學生點選「回報完成」時會自動記錄完成時間。</p>
+              <div class="field__error" id="addTaskError"></div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-filled" id="addTaskSubmit">新增任務</button>
+              </div>
+            </form>
           </div>
         </div>
-        <div class="card card--elevated">
-          <div class="section__header">
-            <span class="section__title">新增 Wayground 任務</span>
-          </div>
-          <form id="addTaskForm" novalidate>
-            <div class="field">
-              <label for="newTaskName">任務名稱 *</label>
-              <input type="text" id="newTaskName" name="name" placeholder="例如：Ch6 生態保育測驗" autocomplete="off" required>
-            </div>
-            <div class="field">
-              <label for="newTaskDue">截止日期（選填）</label>
-              <input type="date" id="newTaskDue" name="dueDate">
-            </div>
-            <div class="field">
-              <label for="newTaskScore">總分（選填）</label>
-              <input type="number" id="newTaskScore" name="totalScore" min="0" step="1" placeholder="例如：100">
-            </div>
-            <div class="field">
-              <label for="newTaskLink">Wayground 連結（選填）</label>
-              <input type="url" id="newTaskLink" name="link" placeholder="https://wayground.com/join/quiz/6a50750e48be57e29ba3f9ca/start?studentShare=true" autocomplete="off">
-            </div>
-            <div class="field__error" id="addTaskError"></div>
-            <div class="form-actions">
-              <button type="submit" class="btn btn-filled" id="addTaskSubmit">新增任務</button>
-            </div>
-          </form>
+        <p class="input-hint" id="inputModeHint"></p>
+        <div class="form-actions" style="max-width:200px;">
+          <button type="button" class="btn btn-text" id="inputLogoutBtn">登出教師帳號</button>
         </div>
       </div>
-      <p class="input-hint" id="inputModeHint"></p>
     </section>
     <!-- ---------- Student Portal View ---------- -->
     <section id="view-portal" class="view hidden">
       <div class="page-header">
         <div>
           <h1>學生登入</h1>
-          <p>選擇你的姓名登入，查看自己的任務並回報 Wayground 成績</p>
+          <p>選擇你的姓名並輸入密碼登入，查看自己的任務並回報 Wayground 成績</p>
         </div>
       </div>
       <div id="portalContent"></div>
