@@ -54,6 +54,7 @@
     bindModal();
     bindStateActions();
     bindInputForms();
+    bindStudentBatchImport();
     renderInputView();
 
     if (state.apiUrl) {
@@ -317,6 +318,142 @@
     } else if (btn.dataset.originalLabel) {
       btn.textContent = btn.dataset.originalLabel;
     }
+  }
+
+  /* ============== Batch student import (CSV / Excel) ============== */
+  let parsedBatchStudents = [];
+
+  function bindStudentBatchImport() {
+    const fileInput = $('#studentBatchFile');
+    const previewEl = $('#studentBatchPreview');
+    const errorEl = $('#addStudentBatchError');
+    const submitBtn = $('#addStudentBatchSubmit');
+    if (!fileInput || !submitBtn) return;
+
+    fileInput.addEventListener('change', async () => {
+      hideFieldError(errorEl);
+      previewEl.classList.add('hidden');
+      previewEl.innerHTML = '';
+      submitBtn.disabled = true;
+      parsedBatchStudents = [];
+
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      if (typeof XLSX === 'undefined') {
+        showFieldError(errorEl, 'CSV / Excel 解析套件載入失敗，請重新整理頁面後再試一次。');
+        return;
+      }
+
+      try {
+        const rows = await parseSpreadsheetFile(file);
+        const students = rowsToStudents(rows);
+        if (students.length === 0) {
+          throw new Error('檔案中找不到有效的學生姓名，請確認第一欄為姓名。');
+        }
+        parsedBatchStudents = students;
+        renderBatchPreview(previewEl, students);
+        submitBtn.disabled = false;
+      } catch (err) {
+        showFieldError(errorEl, err.message);
+      }
+    });
+
+    submitBtn.addEventListener('click', async () => {
+      if (!parsedBatchStudents.length) return;
+      hideFieldError(errorEl);
+
+      if (!state.apiUrl) {
+        showFieldError(errorEl, '尚未連接 Google Sheet，請先點選右上角「設定」貼上 Apps Script 網址。');
+        return;
+      }
+
+      setBusy(submitBtn, true);
+      try {
+        const result = await postToApi({ action: 'addStudentsBatch', students: parsedBatchStudents });
+        const inserted = (result && result.inserted) || 0;
+        const skipped = (result && result.skipped) || [];
+        let msg = `已匯入 ${inserted} 位學生`;
+        if (skipped.length) msg += `，略過 ${skipped.length} 筆重複姓名`;
+        showSnackbar(msg);
+        fetchFromApi(state.apiUrl);
+
+        fileInput.value = '';
+        previewEl.classList.add('hidden');
+        previewEl.innerHTML = '';
+        parsedBatchStudents = [];
+        submitBtn.disabled = true;
+      } catch (err) {
+        showFieldError(errorEl, err.message);
+      } finally {
+        setBusy(submitBtn, false);
+      }
+    });
+  }
+
+  function parseSpreadsheetFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const sheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
+          resolve(rows);
+        } catch (err) {
+          reject(new Error('無法讀取檔案，請確認為有效的 CSV 或 Excel 檔。'));
+        }
+      };
+      reader.onerror = () => reject(new Error('讀取檔案時發生錯誤。'));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  /** 將試算表原始列資料轉成 {name, studentId} 陣列；自動略過標題列與重複姓名 */
+  function rowsToStudents(rows) {
+    let dataRows = (rows || []).filter(r => r && String(r[0] || '').trim() !== '');
+    if (dataRows.length === 0) return [];
+
+    const headerCandidates = ['name', 'studentname', '姓名', '學生姓名'];
+    const firstCell = String(dataRows[0][0] || '').trim().toLowerCase();
+    if (headerCandidates.includes(firstCell)) {
+      dataRows = dataRows.slice(1);
+    }
+
+    const seen = new Set();
+    const students = [];
+    dataRows.forEach(r => {
+      const name = String(r[0] || '').trim();
+      if (!name || seen.has(name)) return;
+      seen.add(name);
+      students.push({
+        name: name,
+        studentId: r[1] !== undefined && r[1] !== null ? String(r[1]).trim() : ''
+      });
+    });
+    return students;
+  }
+
+  function renderBatchPreview(container, students) {
+    const maxShown = 8;
+    const shown = students.slice(0, maxShown);
+    const remaining = students.length - shown.length;
+    let html = `<strong>偵測到 ${students.length} 位學生</strong><ul>`;
+    shown.forEach(s => {
+      html += `<li>${escapeHtml(s.name)}${s.studentId ? '（' + escapeHtml(s.studentId) + '）' : ''}</li>`;
+    });
+    if (remaining > 0) html += `<li>… 其餘 ${remaining} 位</li>`;
+    html += '</ul>';
+    container.innerHTML = html;
+    container.classList.remove('hidden');
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
   }
 
   /* ============== API ============== */
