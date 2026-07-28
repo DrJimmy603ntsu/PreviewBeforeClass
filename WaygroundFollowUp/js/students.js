@@ -59,6 +59,12 @@ window.Wayground = window.Wayground || {};
     return isNaN(d.getTime()) ? null : d;
   }
 
+  /** 安全轉字串：處理 Google Sheet 可能回傳數字、null、undefined 等非字串型別的儲存格 */
+  function toStr(val) {
+    if (val === undefined || val === null) return '';
+    return String(val).trim();
+  }
+
   /**
    * 將後端回傳的 {students, tasks, records} 組成前端運算用的完整資料模型：
    * - grid: 每位學生 x 每項任務 的狀態矩陣
@@ -66,14 +72,23 @@ window.Wayground = window.Wayground || {};
    * - taskStats: 每項任務的彙總統計
    */
   function buildModel(raw) {
-    const students = (raw.students || []).map(s => ({ name: s.name, studentId: s.studentId || '' }));
+    const students = (raw.students || []).map(s => ({
+      name: toStr(s.name),
+      studentId: toStr(s.studentId)
+    }));
     const tasks = (raw.tasks || []).map(t => ({
-      name: t.name,
+      name: toStr(t.name),
       dueDate: t.dueDate || '',
       totalScore: t.totalScore || null,
-      link: t.link || ''
+      link: toStr(t.link)
     }));
-    const records = raw.records || [];
+    const records = (raw.records || []).map(r => ({
+      studentName: toStr(r.studentName),
+      taskName: toStr(r.taskName),
+      status: r.status,
+      completedAt: r.completedAt,
+      score: r.score
+    }));
 
     // 建立快速查找表：studentName|taskName -> record
     const recordMap = new Map();
@@ -160,7 +175,7 @@ window.Wayground = window.Wayground || {};
 
   function getInitials(name) {
     if (!name) return '?';
-    const trimmed = name.trim();
+    const trimmed = String(name).trim();
     // 中文姓名取最後一個字，英文取前兩個字母
     if (/[\u4e00-\u9fff]/.test(trimmed)) return trimmed.slice(-2);
     return trimmed.slice(0, 2).toUpperCase();
