@@ -24,6 +24,9 @@
     autoRefresh: localStorage.getItem(LS_KEYS.autoRefresh) === 'true',
     autoRefreshTimer: null,
     portalStudent: localStorage.getItem(LS_KEYS.portalStudent) || null,
+    portalLoginError: '',
+    portalIframeTask: null,
+    portalChangePw: { open: false, error: '' },
     filters: {
       global: { query: '', status: null },
       matrix: { query: '', status: null },
@@ -58,6 +61,7 @@
     bindStateActions();
     bindInputForms();
     bindStudentBatchImport();
+    bindStudentsTable();
     bindPortal();
     renderInputView();
 
@@ -461,6 +465,37 @@
     }[c]));
   }
 
+  /* ============== Students table (teacher: reset student password) ============== */
+  function bindStudentsTable() {
+    const table = $('#studentsTable');
+    if (!table) return;
+    table.addEventListener('click', async (e) => {
+      const name = e.target.getAttribute && e.target.getAttribute('data-reset-password');
+      if (!name) return;
+
+      if (!state.apiUrl) {
+        showSnackbar('尚未連接 Google Sheet，無法重設密碼');
+        return;
+      }
+      const input = window.prompt(
+        `設定「${name}」的登入密碼\n（直接留白並確定，可清除自訂密碼、恢復預設密碼＝學號）`, ''
+      );
+      if (input === null) return; // 使用者取消
+
+      const newPassword = input.trim();
+      setBusy(e.target, true);
+      try {
+        await postToApi({ action: 'setStudentPassword', studentName: name, password: newPassword });
+        showSnackbar(newPassword ? `已重設 ${name} 的密碼` : `已將 ${name} 的密碼恢復為預設（學號）`);
+        await fetchFromApi(state.apiUrl);
+      } catch (err) {
+        showSnackbar('設定密碼失敗：' + err.message);
+      } finally {
+        setBusy(e.target, false);
+      }
+    });
+  }
+
   /* ============== Student portal (login + self-report score) ============== */
   function renderPortalView() {
     const container = $('#portalContent');
@@ -470,33 +505,63 @@
       return;
     }
     if (state.portalStudent) {
-      Dashboard.renderPortalDashboard(container, state.model, state.portalStudent);
+      Dashboard.renderPortalDashboard(container, state.model, state.portalStudent, {
+        iframeTaskName: state.portalIframeTask,
+        changePwOpen: state.portalChangePw.open,
+        changePwError: state.portalChangePw.error
+      });
     } else {
-      Dashboard.renderPortalLogin(container, state.model);
+      Dashboard.renderPortalLogin(container, state.model, state.portalLoginError);
     }
+  }
+
+  function resetPortalUiState() {
+    state.portalLoginError = '';
+    state.portalIframeTask = null;
+    state.portalChangePw = { open: false, error: '' };
   }
 
   function bindPortal() {
     const container = $('#portalContent');
     if (!container) return;
 
+    container.addEventListener('submit', (e) => {
+      if (e.target.id === 'portalLoginForm') {
+        e.preventDefault();
+        handlePortalLogin();
+        return;
+      }
+      if (e.target.id === 'portalChangePwForm') {
+        e.preventDefault();
+        handlePortalChangePassword();
+      }
+    });
+
     container.addEventListener('click', (e) => {
-      if (e.target.id === 'portalLoginBtn') {
-        const select = $('#portalStudentSelect');
-        const name = select ? select.value : '';
-        if (!name) {
-          showSnackbar('請選擇你的姓名');
-          return;
-        }
-        state.portalStudent = name;
-        localStorage.setItem(LS_KEYS.portalStudent, name);
+      if (e.target.id === 'portalLogoutBtn') {
+        state.portalStudent = null;
+        localStorage.removeItem(LS_KEYS.portalStudent);
+        resetPortalUiState();
         renderPortalView();
         return;
       }
 
-      if (e.target.id === 'portalLogoutBtn') {
-        state.portalStudent = null;
-        localStorage.removeItem(LS_KEYS.portalStudent);
+      if (e.target.id === 'portalChangePwToggle') {
+        state.portalChangePw.open = !state.portalChangePw.open;
+        state.portalChangePw.error = '';
+        renderPortalView();
+        return;
+      }
+
+      const iframeTaskName = e.target.getAttribute && e.target.getAttribute('data-toggle-iframe');
+      if (iframeTaskName) {
+        const opening = state.portalIframeTask !== iframeTaskName;
+        state.portalIframeTask = opening ? iframeTaskName : null;
+        if (opening) {
+          // 記錄學生開始作答的時間（若後端支援 startTask 動作會寫入 Sheet；
+          // 若尚未支援，後端可忽略此呼叫，不影響其餘功能）。
+          notifyTaskStarted(iframeTaskName);
+        }
         renderPortalView();
         return;
       }
@@ -506,6 +571,96 @@
         handlePortalReport(taskName, e.target);
       }
     });
+  }
+
+  function handlePortalLogin() {
+    const select = $('#portalStudentSelect');
+    const pwInput = $('#portalPasswordInput');
+    const name = select ? select.value : '';
+    const password = pwInput ? pwInput.value : '';
+
+    if (!name) {
+      state.portalLoginError = '請選擇你的姓名';
+      renderPortalView();
+      return;
+    }
+    if (!password) {
+      state.portalLoginError = '請輸入密碼';
+      renderPortalView();
+      return;
+    }
+    const student = state.model && state.model.students.find(s => s.name === name);
+    if (!student || !Students.verifyPassword(student, password)) {
+      state.portalLoginError = '姓名或密碼不正確，第一次登入請使用學號作為密碼。';
+      renderPortalView();
+      return;
+    }
+
+    state.portalStudent = name;
+    localStorage.setItem(LS_KEYS.portalStudent, name);
+    resetPortalUiState();
+    renderPortalView();
+  }
+
+  async function handlePortalChangePassword() {
+    const oldPw = ($('#portalOldPassword') || {}).value || '';
+    const newPw = ($('#portalNewPassword') || {}).value || '';
+    const newPw2 = ($('#portalNewPassword2') || {}).value || '';
+    const submitBtn = $('#portalChangePwSubmit');
+
+    const student = state.model && state.model.students.find(s => s.name === state.portalStudent);
+    if (!student || !Students.verifyPassword(student, oldPw)) {
+      state.portalChangePw.error = '目前密碼不正確';
+      renderPortalView();
+      return;
+    }
+    if (!newPw || newPw.length < 4) {
+      state.portalChangePw.error = '新密碼長度至少需 4 碼';
+      renderPortalView();
+      return;
+    }
+    if (newPw !== newPw2) {
+      state.portalChangePw.error = '兩次輸入的新密碼不一致';
+      renderPortalView();
+      return;
+    }
+    if (!state.apiUrl) {
+      state.portalChangePw.error = '尚未連接 Google Sheet，無法儲存密碼';
+      renderPortalView();
+      return;
+    }
+
+    setBusy(submitBtn, true);
+    try {
+      await postToApi({
+        action: 'changePassword',
+        studentName: state.portalStudent,
+        oldPassword: oldPw,
+        newPassword: newPw
+      });
+      state.portalChangePw = { open: false, error: '' };
+      showSnackbar('密碼已更新');
+      await fetchFromApi(state.apiUrl);
+    } catch (err) {
+      state.portalChangePw.error = err.message;
+      renderPortalView();
+    } finally {
+      setBusy(submitBtn, false);
+    }
+  }
+
+  async function notifyTaskStarted(taskName) {
+    if (!state.apiUrl) return;
+    try {
+      await postToApi({
+        action: 'startTask',
+        studentName: state.portalStudent,
+        taskName: taskName,
+        startedAt: new Date().toISOString()
+      });
+    } catch (err) {
+      // 開始作答的紀錄非必要功能，失敗時靜默略過，不打斷學生作答流程。
+    }
   }
 
   async function handlePortalReport(taskName, btn) {
@@ -524,9 +679,11 @@
         studentName: state.portalStudent,
         taskName: taskName,
         status: 'completed',
-        score: scoreRaw === '' ? '' : Number(scoreRaw)
+        score: scoreRaw === '' ? '' : Number(scoreRaw),
+        completedAt: new Date().toISOString()
       });
-      showSnackbar('已回報成績：' + taskName);
+      if (state.portalIframeTask === taskName) state.portalIframeTask = null;
+      showSnackbar('已回報完成並記錄時間：' + taskName);
       await fetchFromApi(state.apiUrl);
     } catch (err) {
       showSnackbar('回報失敗：' + err.message);

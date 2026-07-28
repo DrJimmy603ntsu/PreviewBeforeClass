@@ -204,7 +204,7 @@ window.Wayground = window.Wayground || {};
 
     if (rows.length === 0) {
       tbody.appendChild(el('tr', {}, [
-        el('td', { colspan: '7', style: 'text-align:center;padding:32px;color:var(--md-on-surface-variant);' },
+        el('td', { colspan: '8', style: 'text-align:center;padding:32px;color:var(--md-on-surface-variant);' },
           ['找不到符合條件的學生'])
       ]));
       return;
@@ -242,6 +242,17 @@ window.Wayground = window.Wayground || {};
             el('span', { class: 'dot', style: `background:${meta.color}` }),
             meta.label
           ])
+        ]),
+        el('td', {}, [
+          el('div', { style: 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;' }, [
+            el('span', { style: 'font-size:12px;color:var(--md-on-surface-variant);' },
+              [W.Students.isUsingDefaultPassword(row.student) ? '預設（學號）' : '已自訂']),
+            el('button', {
+              class: 'btn btn-text portal-btn-sm',
+              style: 'padding:0 10px;',
+              'data-reset-password': row.student.name
+            }, ['重設密碼'])
+          ])
         ])
       ]));
     });
@@ -252,7 +263,7 @@ window.Wayground = window.Wayground || {};
   }
 
   /* ---------------- Student portal ---------------- */
-  function renderPortalLogin(container, model) {
+  function renderPortalLogin(container, model, errorMsg) {
     container.innerHTML = '';
     if (!model || !model.students.length) {
       container.appendChild(el('div', { class: 'state-block' }, [
@@ -264,19 +275,41 @@ window.Wayground = window.Wayground || {};
     const options = [el('option', { value: '' }, ['請選擇你的姓名…'])];
     model.students.forEach(s => options.push(el('option', { value: s.name }, [s.name])));
     const select = el('select', { class: 'portal-select', id: 'portalStudentSelect' }, options);
+    const passwordInput = el('input', {
+      type: 'password', class: 'portal-select', id: 'portalPasswordInput',
+      placeholder: '請輸入密碼', autocomplete: 'off'
+    });
 
     container.appendChild(el('div', { class: 'card card--elevated', style: 'max-width:420px;' }, [
-      el('div', { class: 'field' }, [
-        el('label', { for: 'portalStudentSelect' }, ['選擇你的姓名']),
-        select
-      ]),
-      el('div', { class: 'form-actions' }, [
-        el('button', { class: 'btn btn-filled', id: 'portalLoginBtn' }, ['登入'])
+      el('form', { id: 'portalLoginForm' }, [
+        el('div', { class: 'field' }, [
+          el('label', { for: 'portalStudentSelect' }, ['選擇你的姓名']),
+          select
+        ]),
+        el('div', { class: 'field' }, [
+          el('label', { for: 'portalPasswordInput' }, ['密碼']),
+          passwordInput
+        ]),
+        el('p', { class: 'input-hint', style: 'margin:-6px 0 12px;' },
+          ['第一次登入請使用你的學號作為密碼，登入後可自行更改。']),
+        errorMsg ? el('div', { class: 'field__error show' }, [errorMsg]) : null,
+        el('div', { class: 'form-actions' }, [
+          el('button', { class: 'btn btn-filled', id: 'portalLoginBtn', type: 'submit' }, ['登入'])
+        ])
       ])
     ]));
   }
 
-  function renderPortalDashboard(container, model, loggedInName) {
+  function formatTimestamp(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function renderPortalDashboard(container, model, loggedInName, uiState) {
+    uiState = uiState || {};
     container.innerHTML = '';
     const row = model.grid.find(r => r.student.name === loggedInName);
     if (!row) {
@@ -294,22 +327,58 @@ window.Wayground = window.Wayground || {};
         el('div', { style: 'font-size:13px;color:var(--md-on-surface-variant);margin-top:2px;' },
           ['整體完成率 ' + (stat ? stat.completionRate : 0) + '%'])
       ]),
-      el('button', { class: 'btn btn-text', id: 'portalLogoutBtn' }, ['登出'])
+      el('div', { style: 'display:flex;gap:8px;' }, [
+        el('button', { class: 'btn btn-outlined portal-btn-sm', id: 'portalChangePwToggle' },
+          [uiState.changePwOpen ? '取消更改密碼' : '變更密碼']),
+        el('button', { class: 'btn btn-text', id: 'portalLogoutBtn' }, ['登出'])
+      ])
     ]));
+
+    if (uiState.changePwOpen) {
+      container.appendChild(el('div', { class: 'card card--elevated', style: 'max-width:420px;margin-bottom:18px;' }, [
+        el('div', { class: 'section__header', style: 'margin-bottom:12px;' }, [
+          el('span', { class: 'section__title', style: 'font-size:14px;' }, ['變更密碼'])
+        ]),
+        el('form', { id: 'portalChangePwForm' }, [
+          el('div', { class: 'field' }, [
+            el('label', { for: 'portalOldPassword' }, ['目前密碼']),
+            el('input', { type: 'password', id: 'portalOldPassword', autocomplete: 'off' })
+          ]),
+          el('div', { class: 'field' }, [
+            el('label', { for: 'portalNewPassword' }, ['新密碼']),
+            el('input', { type: 'password', id: 'portalNewPassword', autocomplete: 'off' })
+          ]),
+          el('div', { class: 'field' }, [
+            el('label', { for: 'portalNewPassword2' }, ['再次輸入新密碼']),
+            el('input', { type: 'password', id: 'portalNewPassword2', autocomplete: 'off' })
+          ]),
+          uiState.changePwError ? el('div', { class: 'field__error show' }, [uiState.changePwError]) : null,
+          el('div', { class: 'form-actions' }, [
+            el('button', { class: 'btn btn-filled', type: 'submit', id: 'portalChangePwSubmit' }, ['儲存新密碼'])
+          ])
+        ])
+      ]));
+    }
 
     const list = el('div', { class: 'portal-task-list' });
     row.cells.forEach(cell => {
       const task = model.tasks.find(t => t.name === cell.taskName);
       const meta = META[cell.status];
-      const metaLine = '截止：' + (task && task.dueDate ? task.dueDate : '未設定') +
-        (cell.score !== null && cell.score !== undefined && cell.score !== '' ? '　已回報成績：' + cell.score : '');
+      const metaBits = ['截止：' + (task && task.dueDate ? task.dueDate : '未設定')];
+      if (cell.score !== null && cell.score !== undefined && cell.score !== '') metaBits.push('已回報成績：' + cell.score);
+      if (cell.completedAt) metaBits.push('完成時間：' + formatTimestamp(cell.completedAt));
 
       const actions = el('div', { class: 'portal-task-card__actions' });
+      const isIframeOpen = uiState.iframeTaskName === cell.taskName;
+
       if (task && task.link) {
+        actions.appendChild(el('button', {
+          class: 'btn btn-outlined portal-btn-sm', type: 'button',
+          'data-toggle-iframe': cell.taskName
+        }, [isIframeOpen ? '收合作答視窗' : '開始作答 ↧']));
         actions.appendChild(el('a', {
-          class: 'btn btn-outlined portal-btn-sm',
-          href: task.link, target: '_blank', rel: 'noopener noreferrer'
-        }, ['前往 Wayground ↗']));
+          class: 'btn btn-text portal-btn-sm', href: task.link, target: '_blank', rel: 'noopener noreferrer'
+        }, ['另開新分頁 ↗']));
       }
       if (cell.status !== 'completed') {
         actions.appendChild(el('input', {
@@ -317,10 +386,10 @@ window.Wayground = window.Wayground || {};
         }));
         actions.appendChild(el('button', {
           class: 'btn btn-filled portal-btn-sm', 'data-report-task': cell.taskName
-        }, ['回報完成']));
+        }, ['回報完成（記錄時間）']));
       }
 
-      list.appendChild(el('div', { class: 'portal-task-card' }, [
+      const cardChildren = [
         el('div', { class: 'portal-task-card__top' }, [
           el('span', { class: 'status-badge', 'data-status': cell.status }, [
             el('span', { class: 'dot', style: `background:${meta.color}` }),
@@ -328,9 +397,25 @@ window.Wayground = window.Wayground || {};
           ]),
           el('span', { class: 'portal-task-card__title' }, [cell.taskName])
         ]),
-        el('div', { class: 'portal-task-card__meta' }, [metaLine]),
+        el('div', { class: 'portal-task-card__meta' }, [metaBits.join('　')]),
         actions
-      ]));
+      ];
+
+      if (isIframeOpen && task && task.link) {
+        cardChildren.push(el('div', { class: 'portal-iframe-wrap' }, [
+          el('iframe', {
+            src: task.link,
+            title: cell.taskName,
+            loading: 'lazy',
+            referrerpolicy: 'no-referrer-when-downgrade',
+            sandbox: 'allow-scripts allow-forms allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-modals'
+          }, [])
+        ]));
+        cardChildren.push(el('p', { class: 'input-hint', style: 'margin:8px 0 0;' },
+          ['若上方畫面空白，代表 Wayground 不允許嵌入顯示，請改用「另開新分頁」作答，完成後回來點選「回報完成」。']));
+      }
+
+      list.appendChild(el('div', { class: 'portal-task-card' }, cardChildren));
     });
 
     if (row.cells.length === 0) {

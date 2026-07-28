@@ -74,7 +74,10 @@ window.Wayground = window.Wayground || {};
   function buildModel(raw) {
     const students = (raw.students || []).map(s => ({
       name: toStr(s.name),
-      studentId: toStr(s.studentId)
+      studentId: toStr(s.studentId),
+      // password 為老師或學生自行設定過的密碼；若為空字串，代表尚未設定，
+      // 此時有效密碼會 fallback 回學號（見 getEffectivePassword）。
+      password: toStr(s.password)
     }));
     const tasks = (raw.tasks || []).map(t => ({
       name: toStr(t.name),
@@ -173,6 +176,28 @@ window.Wayground = window.Wayground || {};
     });
   }
 
+  /**
+   * 取得學生目前的「有效密碼」：
+   * - 若曾經設定過自訂密碼（老師重設或學生自行更改），使用該密碼。
+   * - 否則預設密碼為學號 (studentId)。
+   */
+  function getEffectivePassword(student) {
+    if (!student) return '';
+    return student.password ? student.password : student.studentId;
+  }
+
+  /** 是否使用預設密碼（尚未自訂），用於介面上顯示提示 */
+  function isUsingDefaultPassword(student) {
+    return !!student && !student.password;
+  }
+
+  /** 驗證登入密碼是否正確（自訂密碼優先，否則比對學號） */
+  function verifyPassword(student, inputPassword) {
+    const input = toStr(inputPassword);
+    if (!input) return false;
+    return input === getEffectivePassword(student);
+  }
+
   function getInitials(name) {
     if (!name) return '?';
     const trimmed = String(name).trim();
@@ -245,6 +270,9 @@ window.Wayground = window.Wayground || {};
     filterStudentStats,
     filterGridRows,
     getInitials,
+    getEffectivePassword,
+    isUsingDefaultPassword,
+    verifyPassword,
     generateDemoData
   };
 })(window.Wayground);
