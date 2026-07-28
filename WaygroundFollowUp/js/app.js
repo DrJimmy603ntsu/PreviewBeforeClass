@@ -229,11 +229,16 @@
           const name = $('#newTaskName').value.trim();
           if (!name) throw new Error('請輸入任務名稱');
           const scoreRaw = $('#newTaskScore').value;
+          const link = $('#newTaskLink').value.trim();
+          if (link && !/^https?:\/\//i.test(link)) {
+            throw new Error('Wayground 連結需以 http:// 或 https:// 開頭');
+          }
           return {
             action: 'addTask',
             name: name,
             dueDate: $('#newTaskDue').value,
-            totalScore: scoreRaw === '' ? '' : Number(scoreRaw)
+            totalScore: scoreRaw === '' ? '' : Number(scoreRaw),
+            link: link
           };
         },
         onSuccess: (name) => {

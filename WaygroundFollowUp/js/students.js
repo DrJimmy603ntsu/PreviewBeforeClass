@@ -70,7 +70,8 @@ window.Wayground = window.Wayground || {};
     const tasks = (raw.tasks || []).map(t => ({
       name: t.name,
       dueDate: t.dueDate || '',
-      totalScore: t.totalScore || null
+      totalScore: t.totalScore || null,
+      link: t.link || ''
     }));
     const records = raw.records || [];
 

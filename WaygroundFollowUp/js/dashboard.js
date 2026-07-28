@@ -106,7 +106,11 @@ window.Wayground = window.Wayground || {};
 
     thead.innerHTML = '<th>學生</th>';
     model.tasks.forEach(task => {
-      thead.appendChild(el('th', { class: 'task-col', title: task.name }, [truncate(task.name, 14)]));
+      const label = truncate(task.name, 14);
+      const headerContent = task.link
+        ? el('a', { href: task.link, target: '_blank', rel: 'noopener noreferrer', style: 'color:inherit;text-decoration:underline dotted;' }, [label])
+        : label;
+      thead.appendChild(el('th', { class: 'task-col', title: task.name + (task.link ? '（點選前往 Wayground）' : '') }, [headerContent]));
     });
 
     const rows = W.Students.filterGridRows(model.grid, filterState.query, filterState.status);
@@ -177,7 +181,14 @@ window.Wayground = window.Wayground || {};
           el('span', {}, ['完成率 ', el('b', {}, [ts.completionRate + '%'])]),
           el('span', {}, ['已完成 ', el('b', {}, [String(ts.counts.completed)])]),
           el('span', {}, ['逾期 ', el('b', { style: ts.counts.overdue ? 'color:var(--status-overdue)' : '' }, [String(ts.counts.overdue)])])
-        ])
+        ]),
+        ts.task.link ? el('a', {
+          class: 'btn btn-outlined',
+          href: ts.task.link,
+          target: '_blank',
+          rel: 'noopener noreferrer',
+          style: 'margin-top:12px;width:100%;justify-content:center;height:36px;font-size:13px;'
+        }, ['前往 Wayground ↗']) : null
       ]));
     });
   }
