@@ -7,6 +7,7 @@
 <meta name="description" content="教師用 Wayground 任務學習進度即時儀表板">
 <link rel="stylesheet" href="css/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 <div class="scrim-mobile" id="scrim"></div>
@@ -181,6 +182,25 @@
               <button type="submit" class="btn btn-filled" id="addStudentSubmit">新增學生</button>
             </div>
           </form>
+
+          <div class="batch-import">
+            <div class="batch-import__divider"></div>
+            <div class="section__header" style="margin-bottom:6px;">
+              <span class="section__title" style="font-size:14px;">批次匯入（CSV / Excel）</span>
+            </div>
+            <p class="input-hint" style="margin-top:0;">
+              第一欄為學生姓名、第二欄為學號（選填）。若第一列是標題（例如「姓名」或 name）會自動略過。
+            </p>
+            <div class="field">
+              <label for="studentBatchFile">選擇檔案（.csv / .xlsx / .xls）</label>
+              <input type="file" id="studentBatchFile" accept=".csv,.xlsx,.xls">
+            </div>
+            <div class="batch-import__preview hidden" id="studentBatchPreview"></div>
+            <div class="field__error" id="addStudentBatchError"></div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-outlined" id="addStudentBatchSubmit" disabled>匯入學生名單</button>
+            </div>
+          </div>
         </div>
         <div class="card card--elevated">
           <div class="section__header">
