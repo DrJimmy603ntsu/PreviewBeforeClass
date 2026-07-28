@@ -9,11 +9,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 </head>
 <body>
-
 <div class="scrim-mobile" id="scrim"></div>
-
 <div class="app-shell">
-
   <!-- ================= Top App Bar ================= -->
   <header class="top-app-bar">
     <button class="top-app-bar__menu-btn" id="menuToggle" aria-label="開啟選單">
@@ -39,7 +36,6 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.6"/></svg>
     </button>
   </header>
-
   <!-- ================= Nav Rail ================= -->
   <nav class="nav-rail" id="navRail">
     <div class="nav-rail__section-label">檢視</div>
@@ -59,12 +55,14 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16.5 5.5a3.5 3.5 0 0 1 0 6.9M21.5 20a6.3 6.3 0 0 0-4.5-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
       學生清單
     </button>
+    <button class="nav-item" data-view="input">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      新增資料
+    </button>
     <div class="nav-rail__footer" id="lastSync">尚未連接資料來源</div>
   </nav>
-
   <!-- ================= Main Content ================= -->
   <main class="main-content">
-
     <!-- ---------- Dashboard View ---------- -->
     <section id="view-dashboard" class="view">
       <div class="page-header">
@@ -77,9 +75,7 @@
           <button class="btn btn-filled" id="connectBtn">連接 Google Sheet</button>
         </div>
       </div>
-
       <div class="stat-grid" id="statGrid"></div>
-
       <div class="two-col">
         <div class="chart-card">
           <div class="section__header">
@@ -95,7 +91,6 @@
           <div class="chart-card__canvas-wrap"><canvas id="statusDonut"></canvas></div>
         </div>
       </div>
-
       <div class="section">
         <div class="section__header">
           <span class="section__title">各任務完成率</span>
@@ -105,7 +100,6 @@
         </div>
       </div>
     </section>
-
     <!-- ---------- Matrix View ---------- -->
     <section id="view-matrix" class="view hidden">
       <div class="page-header">
@@ -114,10 +108,8 @@
           <p>每位學生在每項任務上的完成狀態</p>
         </div>
       </div>
-
       <div class="toolbar" id="matrixFilters"></div>
       <div class="legend" style="margin-bottom:14px;" id="matrixLegend"></div>
-
       <div class="matrix-wrap">
         <table class="matrix" id="matrixTable">
           <thead><tr><th>學生</th></tr></thead>
@@ -125,7 +117,6 @@
         </table>
       </div>
     </section>
-
     <!-- ---------- Tasks View ---------- -->
     <section id="view-tasks" class="view hidden">
       <div class="page-header">
@@ -137,7 +128,6 @@
       <div class="toolbar" id="taskSort"></div>
       <div class="task-grid" id="taskGrid"></div>
     </section>
-
     <!-- ---------- Students View ---------- -->
     <section id="view-students" class="view hidden">
       <div class="page-header">
@@ -164,7 +154,60 @@
         </table>
       </div>
     </section>
-
+    <!-- ---------- Add Data (Input) View ---------- -->
+    <section id="view-input" class="view hidden">
+      <div class="page-header">
+        <div>
+          <h1>新增資料</h1>
+          <p>新增學生姓名或 Wayground 任務，資料會直接寫入你連接的 Google Sheet</p>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card card--elevated">
+          <div class="section__header">
+            <span class="section__title">新增學生</span>
+          </div>
+          <form id="addStudentForm" novalidate>
+            <div class="field">
+              <label for="newStudentName">學生姓名 *</label>
+              <input type="text" id="newStudentName" name="name" placeholder="例如：王小明" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label for="newStudentId">學號（選填）</label>
+              <input type="text" id="newStudentId" name="studentId" placeholder="例如：S1001" autocomplete="off">
+            </div>
+            <div class="field__error" id="addStudentError"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-filled" id="addStudentSubmit">新增學生</button>
+            </div>
+          </form>
+        </div>
+        <div class="card card--elevated">
+          <div class="section__header">
+            <span class="section__title">新增 Wayground 任務</span>
+          </div>
+          <form id="addTaskForm" novalidate>
+            <div class="field">
+              <label for="newTaskName">任務名稱 *</label>
+              <input type="text" id="newTaskName" name="name" placeholder="例如：Ch6 生態保育測驗" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label for="newTaskDue">截止日期（選填）</label>
+              <input type="date" id="newTaskDue" name="dueDate">
+            </div>
+            <div class="field">
+              <label for="newTaskScore">總分（選填）</label>
+              <input type="number" id="newTaskScore" name="totalScore" min="0" step="1" placeholder="例如：100">
+            </div>
+            <div class="field__error" id="addTaskError"></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-filled" id="addTaskSubmit">新增任務</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <p class="input-hint" id="inputModeHint"></p>
+    </section>
     <!-- ---------- Empty / Loading states ---------- -->
     <div id="stateLoading" class="state-block hidden">
       <div class="spinner"></div>
@@ -183,10 +226,8 @@
       <p id="stateErrorMsg">請確認 Apps Script 網址是否正確，且已部署為「任何人」皆可存取。</p>
       <button class="btn btn-tonal" id="retryBtn">重試</button>
     </div>
-
   </main>
 </div>
-
 <!-- ================= Settings Modal ================= -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal">
@@ -214,12 +255,11 @@
     </div>
   </div>
 </div>
-
 <!-- ================= Snackbar ================= -->
 <div class="snackbar" id="snackbar">
   <span id="snackbarMsg"></span>
 </div>
-
+<script src="js/config.js"></script>
 <script src="js/students.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/dashboard.js"></script>
