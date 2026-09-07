@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大學課堂點名與參與加分系統</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-color: #2c3e50;
+      --border-color: #e2e8f0;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #06b6d4;
+      --muted: #64748b;
+    }
+
+    body.dark-mode {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --border-color: #334155;
+      --muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); padding: 15px; transition: background-color 0.3s, color 0.3s; }
+    
+    button { cursor: pointer; border: none; border-radius: 6px; font-weight: bold; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+    .header-title { font-size: 1.6rem; font-weight: bold; }
+    .header-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Dashboard Stats */
+    .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 15px; }
+    .stat-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+    .stat-label { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+    /* Main Grid Layout */
+    .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+    @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; }
+    .card-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Random Picker */
+    .picker-display { text-align: center; padding: 25px 10px; background: var(--bg-color); border-radius: 8px; margin-bottom: 15px; border: 2px dashed var(--border-color); }
+    .picker-name { font-size: 2.8rem; font-weight: bold; color: var(--primary); min-height: 4rem; display: flex; align-items: center; justify-content: center; }
+    .picker-id { font-size: 1.1rem; color: var(--muted); }
+    .picker-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+    /* Action Buttons */
+    .btn-lg { padding: 10px 20px; font-size: 1.1rem; }
+    .btn-md { padding: 6px 12px; font-size: 0.9rem; }
+    .btn-sm { padding: 4px 8px; font-size: 0.8rem; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-secondary { background: var(--muted); color: white; }
+
+    /* Controls & Filter */
+    .filter-bar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .input-search { padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 6px; flex-grow: 1; min-width: 150px; background: var(--card-bg); color: var(--text-color); }
+
+    /* Student List */
+    .student-list-container { max-height: 500px; overflow-y: auto; }
+    .student-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 8px; }
+    .student-item.selected { background-color: rgba(59, 130, 246, 0.15); border-left: 4px solid var(--primary); }
+    .student-info { display: flex; align-items: center; gap: 10px; min-width: 180px; }
+    .student-name { font-size: 1.1rem; font-weight: bold; }
+    .student-id { font-size: 0.85rem; color: var(--muted); }
+    .status-badge { padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+    .status-Present { background: rgba(34, 197, 94, 0.2); color: #15803d; }
+    .status-Absent { background: rgba(239, 68, 68, 0.2); color: #b91c1c; }
+    .status-Late { background: rgba(245, 158, 11, 0.2); color: #b45309; }
+    .status-Excused { background: rgba(6, 182, 212, 0.2); color: #0e7490; }
+    .status-Uncalled { background: rgba(100, 116, 139, 0.2); color: var(--muted); }
+
+    .score-badge { font-weight: bold; color: var(--warning); font-size: 1rem; margin-right: 5px; }
+    .action-group { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+
+    /* Leaderboard Table */
+    .table-container { max-height: 350px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 8px 12px; border-bottom: 1px solid var(--border-color); }
+    th { background: var(--bg-color); position: sticky; top: 0; }
+
+    /* Modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 100; }
+    .modal.active { display: flex; }
+    .modal-content { background: var(--card-bg); padding: 20px; border-radius: 8px; width: 90%; max-width: 500px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px; }
+
+    .pulse { animation: pulse-animation 0.2s infinite alternate; }
+    @keyframes pulse-animation { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+  </style>
+</head>
+<body>
+
+  <div class="header-bar">
+    <div class="header-title">🎓 大學課堂點名與參與加分系統</div>
+    <div class="header-controls">
+      <button class="btn-md btn-secondary" onclick="toggleTimer()">⏱️ <span id="timer-display">00:00</span></button>
+      <button class="btn-md btn-secondary" onclick="toggleDarkMode()">🌙 暗黑模式</button>
+      <button class="btn-md btn-secondary" onclick="toggleSpeech()">🔊 語音: <span id="speech-status">關</span></button>
+      <button class="btn-md btn-warning" onclick="undoLastAction()">↩️ 復原</button>
+      <button class="btn-md btn-primary" onclick="openImportModal()">📥 匯入/匯出</button>
+      <button class="btn-md btn-danger" onclick="confirmResetAll()">🔄 重置全班</button>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="stat-card"><div class="stat-value" id="stat-total">50</div><div class="stat-label">👥 總人數</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-present" style="color:var(--success);">0</div><div class="stat-label">✅ 出席</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-absent" style="color:var(--danger);">0</div><div class="stat-label">❌ 缺席</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-late" style="color:var(--warning);">0</div><div class="stat-label">⏰ 遲到</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-uncalled" style="color:var(--muted);">50</div><div class="stat-label">❓ 未點名</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-bonus" style="color:var(--warning);">0</div><div class="stat-label">⭐ 總加分</div></div>
+    <div class="stat-card"><div class="stat-value" id="stat-questions">0</div><div class="stat-label">❓ 提問次數</div></div>
+  </div>
+
+  <div class="main-grid">
+    <div>
+      <div class="card" style="margin-bottom: 15px;">
+        <div class="card-title">🎯 隨機抽問點名</div>
+        <div class="picker-display">
+          <div class="picker-name" id="picker-name">點擊下方按鈕開始</div>
+          <div class="picker-id" id="picker-id">---</div>
+        </div>
+        <div class="picker-actions">
+          <button class="btn-lg btn-primary" onclick="pickRandomStudent()">🎯 隨機抽取</button>
+          <button class="btn-lg btn-secondary" onclick="pickRandomStudent()">🔄 再次抽選</button>
+        </div>
+        <div id="picker-quick-actions" style="margin-top: 15px; display: none; text-align: center;">
+          <span style="font-size:0.9rem; color:var(--muted);">快速出勤與加分：</span>
+          <div style="margin-top:5px;" class="action-group" id="picker-action-buttons"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🏆 課堂參與排行榜 (Top 10)</div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>名次</th>
+                <th>學號</th>
+                <th>姓名</th>
+                <th>狀態</th>
+                <th>加分</th>
+              </tr>
+            </thead>
+            <tbody id="leaderboard-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>👨‍🎓 學生名單管理</span>
+        <span style="font-size:0.85rem; font-weight:normal; color:var(--muted);" id="roster-count">顯示 50 人</span>
+      </div>
+
+      <div class="filter-bar">
+        <input type="text" id="search-input" class="input-search" placeholder="🔍 搜尋姓名或學號..." oninput="renderRoster()">
+        <select id="filter-status" class="input-search" style="flex-grow:0;" onchange="renderRoster()">
+          <option value="ALL">全部狀態</option>
+          <option value="Uncalled">未點名</option>
+          <option value="Present">出席</option>
+          <option value="Absent">缺席</option>
+          <option value="Late">遲到</option>
+          <option value="ZeroBonus">0 分者</option>
+        </select>
+        <select id="sort-by" class="input-search" style="flex-grow:0;" onchange="renderRoster()">
+          <option value="id">依學號排序</option>
+          <option value="bonus-desc">依加分(高→低)</option>
+          <option value="picks-desc">依抽中次數(高→低)</option>
+        </select>
+      </div>
+
+      <div class="student-list-container" id="student-roster"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="import-modal">
+    <div class="modal-content">
+      <h3>📥 匯入 / 匯出學生資料</h3>
+      <p style="font-size: 0.85rem; color: var(--muted); margin: 8px 0;">貼上 CSV 格式資料 (格式: 學號,姓名)</p>
+      <textarea id="csv-input" style="width: 100%; height: 120px; padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color);"></textarea>
+      <div class="modal-actions">
+        <button class="btn-md btn-secondary" onclick="closeImportModal()">取消</button>
+        <button class="btn-md btn-primary" onclick="exportToCSV()">📤 匯出目前 CSV</button>
+        <button class="btn-md btn-success" onclick="importFromCSV()">📥 載入 CSV 名單</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // System State
+    let students = [];
+    let historyStack = [];
+    let selectedStudentId = null;
+    let uncalledPool = [];
+    let isSpeechEnabled = false;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let totalQuestionsAsked = 0;
+
+    // Sample Data Generation
+    const sampleNames = ["王小明", "陳小華", "林志偉", "張雅婷", "李威倫", "黃怡君", "吳承翰", "蔡佩珊", "楊宗翰", "許家豪",
+      "鄭淑芬", "謝冠宇", "郭佳穎", "洪偉婷", "曾宇軒", "廖思涵", "賴柏翰", "徐雅雯", "周杰倫", "葉詠晴",
+      "蘇智傑", "莊涵婷", "江承恩", "藍心妤", "蕭立偉", "魏嘉玲", "羅國豪", "顏鈺婷", "梁家瑋", "潘靜宜",
+      "靳明德", "游心怡", "彭致遠", "詹佳蓉", "柯建宏", "馮雨潔", "鐘品捷", "彭曉婷", "田家豪", "龔珮君",
+      "白宗翰", "邵羽婷", "蔡宗霖", "董佩君", "范智翔", "傅依婷", "方韋恩", "石家華", "姚思妤", "譚郁婷"];
+
+    function initSampleData() {
+      students = sampleNames.map((name, index) => ({
+        id: `A${String(index + 1).padStart(3, '0')}`,
+        name: name,
+        status: 'Uncalled',
+        bonus: 0,
+        pickCount: 0,
+        notes: ''
+      }));
+      saveToLocalStorage();
+    }
+
+    // LocalStorage Management
+    function saveToLocalStorage() {
+      localStorage.setItem('classroom_students', JSON.stringify(students));
+      localStorage.setItem('classroom_questions', totalQuestionsAsked);
+    }
+
+    function loadFromLocalStorage() {
+      const stored = localStorage.getItem('classroom_students');
+      const questionsStored = localStorage.getItem('classroom_questions');
+      if (stored) {
+        students = JSON.parse(stored);
+        totalQuestionsAsked = questionsStored ? parseInt(questionsStored, 10) : 0;
+      } else {
+        initSampleData();
+      }
+    }
+
+    // History & Undo State
+    function recordState() {
+      if (historyStack.length > 20) historyStack.shift();
+      historyStack.push(JSON.stringify({ students, totalQuestionsAsked }));
+    }
+
+    function undoLastAction() {
+      if (historyStack.length === 0) {
+        alert("已經沒有可復原的操作！");
+        return;
+      }
+      const previousState = JSON.parse(historyStack.pop());
+      students = previousState.students;
+      totalQuestionsAsked = previousState.totalQuestionsAsked;
+      saveToLocalStorage();
+      updateUI();
+    }
+
+    // Attendance & Scoring Operations
+    function setStatus(id, status) {
+      recordState();
+      const student = students.find(s => s.id === id);
+      if (student) {
+        student.status = status;
+        saveToLocalStorage();
+        updateUI();
+      }
+    }
+
+    function addBonus(id, points) {
+      recordState();
+      const student = students.find(s => s.id === id);
+      if (student) {
+        student.bonus += points;
+        totalQuestionsAsked += 1;
+        saveToLocalStorage();
+        updateUI();
+      }
+    }
+
+    // Random Picker Logic
+    function pickRandomStudent() {
+      if (students.length === 0) return;
+
+      if (uncalledPool.length === 0) {
+        uncalledPool = students.map(s => s.id);
+      }
+
+      const pickerDisplay = document.getElementById('picker-name');
+      pickerDisplay.classList.add('pulse');
+
+      let speed = 50;
+      let counter = 0;
+      
+      const interval = setInterval(() => {
+        const randomIndex = Math.floor(Math.random() * students.length);
+        document.getElementById('picker-name').textContent = students[randomIndex].name;
+        document.getElementById('picker-id').textContent = students[randomIndex].id;
+        counter++;
+        if (counter > 12) {
+          clearInterval(interval);
+          pickerDisplay.classList.remove('pulse');
+          finalizePick();
+        }
+      }, speed);
+    }
+
+    function finalizePick() {
+      recordState();
+      const selectedIndex = Math.floor(Math.random() * uncalledPool.length);
+      const chosenId = uncalledPool.splice(selectedIndex, 1)[0];
+      const student = students.find(s => s.id === chosenId);
+
+      if (student) {
+        student.pickCount += 1;
+        selectedStudentId = student.id;
+        document.getElementById('picker-name').textContent = student.name;
+        document.getElementById('picker-id').textContent = `${student.id} (已抽中 ${student.pickCount} 次)`;
+        
+        if (isSpeechEnabled) {
+          speakText(student.name);
+        }
+
+        renderPickerActions(student);
+        saveToLocalStorage();
+        updateUI();
+      }
+    }
+
+    function renderPickerActions(student) {
+      const container = document.getElementById('picker-quick-actions');
+      const btnGroup = document.getElementById('picker-action-buttons');
+      container.style.display = 'block';
+      btnGroup.innerHTML = `
+        <button class="btn-sm btn-success" onclick="setStatus('${student.id}', 'Present')">✅ 出席</button>
+        <button class="btn-sm btn-danger" onclick="setStatus('${student.id}', 'Absent')">❌ 缺席</button>
+        <button class="btn-sm btn-warning" onclick="setStatus('${student.id}', 'Late')">⏰ 遲到</button>
+        <button class="btn-sm btn-primary" onclick="addBonus('${student.id}', 1)">+1</button>
+        <button class="btn-sm btn-primary" onclick="addBonus('${student.id}', 2)">+2</button>
+        <button class="btn-sm btn-primary" onclick="addBonus('${student.id}', 3)">+3</button>
+        <button class="btn-sm btn-primary" onclick="addBonus('${student.id}', 5)">+5</button>
+      `;
+    }
+
+    // UI Rendering
+    function updateUI() {
+      renderDashboard();
+      renderRoster();
+      renderLeaderboard();
+    }
+
+    function renderDashboard() {
+      const total = students.length;
+      const present = students.filter(s => s.status === 'Present').length;
+      const absent = students.filter(s => s.status === 'Absent').length;
+      const late = students.filter(s => s.status === 'Late').length;
+      const uncalled = students.filter(s => s.status === 'Uncalled').length;
+      const totalBonus = students.reduce((acc, s) => acc + s.bonus, 0);
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-present').textContent = present;
+      document.getElementById('stat-absent').textContent = absent;
+      document.getElementById('stat-late').textContent = late;
+      document.getElementById('stat-uncalled').textContent = uncalled;
+      document.getElementById('stat-bonus').textContent = totalBonus;
+      document.getElementById('stat-questions').textContent = totalQuestionsAsked;
+    }
+
+    function renderRoster() {
+      const searchQuery = document.getElementById('search-input').value.toLowerCase();
+      const statusFilter = document.getElementById('filter-status').value;
+      const sortBy = document.getElementById('sort-by').value;
+
+      let filtered = students.filter(s => {
+        const matchesSearch = s.name.toLowerCase().includes(searchQuery) || s.id.toLowerCase().includes(searchQuery);
+        let matchesStatus = true;
+        if (statusFilter === 'ZeroBonus') matchesStatus = s.bonus === 0;
+        else if (statusFilter !== 'ALL') matchesStatus = s.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      filtered.sort((a, b) => {
+        if (sortBy === 'bonus-desc') return b.bonus - a.bonus;
+        if (sortBy === 'picks-desc') return b.pickCount - a.pickCount;
+        return a.id.localeCompare(b.id);
+      });
+
+      document.getElementById('roster-count').textContent = `顯示 ${filtered.length} / ${students.length} 人`;
+      const container = document.getElementById('student-roster');
+      container.innerHTML = '';
+
+      const statusMap = { Present: '出席', Absent: '缺席', Late: '遲到', Excused: '請假', Uncalled: '未點名' };
+
+      filtered.forEach(s => {
+        const isSelected = s.id === selectedStudentId;
+        const div = document.createElement('div');
+        div.className = `student-item ${isSelected ? 'selected' : ''}`;
+        div.innerHTML = `
+          <div class="student-info">
+            <div>
+              <span class="student-name">${s.name}</span>
+              <span class="student-id">(${s.id})</span>
+            </div>
+            <span class="status-badge status-${s.status}">${statusMap[s.status] || s.status}</span>
+          </div>
+          <div class="action-group">
+            <span class="score-badge">⭐ ${s.bonus}</span>
+            <button class="btn-sm btn-success" onclick="setStatus('${s.id}', 'Present')">✅</button>
+            <button class="btn-sm btn-danger" onclick="setStatus('${s.id}', 'Absent')">❌</button>
+            <button class="btn-sm btn-warning" onclick="setStatus('${s.id}', 'Late')">⏰</button>
+            <button class="btn-sm btn-secondary" onclick="setStatus('${s.id}', 'Excused')">假</button>
+            |
+            <button class="btn-sm btn-primary" onclick="addBonus('${s.id}', 1)">+1</button>
+            <button class="btn-sm btn-primary" onclick="addBonus('${s.id}', 2)">+2</button>
+            <button class="btn-sm btn-primary" onclick="addBonus('${s.id}', 3)">+3</button>
+            <button class="btn-sm btn-primary" onclick="addBonus('${s.id}', 5)">+5</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderLeaderboard() {
+      const sorted = [...students].sort((a, b) => b.bonus - a.bonus).slice(0, 10);
+      const tbody = document.getElementById('leaderboard-body');
+      const statusMap = { Present: '出席', Absent: '缺席', Late: '遲到', Excused: '請假', Uncalled: '未點名' };
+      tbody.innerHTML = '';
+
+      sorted.forEach((s, index) => {
+        if (s.bonus === 0) return;
+        const tr = document.createElement('tr');
+        const rankMedal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : index + 1;
+        tr.innerHTML = `
+          <td>${rankMedal}</td>
+          <td>${s.id}</td>
+          <td><b>${s.name}</b></td>
+          <td><span class="status-badge status-${s.status}">${statusMap[s.status]}</span></td>
+          <td style="color:var(--warning); font-weight:bold;">+${s.bonus}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // CSV Utilities
+    function openImportModal() {
+      const csvStr = students.map(s => `${s.id},${s.name}`).join('\n');
+      document.getElementById('csv-input').value = csvStr;
+      document.getElementById('import-modal').classList.add('active');
+    }
+
+    function closeImportModal() {
+      document.getElementById('import-modal').classList.remove('active');
+    }
+
+    function importFromCSV() {
+      recordState();
+      const text = document.getElementById('csv-input').value.trim();
+      if (!text) return;
+
+      const lines = text.split('\n');
+      const newStudents = [];
+
+      lines.forEach(line => {
+        const parts = line.split(',');
+        if (parts.length >= 2) {
+          const id = parts[0].trim();
+          const name = parts[1].trim();
+          if (id && name) {
+            newStudents.push({
+              id: id,
+              name: name,
+              status: 'Uncalled',
+              bonus: 0,
+              pickCount: 0,
+              notes: ''
+            });
+          }
+        }
+      });
+
+      if (newStudents.length > 0) {
+        students = newStudents;
+        uncalledPool = [];
+        totalQuestionsAsked = 0;
+        saveToLocalStorage();
+        updateUI();
+        closeImportModal();
+        alert(`成功載入 ${newStudents.length} 位學生！`);
+      } else {
+        alert("格式錯誤，請確認每行皆為 '學號,姓名'");
+      }
+    }
+
+    function exportToCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF學號,姓名,出勤狀態,加分,被抽中次數\n";
+      students.forEach(s => {
+        csvContent += `${s.id},${s.name},${s.status},${s.bonus},${s.pickCount}\n`;
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `課堂點名加分紀錄_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Tools
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark-mode');
+    }
+
+    function toggleSpeech() {
+      isSpeechEnabled = !isSpeechEnabled;
+      document.getElementById('speech-status').textContent = isSpeechEnabled ? "開" : "關";
+    }
+
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'zh-TW';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function toggleTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      } else {
+        timerInterval = setInterval(() => {
+          timerSeconds++;
+          const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+          const s = String(timerSeconds % 60).padStart(2, '0');
+          document.getElementById('timer-display').textContent = `${m}:${s}`;
+        }, 1000);
+      }
+    }
+
+    function confirmResetAll() {
+      if (confirm("確定要重置全班的出勤與加分資料嗎？此動作無法取消（可用復原功能恢復）。")) {
+        recordState();
+        students.forEach(s => {
+          s.status = 'Uncalled';
+          s.bonus = 0;
+          s.pickCount = 0;
+        });
+        totalQuestionsAsked = 0;
+        uncalledPool = [];
+        saveToLocalStorage();
+        updateUI();
+      }
+    }
+
+    // Initialization
+    window.onload = function() {
+      loadFromLocalStorage();
+      updateUI();
+    };
+  </script>
+</body>
+</html>
