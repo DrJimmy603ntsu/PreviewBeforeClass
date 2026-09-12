@@ -1,0 +1,2658 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ResusSim — AHA 2025 Resuscitation Trainer</title>
+<style>
+:root{
+  --bg:#0b1016; --panel:#121a24; --panel2:#0e151d; --border:#233041;
+  --text:#e7eef5; --muted:#93a4b8; --accent:#2dd4bf; --accent2:#38bdf8;
+  --good:#34d399; --good-dim:#0f3d31; --warn:#fbbf24; --warn-dim:#3d3110;
+  --bad:#f87171; --bad-dim:#3d1414; --crit:#ff4d4d;
+  --mono-green:#3ef07c; --mono-yellow:#ffd23e; --mono-cyan:#4ad9ff; --mono-red:#ff5a5a; --mono-white:#eef5fb;
+  --radius:12px;
+  --shadow:0 6px 24px rgba(0,0,0,.35);
+  font-size:16px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:radial-gradient(1200px 800px at 20% -10%, #16202c 0%, var(--bg) 55%) fixed, var(--bg);
+  color:var(--text);
+  font-family:"Segoe UI",Roboto,-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+  min-height:100vh;
+  padding-bottom:24px;
+}
+button{font-family:inherit;}
+.hidden{display:none !important;}
+a{color:var(--accent2);}
+.small{font-size:.8em;color:var(--muted);}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:600;letter-spacing:.02em;}
+.tag.good{background:var(--good-dim);color:var(--good);}
+.tag.warn{background:var(--warn-dim);color:var(--warn);}
+.tag.bad{background:var(--bad-dim);color:var(--bad);}
+.tag.info{background:#0f2a3d;color:var(--accent2);}
+
+/* ---------- top bar ---------- */
+#topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#0f1620,#0b1016);
+  position:sticky;top:0;z-index:50;
+}
+#topbar .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em;}
+#topbar .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
+#topbar nav{display:flex;gap:6px;flex-wrap:wrap;}
+#topbar nav button{
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+  padding:8px 12px;border-radius:8px;cursor:pointer;font-size:.85rem;transition:.15s;
+}
+#topbar nav button:hover{border-color:var(--accent2);color:var(--text);}
+#topbar nav button.active{background:var(--accent2);color:#04141c;border-color:var(--accent2);font-weight:700;}
+
+.wrap{max-width:1300px;margin:0 auto;padding:20px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadein .18s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+/* ---------- cards / grid ---------- */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);}
+.grid{display:grid;gap:16px;}
+.grid.cols-2{grid-template-columns:1fr 1fr;}
+.grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.grid.cols-4{grid-template-columns:repeat(4,1fr);}
+@media (max-width:900px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}}
+
+h1{font-size:1.7rem;margin:.2em 0;}
+h2{font-size:1.25rem;margin:.3em 0;}
+h3{font-size:1.05rem;margin:.4em 0;}
+p{line-height:1.5;color:var(--text);}
+.muted{color:var(--muted);}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:10px 16px;border-radius:10px;cursor:pointer;font-size:.92rem;font-weight:600;
+  transition:.15s;
+}
+.btn:hover{border-color:var(--accent2);transform:translateY(-1px);}
+.btn.primary{background:linear-gradient(180deg,var(--accent2),#0ea5c9);color:#031722;border:none;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.warn{background:linear-gradient(180deg,var(--warn),#b3820f);color:#241a02;border:none;}
+.btn.bad{background:linear-gradient(180deg,var(--bad),#a53939);color:#2a0808;border:none;}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn.block{width:100%;}
+.btn.lg{padding:16px 20px;font-size:1.05rem;}
+
+.pill-row{display:flex;gap:8px;flex-wrap:wrap;}
+.pill{padding:7px 14px;border-radius:999px;border:1px solid var(--border);cursor:pointer;background:var(--panel2);color:var(--muted);font-size:.85rem;}
+.pill.selected{border-color:var(--accent);color:var(--accent);background:#0d2a26;}
+
+/* ---------- home menu ---------- */
+.mode-card{cursor:pointer;transition:.15s;}
+.mode-card:hover{border-color:var(--accent2);transform:translateY(-2px);}
+.mode-card .icon{font-size:1.6rem;}
+
+/* ---------- simulation layout ---------- */
+#simLayout{display:grid;grid-template-columns:340px 1fr 300px;gap:14px;align-items:start;}
+@media (max-width:1150px){#simLayout{grid-template-columns:1fr;}}
+
+.monitor{
+  background:#000;border:2px solid #1b2733;border-radius:var(--radius);padding:12px;
+  font-family:"Courier New",monospace;box-shadow:inset 0 0 30px rgba(0,0,0,.6);
+}
+.monitor .vitals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.vital{padding:6px 8px;border-radius:6px;background:#050a0f;}
+.vital .label{font-size:.65rem;color:#7f93a8;letter-spacing:.08em;}
+.vital .value{font-size:1.5rem;font-weight:700;line-height:1.1;}
+.vital.hr .value{color:var(--mono-green);}
+.vital.bp .value{color:var(--mono-white);font-size:1.15rem;}
+.vital.spo2 .value{color:var(--mono-cyan);}
+.vital.rr .value{color:var(--mono-yellow);}
+.vital.etco2 .value{color:var(--mono-white);font-size:1.15rem;}
+.vital.temp .value{color:var(--mono-white);font-size:1.15rem;}
+canvas.strip{width:100%;height:70px;background:#000;border-radius:4px;display:block;}
+.strip-label{font-size:.65rem;color:#7f93a8;margin:6px 0 2px;letter-spacing:.06em;}
+
+#timerBox{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:10px;border-radius:8px;background:#050a0f;}
+#timerBox .t{font-family:"Courier New",monospace;font-size:1.8rem;color:var(--mono-red);font-weight:700;}
+#timerBox .lastEvent{font-size:.72rem;color:var(--muted);max-width:170px;text-align:right;}
+
+.roleChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.roleChip{font-size:.68rem;padding:3px 8px;border-radius:999px;background:#0f2a3d;color:var(--accent2);border:1px solid #164a63;}
+
+#patientCard{margin-bottom:12px;}
+#patientCard .metaRow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+
+#centerPanel{min-height:400px;}
+#scenarioPrompt{font-size:1.08rem;line-height:1.55;margin-bottom:14px;white-space:pre-wrap;}
+.optionBtn{
+  display:block;width:100%;text-align:left;background:var(--panel2);
+  border:1px solid var(--border);color:var(--text);padding:14px 16px;
+  border-radius:10px;margin-bottom:10px;cursor:pointer;font-size:.95rem;transition:.12s;
+}
+.optionBtn:hover{border-color:var(--accent2);}
+.optionBtn .k{display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:5px;background:#0f2a3d;color:var(--accent2);font-size:.72rem;margin-right:8px;font-weight:700;}
+.optionBtn.disabledOpt{opacity:.45;pointer-events:none;}
+
+.feedbackBox{border-radius:10px;padding:14px 16px;margin-top:10px;border:1px solid var(--border);}
+.feedbackBox.ideal{background:var(--good-dim);border-color:#1e6f52;}
+.feedbackBox.acceptable{background:#12314f;border-color:#1f5a8a;}
+.feedbackBox.error{background:var(--warn-dim);border-color:#8a6a10;}
+.feedbackBox.critical{background:var(--bad-dim);border-color:#8a2323;}
+.feedbackBox h4{margin:0 0 6px;}
+.feedbackBox .ref{margin-top:8px;font-size:.78rem;color:var(--muted);border-top:1px dashed var(--border);padding-top:8px;}
+
+#actionLog{max-height:420px;overflow-y:auto;}
+#actionLog .entry{padding:8px 0;border-bottom:1px solid var(--border);font-size:.82rem;}
+#actionLog .entry .tm{color:var(--accent2);font-family:"Courier New",monospace;margin-right:6px;}
+
+.complicationBanner{background:#3d1414;border:1px solid #8a2323;color:#ffd6d6;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:.9rem;}
+
+/* ---------- dashboard ---------- */
+.scoreBig{font-size:3rem;font-weight:800;}
+.meter{background:#0a1017;border:1px solid var(--border);border-radius:999px;height:14px;overflow:hidden;margin:4px 0 10px;}
+.meter > div{height:100%;border-radius:999px;}
+.metricRow{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:2px;}
+.statTile{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.statTile .n{font-size:1.6rem;font-weight:800;}
+.statTile .l{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+
+/* ---------- protocol mode flowchart ---------- */
+.flowWrap{overflow-x:auto;padding:10px 0;}
+.flowNode{
+  display:inline-block;min-width:200px;max-width:240px;vertical-align:top;
+  background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;margin:6px;cursor:pointer;
+}
+.flowNode:hover{border-color:var(--accent2);}
+.flowNode.current{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;}
+.flowNode .t{font-size:.7rem;color:var(--accent2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.flowArrow{display:inline-block;color:var(--muted);font-size:1.4rem;vertical-align:middle;padding:0 4px;}
+
+/* ---------- exam mode ---------- */
+#examProgress{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
+#examProgress .dot{width:14px;height:14px;border-radius:3px;background:#1c2836;}
+#examProgress .dot.done-good{background:var(--good);}
+#examProgress .dot.done-bad{background:var(--bad);}
+#examProgress .dot.current{outline:2px solid var(--accent2);}
+
+/* misc */
+.footer-note{margin-top:26px;padding:14px;border-radius:10px;background:#0e151d;border:1px dashed var(--border);color:var(--muted);font-size:.78rem;}
+.kv{display:flex;justify-content:space-between;font-size:.85rem;padding:4px 0;border-bottom:1px dashed var(--border);}
+.section-title{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.section-title .badge{background:#0f2a3d;color:var(--accent2);font-size:.68rem;padding:3px 8px;border-radius:6px;}
+select,input[type=text]{
+  background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:8px 10px;border-radius:8px;font-size:.9rem;
+}
+label{font-size:.82rem;color:var(--muted);display:block;margin-bottom:4px;}
+.field{margin-bottom:12px;}
+.close-x{position:absolute;top:10px;right:14px;cursor:pointer;color:var(--muted);font-size:1.3rem;}
+.modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
+.modalBox{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;position:relative;box-shadow:var(--shadow);}
+
+@media (max-width:600px){
+  .wrap{padding:12px;}
+  #topbar{padding:10px 12px;flex-direction:column;align-items:flex-start;gap:8px;}
+  .grid.cols-3,.grid.cols-4{grid-template-columns:1fr 1fr;}
+  .scoreBig{font-size:2.2rem;}
+}
+
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="brand"><span class="dot"></span> ResusSim <span class="small">· 2025 AHA-aligned trainer</span></div>
+  <nav>
+    <button data-nav="home" class="active">Home</button>
+    <button data-nav="protocol">Protocol Mode</button>
+    <button data-nav="dashboard">My Performance</button>
+    <button data-nav="about">About / Safety</button>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ HOME SCREEN ============ -->
+  <section id="screen-home" class="screen active">
+    <h1>Resuscitation Decision-Making Simulator</h1>
+    <p class="muted">Practice think → decide → act → observe → reassess resuscitation care aligned with the 2025 AHA Guidelines for CPR &amp; ECC. Pick a mode below.</p>
+
+    <div class="grid cols-3" style="margin-top:18px;">
+      <div class="card mode-card" data-start="random">
+        <div class="icon">🎲</div>
+        <h3>Give Me a Random Case</h3>
+        <p class="muted small">Instantly generate a fully randomized scenario — any age, setting, rhythm, and complication.</p>
+      </div>
+      <div class="card mode-card" data-start="builder">
+        <div class="icon">🩺</div>
+        <h3>Scenario Generator</h3>
+        <p class="muted small">Choose the case family, age group, and difficulty yourself before you begin.</p>
+      </div>
+      <div class="card mode-card" data-nav="protocol">
+        <div class="icon">🗺️</div>
+        <h3>Protocol Mode</h3>
+        <p class="muted small">Click through the AHA algorithms step-by-step with no time pressure.</p>
+      </div>
+      <div class="card mode-card" data-start="exam">
+        <div class="icon">⏱️</div>
+        <h3>Exam Mode</h3>
+        <p class="muted small">Timed multi-case assessment. No feedback until the final report.</p>
+      </div>
+      <div class="card mode-card" data-start="drill">
+        <div class="icon">📈</div>
+        <h3>Rhythm Recognition Drill</h3>
+        <p class="muted small">Rapid-fire ECG strip classification — shockable vs non-shockable, brady vs tachy.</p>
+      </div>
+      <div class="card mode-card" data-nav="dashboard">
+        <div class="icon">📊</div>
+        <h3>My Performance</h3>
+        <p class="muted small">Review your scores, recurring mistakes, and adaptive recommendations.</p>
+      </div>
+      <div class="card mode-card" data-nav="about">
+        <div class="icon">⚠️</div>
+        <h3>About &amp; Safety</h3>
+        <p class="muted small">What this tool is (and is not), and how to read the AHA references.</p>
+      </div>
+    </div>
+
+    <div id="adaptiveHomeBox" class="card hidden" style="margin-top:18px;border-color:#8a6a10;">
+      <h3>🎯 Recommended for you</h3>
+      <div id="adaptiveHomeContent"></div>
+    </div>
+  </section>
+
+  <!-- ============ SCENARIO BUILDER ============ -->
+  <section id="screen-builder" class="screen">
+    <h2>Build a Scenario</h2>
+    <div class="card">
+      <div class="grid cols-2">
+        <div>
+          <div class="field">
+            <label>Case family</label>
+            <div class="pill-row" id="pillFamily"></div>
+          </div>
+          <div class="field">
+            <label>Age group</label>
+            <div class="pill-row" id="pillAge"></div>
+          </div>
+        </div>
+        <div>
+          <div class="field">
+            <label>Difficulty</label>
+            <div class="pill-row" id="pillDifficulty"></div>
+          </div>
+          <div class="field">
+            <label>Team mode</label>
+            <div class="pill-row" id="pillTeam"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary lg block" id="btnBuildStart">Start Scenario</button>
+    </div>
+  </section>
+
+  <!-- ============ ROLE ASSIGNMENT (team mode) ============ -->
+  <section id="screen-roles" class="screen">
+    <h2>Assemble Your Code Team</h2>
+    <p class="muted">Assign roles before the scenario begins. You will play <b>Team Leader</b> by default — choose who plays each other role.</p>
+    <div class="card" id="roleAssignCard"></div>
+    <button class="btn primary lg block" id="btnRolesContinue" style="margin-top:14px;">Begin Scenario</button>
+  </section>
+
+  <!-- ============ SIMULATION SCREEN ============ -->
+  <section id="screen-sim" class="screen">
+    <div id="examProgress" class="hidden"></div>
+    <div id="simLayout">
+      <!-- LEFT: monitor -->
+      <div>
+        <div class="card" id="patientCard">
+          <div class="section-title"><h3 id="patientName">Patient</h3><span class="badge" id="patientDifficultyBadge"></span></div>
+          <div class="metaRow" id="patientMeta"></div>
+        </div>
+        <div class="monitor">
+          <div class="vitals">
+            <div class="vital hr"><div class="label">HR (bpm)</div><div class="value" id="vHR">--</div></div>
+            <div class="vital bp"><div class="label">BP (mmHg)</div><div class="value" id="vBP">--/--</div></div>
+            <div class="vital spo2"><div class="label">SpO₂ (%)</div><div class="value" id="vSpO2">--</div></div>
+            <div class="vital rr"><div class="label">RR (/min)</div><div class="value" id="vRR">--</div></div>
+            <div class="vital etco2"><div class="label">EtCO₂ (mmHg)</div><div class="value" id="vEtCO2">--</div></div>
+            <div class="vital temp"><div class="label">Temp (°C)</div><div class="value" id="vTemp">--</div></div>
+          </div>
+          <div class="strip-label">RHYTHM</div>
+          <canvas class="strip" id="stripCanvas" width="600" height="80"></canvas>
+          <div id="pulseStatus" class="small" style="margin-top:6px;">Pulse: —</div>
+        </div>
+        <div id="timerBox">
+          <div>
+            <div class="small">RESUSCITATION TIME</div>
+            <div class="t" id="timerDisplay">00:00</div>
+          </div>
+          <div class="lastEvent" id="lastEventLabel">No events yet</div>
+        </div>
+        <div id="roleChipsBox" class="roleChips"></div>
+      </div>
+
+      <!-- CENTER: decision panel -->
+      <div class="card" id="centerPanel">
+        <div id="complicationSlot"></div>
+        <div id="countdownBox" class="small hidden" style="margin-bottom:8px;"></div>
+        <div class="section-title">
+          <span class="tag info" id="stageTag">Assessment</span>
+          <span class="tag" id="algoTag"></span>
+        </div>
+        <div id="scenarioPrompt"></div>
+        <div id="optionsContainer"></div>
+        <div id="feedbackContainer"></div>
+        <div id="continueRow" class="hidden" style="margin-top:14px;text-align:right;">
+          <button class="btn primary" id="btnContinue">Continue →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: action log -->
+      <div class="card">
+        <div class="section-title"><h3>Action History</h3></div>
+        <div id="actionLog"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DEBRIEF SCREEN ============ -->
+  <section id="screen-debrief" class="screen">
+    <h1>Case Debrief</h1>
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="small muted">OVERALL SCORE</div>
+        <div class="scoreBig" id="debriefScore">--%</div>
+        <div id="debriefScoreLabel" class="tag"></div>
+        <div style="margin-top:16px;" id="debriefMetrics"></div>
+      </div>
+      <div class="card">
+        <h3>A. What happened</h3>
+        <p id="debriefSummary" class="small"></p>
+        <h3>Key events timeline</h3>
+        <div id="debriefTimeline" class="small"></div>
+      </div>
+    </div>
+    <div class="grid cols-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>B. What you did well</h3>
+        <ul id="debriefGood"></ul>
+      </div>
+      <div class="card">
+        <h3>C. What could be improved</h3>
+        <ul id="debriefBad"></ul>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>D. Ideal pathway</h3>
+      <ol id="debriefIdeal"></ol>
+    </div>
+    <div class="card" style="margin-top:16px;border-color:#1e6f52;">
+      <h3>E. Key learning points</h3>
+      <ul id="debriefLearning"></ul>
+    </div>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn primary" id="btnAnotherCase">Run Another Case</button>
+      <button class="btn" id="btnToDashboard">View My Performance</button>
+      <button class="btn ghost" id="btnDebriefHome">Back to Home</button>
+    </div>
+  </section>
+
+  <!-- ============ PROTOCOL MODE ============ -->
+  <section id="screen-protocol" class="screen">
+    <h2>Protocol Mode</h2>
+    <p class="muted">Click through each AHA algorithm at your own pace. Every decision point shows what happens next — use Back to try a different branch.</p>
+    <div class="pill-row" id="protocolPicker" style="margin-bottom:14px;"></div>
+    <div class="card">
+      <div class="section-title"><h3 id="protocolTitle"></h3><span class="badge" id="protocolStepBadge"></span></div>
+      <p id="protocolNodeText"></p>
+      <div id="protocolOptions" class="pill-row"></div>
+      <div style="margin-top:14px;">
+        <button class="btn ghost" id="btnProtocolBack">← Back</button>
+        <button class="btn ghost" id="btnProtocolRestart">Restart Algorithm</button>
+      </div>
+    </div>
+    <div class="flowWrap card" style="margin-top:14px;">
+      <div id="protocolFlow"></div>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="screen-dashboard" class="screen">
+    <h2>My Performance</h2>
+    <div class="grid cols-4" id="dashboardTiles"></div>
+    <div class="grid cols-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Accuracy by domain</h3>
+        <div id="dashboardMeters"></div>
+      </div>
+      <div class="card">
+        <h3>🎯 Adaptive focus areas</h3>
+        <div id="dashboardAdaptive" class="small"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>Case history</h3>
+      <div id="dashboardHistory" class="small"></div>
+    </div>
+  </section>
+
+  <!-- ============ EXAM RESULTS ============ -->
+  <section id="screen-examresult" class="screen">
+    <h1>Exam Mode — Final Report</h1>
+    <div class="grid cols-4" id="examTiles"></div>
+    <div class="card" style="margin-top:16px;">
+      <h3>Case-by-case breakdown</h3>
+      <div id="examBreakdown" class="small"></div>
+    </div>
+    <div style="margin-top:18px;">
+      <button class="btn primary" id="btnExamHome">Back to Home</button>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="screen-about" class="screen">
+    <h2>About &amp; Educational Safety</h2>
+    <div class="card">
+      <p><strong>ResusSim is an educational simulation tool.</strong> It is designed to help healthcare learners practice resuscitation decision-making aligned with the <strong>2025 AHA Guidelines for CPR &amp; ECC</strong>.</p>
+      <p>It is <strong>not</strong> a substitute for:</p>
+      <ul>
+        <li>Formal American Heart Association course completion (BLS, ACLS, PALS, etc.) and hands-on skills verification</li>
+        <li>Your institution's specific resuscitation protocols and equipment</li>
+        <li>Direct medical supervision and physician judgment</li>
+        <li>Real-time clinical judgment on an actual patient</li>
+      </ul>
+      <p>All medications, doses, timings, and algorithm steps in this tool are presented for practice purposes and reflect a good-faith educational summary of the 2025 AHA update. <strong>Always verify against the official published 2025 AHA algorithms and your local protocols</strong> before applying anything learned here in clinical practice.</p>
+      <h3>What changed in the 2025 update that this simulator reflects</h3>
+      <ul id="aboutChangesList"></ul>
+    </div>
+  </section>
+
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ============================================================
+   AHA 2025 REFERENCE DATA
+   Grounded in: 2025 AHA Guidelines for CPR & ECC (Circulation,
+   Oct/Nov 2025 update) — unified Chain of Survival, one-shock
+   defibrillation strategy, IV-first vascular access, opioid
+   overdose/naloxone algorithm, revised choking response, etc.
+   THIS IS AN EDUCATIONAL SIMULATION ONLY. Values are presented
+   for training/practice purposes and must be cross-checked
+   against the official published 2025 AHA algorithms and local
+   institutional protocol before any clinical use.
+   ============================================================ */
+
+const AHA_META = {
+  version: "Educational build referencing the 2025 AHA Guidelines for CPR & ECC",
+  chainOfSurvival: [
+    "Recognition & Emergency Activation",
+    "High-Quality CPR",
+    "Defibrillation",
+    "Advanced Resuscitation",
+    "Post-Cardiac Arrest Care",
+    "Recovery & Survivorship"
+  ],
+  disclaimer: "Educational simulation only — not a substitute for formal AHA course completion, your institution's protocols, physician supervision, or real-time clinical judgment. Always verify doses/algorithms against the official 2025 AHA materials."
+};
+
+/* ---------- Medication reference table ---------- */
+const MED_REFERENCE = {
+  epinephrine_arrest: {
+    name: "Epinephrine",
+    indication: "Cardiac arrest (all rhythms)",
+    dose: "1 mg IV/IO",
+    repeat: "every 3–5 min",
+    route: ["IV", "IO"],
+    notes: "For shockable rhythms, give after the 2nd shock if VF/pVT persists, then every other cycle. For PEA/asystole, give as soon as feasible after IV/IO access.",
+    distractors: ["0.1 mg IV/IO", "1 mg IM", "10 mg IV/IO", "1 mg every 10 min"]
+  },
+  epinephrine_bradycardia: {
+    name: "Epinephrine infusion",
+    indication: "Bradycardia refractory to atropine (alternative to dopamine)",
+    dose: "2–10 mcg/min IV infusion",
+    route: ["IV", "IO"],
+    notes: "Titrate to patient response.",
+    distractors: ["1 mg IV push", "0.5 mcg/min", "20 mg IV bolus"]
+  },
+  amiodarone: {
+    name: "Amiodarone",
+    indication: "Refractory VF/pulseless VT",
+    dose: "300 mg IV/IO first dose",
+    repeatDose: "150 mg IV/IO second dose",
+    route: ["IV", "IO"],
+    notes: "Give after epinephrine for persistent shockable rhythm; second dose for recurrent/refractory VF/pVT.",
+    distractors: ["300 mg IM", "30 mg IV/IO", "900 mg IV push", "150 mg IV over 1 min repeated q3min"]
+  },
+  lidocaine: {
+    name: "Lidocaine",
+    indication: "Refractory VF/pulseless VT (alternative to amiodarone)",
+    dose: "1–1.5 mg/kg IV/IO first dose",
+    repeatDose: "0.5–0.75 mg/kg IV/IO (max 3 mg/kg total)",
+    route: ["IV", "IO"],
+    notes: "Alternative antiarrhythmic; do not combine both antiarrhythmics routinely.",
+    distractors: ["1–1.5 mg/kg IM", "5 mg/kg IV bolus", "100 mg IV every hour"]
+  },
+  atropine: {
+    name: "Atropine",
+    indication: "Symptomatic bradycardia (HR typically <50/min with symptoms)",
+    dose: "1 mg IV bolus",
+    repeat: "every 3–5 min, max total 3 mg",
+    route: ["IV", "IO"],
+    notes: "Not first-line for high-degree AV block (type II 2nd degree or 3rd degree) with wide QRS — proceed to pacing/catecholamines. Not indicated in asystole/PEA.",
+    distractors: ["0.5 mg IV bolus", "1 mg IV every 10 min", "3 mg single dose", "1 mg IM"]
+  },
+  dopamine: {
+    name: "Dopamine infusion",
+    indication: "Bradycardia refractory to atropine",
+    dose: "5–20 mcg/kg/min IV infusion",
+    route: ["IV", "IO"],
+    notes: "Titrate to response; taper slowly.",
+    distractors: ["1–2 mcg/kg/min", "50 mcg/kg/min", "5 mg IV push"]
+  },
+  adenosine: {
+    name: "Adenosine",
+    indication: "Stable regular narrow-complex SVT",
+    dose: "6 mg rapid IV push",
+    repeatDose: "12 mg rapid IV push (may repeat once)",
+    route: ["IV (rapid push + saline flush)"],
+    notes: "Use a large proximal vein, immediate saline flush, warn patient of transient flushing/chest discomfort. Avoid in irregular wide-complex/pre-excited AFib.",
+    distractors: ["6 mg IV over 5 min", "0.6 mg IV push", "12 mg IM", "6 mg IV push, repeat 6 mg twice"]
+  },
+  naloxone: {
+    name: "Naloxone",
+    indication: "Suspected opioid-associated life-threatening emergency (no/abnormal breathing)",
+    dose: "0.4–2 mg IV/IM/IN (intranasal common for lay responders, e.g. 4 mg IN spray)",
+    repeat: "may repeat every 2–3 min if no response",
+    route: ["IN", "IM", "IV"],
+    notes: "2025 update: first public-facing AHA algorithm for lay naloxone use. Never delay CPR/rescue breathing/compressions to obtain or give naloxone — ventilation/compressions come first if the person is not breathing normally.",
+    distractors: ["4 mg IV push once only", "0.04 mg IN", "give only after 3 rounds of CPR", "10 mg IM"]
+  },
+  sodiumBicarb: {
+    name: "Sodium bicarbonate",
+    indication: "NOT routine in undifferentiated arrest",
+    dose: "Not indicated routinely",
+    notes: "2025 guidance: routine administration of bicarbonate, calcium, magnesium, or steroids during undifferentiated cardiac arrest is NOT recommended absent a specific indication (e.g., known hyperkalemia, tricyclic overdose, severe metabolic acidosis).",
+    isDistractorDrug: true
+  },
+  calciumChloride: {
+    name: "Calcium chloride",
+    indication: "NOT routine — reserve for hyperkalemia, hypocalcemia, calcium-channel-blocker toxicity",
+    dose: "Not indicated routinely",
+    isDistractorDrug: true
+  },
+  magnesium: {
+    name: "Magnesium sulfate",
+    indication: "Torsades de pointes / known hypomagnesemia only",
+    dose: "1–2 g IV/IO over several minutes (rapid push only if pulseless torsades)",
+    isDistractorDrug: true
+  }
+};
+
+/* ---------- CPR / defibrillation quality parameters ---------- */
+const CPR_STANDARDS = {
+  compressionRateAdult: "100–120/min",
+  compressionDepthAdult: "at least 2 in (5 cm), not more than 2.4 in (6 cm)",
+  compressionRatioSingleRescuer: "30:2",
+  compressionDepthChild: "about 2 in (5 cm) or 1/3 AP chest diameter",
+  compressionDepthInfant: "about 1.5 in (4 cm) or 1/3 AP chest diameter",
+  pauseTarget: "minimize interruptions; pediatric pauses should be <10 seconds",
+  rhythmCheckInterval: "every 2 minutes, kept brief",
+  defibStrategy: "One-shock strategy — no stacked shocks; resume compressions immediately after each shock without pausing to recheck rhythm/pulse first",
+  ventilationRateAdvancedAirway: "1 breath every 6 seconds (10/min) with continuous compressions once an advanced airway is placed",
+  accessPriority: "IV access first-line; IO reasonable if IV cannot be obtained quickly without delaying key interventions",
+  mechanicalCPR: "Consider a mechanical CPR device when high-quality manual compressions are difficult or unsafe (e.g., transport, prolonged resuscitation)"
+};
+
+/* ---------- Choking response (2025) ---------- */
+const CHOKING_RESPONSE = {
+  adultChild: "Alternate 5 back blows and 5 abdominal thrusts until the object is expelled or the person becomes unresponsive.",
+  infant: "Alternate 5 back blows and 5 chest thrusts (heel of one hand) — avoid abdominal thrusts in infants."
+};
+
+/* ---------- Age / weight helpers ---------- */
+function estimateChildWeightKg(ageYears) {
+  if (ageYears < 1) return Math.round((3.5 + ageYears * 9) * 10) / 10;
+  return Math.round((2 * ageYears + 8) * 10) / 10; // rough weight-for-age formula, education only
+}
+
+/* ---------- Random helpers ---------- */
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function chance(p) { return Math.random() < p; }
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+/* ---------- Settings / context pools ---------- */
+const SETTINGS_ADULT = [
+  "at home in the living room, family present",
+  "in a grocery store aisle, bystanders nearby",
+  "on a medical-surgical hospital ward",
+  "in the emergency department resuscitation bay",
+  "in the ICU, already on a cardiac monitor",
+  "at a gym during exercise",
+  "in a dental office waiting room",
+  "on a commercial flight at cruising altitude",
+  "at an outdoor sporting event",
+  "in a skilled nursing facility"
+];
+const SETTINGS_PEDS = [
+  "at home, found by a parent",
+  "at a daycare center",
+  "on the pediatric hospital ward",
+  "in the pediatric ICU on a monitor",
+  "at a community swimming pool (post-submersion)",
+  "in the emergency department",
+  "at school during recess",
+  "in the neonatal nursery"
+];
+
+const SPECIAL_CIRCUMSTANCES = [
+  { id: "none", label: "None", weight: 6 },
+  { id: "opioid", label: "Suspected opioid involvement", weight: 2 },
+  { id: "hypothermia", label: "Significant hypothermia (cold-water immersion / exposure)", weight: 1 },
+  { id: "pregnancy", label: "Patient is pregnant (>20 weeks)", weight: 1 },
+  { id: "lvad", label: "Patient has an LVAD (durable mechanical circulatory support)", weight: 1 },
+  { id: "drowning", label: "Submersion / drowning event", weight: 1 },
+  { id: "anaphylaxis", label: "Suspected anaphylaxis trigger", weight: 1 }
+];
+
+function weightedPick(pool) {
+  const total = pool.reduce((s, x) => s + x.weight, 0);
+  let r = Math.random() * total;
+  for (const item of pool) { if ((r -= item.weight) <= 0) return item; }
+  return pool[0];
+}
+
+</script>
+<script>
+/* ============================================================
+   ECG RHYTHM STRIP RENDERER
+   Stylized (not diagnostic-grade) waveform generator used for
+   rhythm-recognition practice. Draws a scrolling strip on a
+   canvas element based on a rhythm type + rate.
+   ============================================================ */
+
+const RHYTHM_LIBRARY = {
+  sinus_normal:   { label: "Normal Sinus Rhythm", shockable: false, category: "perfusing" },
+  sinus_brady:    { label: "Sinus Bradycardia", shockable: false, category: "brady" },
+  sinus_tachy:    { label: "Sinus Tachycardia", shockable: false, category: "tachy_narrow" },
+  afib_rvr:       { label: "Atrial Fibrillation with RVR", shockable: false, category: "tachy_narrow_irregular" },
+  svt:            { label: "Supraventricular Tachycardia (SVT)", shockable: false, category: "tachy_narrow" },
+  heart_block_3rd:{ label: "Complete (3rd-degree) AV Block", shockable: false, category: "brady" },
+  heart_block_2:  { label: "2nd-degree AV Block, Type II", shockable: false, category: "brady" },
+  junctional_brady:{ label: "Junctional Bradycardia", shockable: false, category: "brady" },
+  vt_mono_stable: { label: "Monomorphic Ventricular Tachycardia (with pulse)", shockable: false, category: "tachy_wide" },
+  vt_pulseless:   { label: "Pulseless Ventricular Tachycardia", shockable: true, category: "arrest" },
+  torsades:       { label: "Torsades de Pointes (Polymorphic VT)", shockable: true, category: "arrest" },
+  vf_coarse:      { label: "Coarse Ventricular Fibrillation", shockable: true, category: "arrest" },
+  vf_fine:        { label: "Fine Ventricular Fibrillation", shockable: true, category: "arrest" },
+  pea_organized:  { label: "Organized Rhythm without a Pulse (PEA)", shockable: false, category: "arrest" },
+  asystole:       { label: "Asystole", shockable: false, category: "arrest" }
+};
+
+function buildBeatUnit(type, rng) {
+  // returns array of y offsets (-1..1) representing one "beat cell" of fixed width=100
+  const n = 100;
+  const arr = new Float32Array(n);
+  const noise = () => (rng() - 0.5) * 0.03;
+  switch (type) {
+    case "sinus_normal": case "sinus_brady": case "sinus_tachy": {
+      for (let i = 0; i < n; i++) {
+        let y = 0;
+        if (i >= 8 && i < 14) y = 0.12 * Math.sin(((i - 8) / 6) * Math.PI); // P
+        if (i >= 20 && i < 24) y = -0.15 * ((i - 20) / 4);
+        if (i >= 24 && i < 28) y = 1.0 * ((28 - i) / 4);
+        if (i >= 28 && i < 32) y = -0.25 * ((32 - i) / 4);
+        if (i >= 40 && i < 60) y = 0.22 * Math.sin(((i - 40) / 20) * Math.PI); // T
+        arr[i] = y + noise();
+      }
+      break;
+    }
+    case "afib_rvr": case "svt": {
+      for (let i = 0; i < n; i++) {
+        let y = 0;
+        if (i >= 20 && i < 24) y = -0.1 * ((i - 20) / 4);
+        if (i >= 24 && i < 28) y = 0.9 * ((28 - i) / 4);
+        if (i >= 28 && i < 32) y = -0.2 * ((32 - i) / 4);
+        if (i >= 42 && i < 58) y = 0.15 * Math.sin(((i - 42) / 16) * Math.PI);
+        arr[i] = y + noise() + (type === "afib_rvr" ? (rng() - 0.5) * 0.06 : 0);
+      }
+      break;
+    }
+    case "heart_block_3rd": case "heart_block_2": case "junctional_brady": {
+      for (let i = 0; i < n; i++) {
+        let y = 0;
+        if (i >= 4 && i < 10) y = 0.1 * Math.sin(((i - 4) / 6) * Math.PI); // dissociated P waves
+        if (i >= 45 && i < 49) y = -0.15;
+        if (i >= 49 && i < 53) y = 1.0 * ((53 - i) / 4);
+        if (i >= 53 && i < 57) y = -0.3;
+        if (i >= 65 && i < 85) y = 0.2 * Math.sin(((i - 65) / 20) * Math.PI);
+        arr[i] = y + noise();
+      }
+      break;
+    }
+    case "vt_mono_stable": case "vt_pulseless": {
+      for (let i = 0; i < n; i++) {
+        const phase = (i / n) * Math.PI * 2;
+        arr[i] = 0.85 * Math.sin(phase) + 0.25 * Math.sin(phase * 2) + noise();
+      }
+      break;
+    }
+    case "torsades": {
+      for (let i = 0; i < n; i++) {
+        const envPhase = (i / n) * Math.PI * 2;
+        const env = Math.sin(envPhase * 0.5 + rng() * 0.1);
+        arr[i] = env * (0.7 + 0.3 * Math.sin(i * 0.9)) + noise();
+      }
+      break;
+    }
+    case "vf_coarse": {
+      for (let i = 0; i < n; i++) arr[i] = 0.75 * Math.sin(i * 0.9 + rng()) * (0.6 + 0.4 * Math.sin(i * 0.13)) + (rng() - 0.5) * 0.25;
+      break;
+    }
+    case "vf_fine": {
+      for (let i = 0; i < n; i++) arr[i] = 0.25 * Math.sin(i * 1.1 + rng()) * (0.6 + 0.4 * Math.sin(i * 0.2)) + (rng() - 0.5) * 0.12;
+      break;
+    }
+    case "pea_organized": {
+      for (let i = 0; i < n; i++) {
+        let y = 0;
+        if (i >= 8 && i < 14) y = 0.08 * Math.sin(((i - 8) / 6) * Math.PI);
+        if (i >= 24 && i < 28) y = 0.55 * ((28 - i) / 4);
+        if (i >= 40 && i < 60) y = 0.12 * Math.sin(((i - 40) / 20) * Math.PI);
+        arr[i] = y + noise();
+      }
+      break;
+    }
+    case "asystole": {
+      for (let i = 0; i < n; i++) arr[i] = (rng() - 0.5) * 0.03;
+      break;
+    }
+    default: {
+      for (let i = 0; i < n; i++) arr[i] = noise();
+    }
+  }
+  return arr;
+}
+
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+class RhythmStrip {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.type = "asystole";
+    this.rate = 0;
+    this.phase = 0;
+    this.rng = mulberry32(12345);
+    this.unit = buildBeatUnit(this.type, this.rng);
+    this._raf = null;
+    this._last = performance.now();
+    this.arrestFlutter = false;
+  }
+  setRhythm(type, rate) {
+    this.type = type;
+    this.rate = rate || 0;
+    this.rng = mulberry32(Math.floor(Math.random() * 1e9));
+    this.unit = buildBeatUnit(type, this.rng);
+  }
+  start() {
+    if (this._raf) return;
+    const loop = (now) => {
+      const dt = Math.min(0.06, (now - this._last) / 1000);
+      this._last = now;
+      const info = RHYTHM_LIBRARY[this.type] || {};
+      let speed;
+      if (info.category === "arrest" && this.type !== "asystole" && this.type !== "pea_organized") {
+        speed = 220; // chaotic rhythms scroll fast regardless of "rate"
+      } else {
+        const bpm = this.rate || 60;
+        speed = (bpm / 60) * 100 * 1.15;
+      }
+      this.phase += speed * dt;
+      this.draw();
+      this._raf = requestAnimationFrame(loop);
+    };
+    this._raf = requestAnimationFrame(loop);
+  }
+  stop() {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    this._raf = null;
+  }
+  draw() {
+    const ctx = this.ctx, canvas = this.canvas;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    // grid
+    ctx.strokeStyle = "rgba(60,90,60,0.25)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+    const color = (RHYTHM_LIBRARY[this.type] && RHYTHM_LIBRARY[this.type].shockable) ? "#ff5a5a" : "#3ef07c";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const mid = h / 2;
+    const ampScale = h * 0.42;
+    const pxPerUnit = 2.2;
+    const totalUnits = Math.ceil(w / pxPerUnit) + 2;
+    const startUnit = Math.floor(this.phase / pxPerUnit) - totalUnits;
+    for (let i = 0; i < w; i++) {
+      const u = (i + this.phase) / pxPerUnit;
+      const idx = Math.floor(u) % 100;
+      const safeIdx = ((idx % 100) + 100) % 100;
+      const y = mid - this.unit[safeIdx] * ampScale;
+      if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+    // sweep glow line
+    ctx.fillStyle = "rgba(255,255,255,0.04)";
+  }
+}
+
+</script>
+<script>
+/* ============================================================
+   SCENARIO ENGINE — DECISION-TREE CONTENT
+   Each family exposes build(state) -> { startNodeId, nodes }
+   Node shapes:
+     decision node:  { id, stage, algoTag, prompt(state), type:'decision', options:[...] }
+     medication node:{ id, stage, algoTag, prompt(state), type:'medication', drugSet, correctKey, acceptableKeys, next(state,tier) }
+     info node:      { id, stage, algoTag, prompt(state), type:'info', next(state) }
+     end node:       { id, stage, type:'end' }
+   Option shape:
+     { id, text, tier:'ideal'|'acceptable'|'error'|'critical', feedback, ref, timeCost,
+       vitalsEffect(state), next(state) }
+   ============================================================ */
+
+function opt(id, text, tier, feedback, ref, timeCost, next, vitalsEffect) {
+  return { id, text, tier, feedback, ref, timeCost: timeCost || 5, next, vitalsEffect: vitalsEffect || function () {} };
+}
+function node(id, stage, algoTag, promptFn, options) {
+  return { id, stage, algoTag, prompt: promptFn, type: "decision", options };
+}
+function infoNode(id, stage, algoTag, promptFn, next, vitalsEffect) {
+  return { id, stage, algoTag, prompt: promptFn, type: "info", next, vitalsEffect: vitalsEffect || function () {} };
+}
+function endNode(id, stage) { return { id, stage, type: "end" }; }
+
+function medNode(id, stage, algoTag, promptFn, drugKeys, correctKey, acceptableKeys, next) {
+  return {
+    id, stage, algoTag, prompt: promptFn, type: "medication", category: "medication",
+    drugKeys, correctKey, acceptableKeys: acceptableKeys || [],
+    next
+  };
+}
+
+/* ---------- shared narrative helpers ---------- */
+function ageDesc(state) {
+  if (state.ageGroup === "adult") return `${state.ageValue}-year-old ${state.sex}`;
+  if (state.ageGroup === "child") return `${state.ageValue}-year-old child`;
+  if (state.ageGroup === "infant") return `${state.ageValue}-month-old infant`;
+  return `${state.ageValue}-year-old`;
+}
+function vitalsLine(state) {
+  const v = state.vitals;
+  return `HR ${v.hr === null ? "—" : v.hr}, BP ${v.bpSys === null ? "—" : v.bpSys + "/" + v.bpDia}, SpO₂ ${v.spo2 === null ? "—" : v.spo2 + "%"}, RR ${v.rr === null ? "—" : v.rr}, EtCO₂ ${v.etco2 === null ? "—" : v.etco2}`;
+}
+
+function scMod(state) { return state.specialCircumstance || "none"; }
+function scNote(state) {
+  const sc = scMod(state);
+  const notes = {
+    opioid: "You notice pinpoint pupils and paraphernalia nearby — opioid involvement is possible.",
+    hypothermia: "The patient feels very cold to the touch; core temperature is markedly low.",
+    pregnancy: "The patient is visibly pregnant, estimated beyond 20 weeks gestation.",
+    lvad: "You notice a controller and driveline — the patient has an implanted LVAD.",
+    drowning: "The patient was just pulled from the water after a submersion event.",
+    anaphylaxis: "You note hives, facial swelling, and a history of a new food/medication exposure."
+  };
+  return notes[sc] || "";
+}
+
+/* =========================================================================
+   FAMILY 1: ADULT CARDIAC ARREST
+   ========================================================================= */
+function buildAdultArrest(state) {
+  const nodes = {};
+  const sc = scMod(state);
+
+  nodes.start = node("start", "Scene Safety & Recognition", "BLS Algorithm",
+    (s) => `You find ${ageDesc(s)} unresponsive ${s.setting}. ${s.witnessed ? "The collapse was witnessed moments ago." : "It is unknown how long the patient has been down."} ${scNote(s)}\n\nScene appears safe. What do you do first?`,
+    [
+      opt("a", "Check responsiveness, then simultaneously assess breathing and pulse for no more than 10 seconds", "ideal",
+        "Correct. The 2025 BLS approach is rapid, simultaneous assessment of responsiveness, breathing, and pulse in ≤10 seconds to avoid delaying CPR.",
+        "2025 AHA BLS Algorithm — Recognition & Emergency Activation", 8, () => "callForHelp"),
+      opt("b", "Immediately start chest compressions without checking anything", "error",
+        "Too hasty — you must briefly confirm unresponsiveness and absence of normal breathing/pulse first (≤10 sec), otherwise you risk compressing a patient who doesn't need it. In this case the patient does need CPR, but the sequence matters for real practice.",
+        "2025 AHA BLS Algorithm", 5, () => "callForHelp"),
+      opt("c", "Only check for a pulse before deciding", "error",
+        "A pulse check alone is not enough and can be unreliable/slow under stress. Assess breathing and pulse together, briefly.", "2025 AHA BLS Algorithm", 12, () => "callForHelp"),
+      opt("d", "Leave to find family before doing anything", "critical",
+        "Critical delay. Time to recognition and CPR initiation is the strongest driver of survival — never delay assessment.", "2025 AHA Chain of Survival — Recognition & Emergency Activation", 30, () => "callForHelp")
+    ]);
+
+  nodes.callForHelp = node("callForHelp", "Activate Emergency Response", "BLS Algorithm",
+    (s) => `No normal breathing, no pulse. Patient is in cardiac arrest.\n\nWhat's your next action?`,
+    [
+      opt("a", "Shout for help / activate the emergency response system and get the defibrillator (or send someone to), then begin CPR immediately", "ideal",
+        "Correct — activate the response system and get a defibrillator/AED without delaying CPR.", "2025 AHA Chain of Survival", 6, () => "startCpr"),
+      opt("b", "Go find a defibrillator yourself before starting CPR", "error",
+        "This delays chest compressions. Send someone else for the defibrillator/AED if possible; you should stay and begin CPR.", "2025 AHA BLS Algorithm", 25, () => "startCpr"),
+      opt("c", "Wait for more staff/EMS to arrive before starting anything", "critical",
+        "Critical delay — begin high-quality CPR immediately; do not wait.", "2025 AHA Chain of Survival", 40, () => "startCpr")
+    ]);
+
+  nodes.startCpr = node("startCpr", "High-Quality CPR", "BLS / ACLS Cardiac Arrest Algorithm",
+    (s) => `You begin resuscitation. What compression technique should you use?`,
+    [
+      opt("a", "Rate 100–120/min, depth at least 2 in (5 cm) but not more than 2.4 in (6 cm), allow full chest recoil, minimize interruptions, ratio 30:2 until an advanced airway is placed", "ideal",
+        "Correct — this is the 2025 AHA high-quality CPR standard for adults.", "2025 AHA High-Quality CPR standards", 10, () => "attachMonitor"),
+      opt("b", "Rate ~80/min, depth about 1 inch, focus on speed over depth", "critical",
+        "Too slow and too shallow — inadequate compressions won't generate sufficient coronary perfusion pressure.", "2025 AHA High-Quality CPR standards", 15, () => "attachMonitor"),
+      opt("c", "Rate 140+/min as fast as possible, minimal recoil needed", "error",
+        "Too fast, and incomplete recoil between compressions reduces venous return/preload. Target 100–120/min with full recoil.", "2025 AHA High-Quality CPR standards", 12, () => "attachMonitor")
+    ]);
+  nodes.startCpr.category = "cpr";
+
+  nodes.attachMonitor = infoNode("attachMonitor", "Rhythm Assessment", "ACLS Cardiac Arrest Algorithm",
+    (s) => {
+      const shockable = chance(0.62);
+      s._pendingShockable = shockable;
+      if (sc === "lvad") {
+        s.rhythmType = shockable ? "vf_coarse" : "pea_organized";
+      } else {
+        s.rhythmType = shockable ? pick(["vf_coarse", "vf_fine", "vt_pulseless"]) : pick(["asystole", "pea_organized"]);
+      }
+      s.vitals.hr = null; s.vitals.bpSys = null; s.vitals.bpDia = null;
+      return `The defibrillator/monitor is attached with minimal interruption to compressions. Look at the rhythm strip on the monitor now.${sc === "lvad" ? " Remember: LVAD patients may not have a palpable pulse or normal waveform at baseline — auscultate for the device hum and check device parameters if possible." : ""}`;
+    },
+    () => "rhythmCheck1");
+
+  function rhythmCheckNode(id, cycleLabel, nextShockable, nextNonshockable) {
+    const n = node(id, "Rhythm Check — " + cycleLabel, "ACLS Cardiac Arrest Algorithm",
+      (s) => `Rhythm check (kept brief, ≤10 sec). Read the monitor strip. What do you do?`,
+      [
+        opt("shock", "Shockable rhythm → resume CPR while charging, then deliver ONE shock and immediately resume compressions (no pulse/rhythm check pause)",
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "Correct — one-shock strategy, no stacked shocks; resume CPR right after the shock." : "This rhythm was actually non-shockable — a shock will not help and interrupts effective CPR.",
+          "2025 AHA — one-shock strategy, no stacked shocks", 15,
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? nextShockable(s) : nextNonshockable(s)),
+        opt("noshock", "Non-shockable, organized-looking rhythm → briefly check for a pulse",
+          (s) => (!RHYTHM_LIBRARY[s.rhythmType].shockable && s.rhythmType === "pea_organized") ? "ideal" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "critical" : "acceptable"),
+          (s) => (!RHYTHM_LIBRARY[s.rhythmType].shockable && s.rhythmType === "pea_organized") ? "Correct — an organized-looking rhythm warrants a brief pulse check." : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "That rhythm was actually shockable (VF/pVT) — withholding defibrillation here delays the most effective therapy." : "This was asystole, not an organized rhythm — no need to check pulse, just resume CPR and prioritize epinephrine."),
+          "2025 AHA ACLS Cardiac Arrest Algorithm", 10,
+          (s) => (!RHYTHM_LIBRARY[s.rhythmType].shockable && s.rhythmType === "pea_organized") ? "checkPulseAfterRhythm" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? nextShockable(s) : nextNonshockable(s))),
+        opt("noshock2", "Non-shockable (asystole/PEA) → no shock, resume CPR immediately, prioritize IV/IO access and epinephrine",
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "critical" : "ideal",
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "That rhythm was actually shockable (VF/pVT) — withholding defibrillation here delays the most effective therapy." : "Correct — non-shockable rhythms get CPR, IV/IO access, and epinephrine, not a shock.",
+          "2025 AHA ACLS Cardiac Arrest Algorithm", 8,
+          (s) => (!RHYTHM_LIBRARY[s.rhythmType].shockable) ? nextNonshockable(s) : nextShockable(s)),
+        opt("unsure", "Unsure — pause longer (>10 sec) to study the rhythm before deciding", "error",
+          "Rhythm/pulse checks should be brief (≤10 seconds). Prolonged pauses reduce coronary perfusion pressure built up by compressions.",
+          "2025 AHA High-Quality CPR standards", 20,
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? nextShockable(s) : nextNonshockable(s))
+      ]);
+    n.category = "rhythm";
+    return n;
+  }
+  nodes.wrongNonshockableShocked = infoNode("wrongNonshockableShocked", "Rhythm Check — Error", "ACLS Cardiac Arrest Algorithm",
+    () => `That rhythm was actually non-shockable — a shock here will not help and interrupts effective CPR. Resuming compressions now.`, () => "postFirstCheckNonshockPath", null);
+  nodes.missedShockable = infoNode("missedShockable", "Rhythm Check — Error", "ACLS Cardiac Arrest Algorithm",
+    () => `That rhythm was actually shockable (VF/pVT) — withholding defibrillation here delays the single most effective therapy for this rhythm.`, () => "postFirstCheckShockPath", null);
+
+  nodes.rhythmCheck1 = rhythmCheckNode("rhythmCheck1", "#1", () => "shock1", () => "nonshockCycle1Cpr");
+  nodes.checkPulseAfterRhythm = node("checkPulseAfterRhythm", "Pulse Check", "ACLS Cardiac Arrest Algorithm",
+    () => `The rhythm looks organized. You check for a pulse (≤10 sec).`,
+    [
+      opt("pulse", "Pulse present → this is ROSC. Begin post-cardiac-arrest care.", "ideal",
+        "Correct — an organized rhythm with a palpable pulse is Return of Spontaneous Circulation.", "2025 AHA ACLS Cardiac Arrest Algorithm", 10,
+        (s) => { s.flags.rosc = true; s.vitals.hr = 96; s.vitals.bpSys = 102; s.vitals.bpDia = 66; s.vitals.spo2 = 93; s.vitals.etco2 = 38; return "rosc"; }),
+      opt("nopulse", "No pulse → this is PEA. Resume CPR and treat as non-shockable arrest.", "acceptable",
+        "Correct interpretation for this case, though here the rhythm did convert with a pulse — always re-verify with a full assessment.", "2025 AHA ACLS Cardiac Arrest Algorithm", 10,
+        () => "nonshockCycle1Cpr")
+    ]);
+
+  // ---- Shockable branch ----
+  nodes.shock1 = infoNode("shock1", "Defibrillation #1", "ACLS Cardiac Arrest Algorithm",
+    (s) => { s.events.push({ t: s.timerSec, label: "1st defibrillation delivered" }); s.flags.firstShockTime = s.timerSec; return `Shock delivered. Compressions resumed immediately — no pause to recheck rhythm or pulse.`; },
+    () => "postShock1Cpr");
+  nodes.postShock1Cpr = node("postShock1Cpr", "CPR Cycle (2 min)", "ACLS Cardiac Arrest Algorithm",
+    () => `You perform a 2-minute cycle of high-quality CPR. What should happen in parallel during this cycle?`,
+    [
+      opt("a", "Obtain IV/IO access (IV preferred first-line if quickly achievable) and prepare epinephrine", "ideal",
+        "Correct — 2025 guidance favors IV access first-line, with IO reasonable if IV isn't quickly achievable, without delaying key interventions.", "2025 AHA — vascular access priority", 15, () => "epi1"),
+      opt("b", "Stop compressions to place a central line", "critical",
+        "Do not interrupt compressions for a non-urgent procedure like central line placement during active resuscitation.", "2025 AHA High-Quality CPR standards", 30, () => "epi1"),
+      opt("c", "Wait until the next rhythm check to start thinking about access", "error",
+        "Access and medication preparation should happen during the CPR cycle, not be delayed.", "2025 AHA ACLS Cardiac Arrest Algorithm", 15, () => "epi1")
+    ]);
+  nodes.epi1 = medNode("epi1", "Medication — Epinephrine", "ACLS Cardiac Arrest Algorithm",
+    () => `IV/IO access is obtained. Order your first medication.`,
+    ["epinephrine_arrest", "amiodarone", "sodiumBicarb", "calciumChloride"], "epinephrine_arrest", [],
+    (s, tier) => "rhythmCheck2");
+  nodes.rhythmCheck2 = rhythmCheckNode("rhythmCheck2", "#2", () => "shock2", () => "convertedToNonshock");
+  nodes.shock2 = infoNode("shock2", "Defibrillation #2", "ACLS Cardiac Arrest Algorithm",
+    (s) => { s.events.push({ t: s.timerSec, label: "2nd defibrillation delivered" }); return `Second shock delivered. Compressions resume immediately.`; },
+    () => "amio1");
+  nodes.amio1 = medNode("amio1", "Medication — Antiarrhythmic", "ACLS Cardiac Arrest Algorithm",
+    () => `VF/pVT persists after the second shock. Order an antiarrhythmic.`,
+    ["amiodarone", "lidocaine", "sodiumBicarb", "magnesium"], "amiodarone", ["lidocaine"],
+    () => "hAndTs1");
+  nodes.hAndTs1 = node("hAndTs1", "Reversible Causes (H's & T's)", "ACLS Cardiac Arrest Algorithm",
+    (s) => `While CPR continues, the team should search for reversible causes. Given this is refractory VF/pVT ${scNote(s) ? "and " + scNote(s).toLowerCase() : ""}, which is the most important to actively consider right now?`,
+    buildHTsOptions(state, () => "rhythmCheck3")
+  );
+  nodes.rhythmCheck3 = rhythmCheckNode("rhythmCheck3", "#3", () => "shock3", () => "convertedToNonshock");
+  nodes.shock3 = infoNode("shock3", "Defibrillation #3", "ACLS Cardiac Arrest Algorithm",
+    (s) => { s.events.push({ t: s.timerSec, label: "3rd defibrillation delivered" }); return `Third shock delivered; compressions resume.`; }, () => "epi2");
+  nodes.epi2 = medNode("epi2", "Medication — Repeat Epinephrine", "ACLS Cardiac Arrest Algorithm",
+    () => `It has been 3–5 minutes since the last epinephrine dose. Order the next dose.`,
+    ["epinephrine_arrest", "amiodarone"], "epinephrine_arrest", [],
+    () => "rosc_or_continue_shockable");
+  nodes.rosc_or_continue_shockable = infoNode("rosc_or_continue_shockable", "Reassessment", "ACLS Cardiac Arrest Algorithm",
+    (s) => {
+      const converts = chance(0.55 + (s._qualityBonus || 0));
+      if (converts) { s.flags.rosc = true; s.rhythmType = "sinus_normal"; s.vitals.hr = 100; s.vitals.bpSys = 104; s.vitals.bpDia = 64; s.vitals.spo2 = 94; s.vitals.etco2 = 40; s.vitals.rr = 14; return `The rhythm converts to an organized rhythm and a pulse is confirmed — Return of Spontaneous Circulation (ROSC)!`; }
+      s.rhythmType = pick(["vf_coarse", "vt_pulseless", "asystole", "pea_organized"]);
+      return `Reassessment shows the arrest continues. The team keeps working the algorithm.`;
+    },
+    (s) => s.flags.rosc ? "rosc" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock1b" : "nonshockCycle1Cpr"));
+  nodes.shock1b = infoNode("shock1b", "Defibrillation (continued)", "ACLS Cardiac Arrest Algorithm",
+    (s) => { s.events.push({ t: s.timerSec, label: "Defibrillation delivered" }); return "Shock delivered, compressions resumed immediately."; }, () => "endArrestNoRosc");
+
+  // ---- Non-shockable branch ----
+  nodes.nonshockCycle1Cpr = node("nonshockCycle1Cpr", "CPR — PEA/Asystole", "ACLS Cardiac Arrest Algorithm",
+    () => `The rhythm is non-shockable (PEA/asystole). What is the priority right now?`,
+    [
+      opt("a", "Continue high-quality CPR, obtain IV/IO access, and give epinephrine as soon as feasible", "ideal",
+        "Correct — for non-shockable rhythms, give epinephrine as soon as feasible after access is obtained, then every 3–5 min.", "2025 AHA ACLS Cardiac Arrest Algorithm", 10, () => "epiNonshock1"),
+      opt("b", "Deliver a shock anyway, just in case", "critical",
+        "Do not shock a non-shockable rhythm — it will not help and interrupts effective CPR.", "2025 AHA ACLS Cardiac Arrest Algorithm", 20, () => "epiNonshock1"),
+      opt("c", "Hold epinephrine until an advanced airway is placed", "error",
+        "Don't delay epinephrine for airway placement — give it as soon as IV/IO access allows.", "2025 AHA ACLS Cardiac Arrest Algorithm", 20, () => "epiNonshock1")
+    ]);
+  nodes.epiNonshock1 = medNode("epiNonshock1", "Medication — Epinephrine", "ACLS Cardiac Arrest Algorithm",
+    () => `Order your medication now.`,
+    ["epinephrine_arrest", "atropine", "sodiumBicarb", "calciumChloride"], "epinephrine_arrest", [],
+    () => "hAndTsNonshock");
+  nodes.hAndTsNonshock = node("hAndTsNonshock", "Reversible Causes (H's & T's)", "ACLS Cardiac Arrest Algorithm",
+    (s) => `PEA/asystole is very often driven by a reversible cause. ${scNote(s) ? scNote(s) + " " : ""}Which should the team actively investigate?`,
+    buildHTsOptions(state, () => "rhythmCheckNonshock2")
+  );
+  nodes.rhythmCheckNonshock2 = rhythmCheckNode("rhythmCheckNonshock2", "#2", () => "convertedToShock", () => "epiNonshock2");
+  nodes.convertedToShock = infoNode("convertedToShock", "Rhythm Converts", "ACLS Cardiac Arrest Algorithm",
+    () => `The rhythm has converted to a shockable rhythm.`, () => "shock1");
+  nodes.convertedToNonshock = infoNode("convertedToNonshock", "Rhythm Converts", "ACLS Cardiac Arrest Algorithm",
+    () => `The rhythm has converted to a non-shockable rhythm.`, () => "nonshockCycle1Cpr");
+  nodes.epiNonshock2 = medNode("epiNonshock2", "Medication — Repeat Epinephrine", "ACLS Cardiac Arrest Algorithm",
+    () => `3–5 minutes have passed. Repeat dosing?`,
+    ["epinephrine_arrest"], "epinephrine_arrest", [],
+    () => "reassessNonshock");
+  nodes.reassessNonshock = infoNode("reassessNonshock", "Reassessment", "ACLS Cardiac Arrest Algorithm",
+    (s) => {
+      const converts = chance(0.30 + (s._qualityBonus || 0));
+      if (converts) { s.flags.rosc = true; s.rhythmType = "sinus_normal"; s.vitals.hr = 92; s.vitals.bpSys = 96; s.vitals.bpDia = 60; s.vitals.spo2 = 92; s.vitals.etco2 = 36; s.vitals.rr = 14; return "A pulse returns with an organized rhythm — ROSC achieved."; }
+      s.rhythmType = pick(["asystole", "pea_organized", "vf_coarse"]);
+      return "No ROSC yet. The team continues the algorithm, cycling epinephrine every 3–5 minutes and reassessing rhythm every 2 minutes.";
+    },
+    (s) => s.flags.rosc ? "rosc" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock1" : "endArrestNoRosc"));
+
+  nodes.endArrestNoRosc = node("endArrestNoRosc", "Prolonged Resuscitation", "ACLS Cardiac Arrest Algorithm",
+    () => `Multiple cycles have passed without ROSC despite adequate CPR, appropriate medications, and treatment of reversible causes. What now?`,
+    [
+      opt("a", "The team leader discusses likely futility with the full team and considers termination-of-resuscitation criteria per local protocol, rather than continuing indefinitely alone", "ideal",
+        "Correct approach — termination decisions are a team/clinical-leadership decision guided by duration, cause, and local protocol, not something to decide unilaterally or to continue indefinitely without reassessment.", "2025 AHA — Team-Based Resuscitation & clinical judgment", 20, () => "endCase"),
+      opt("b", "Continue exactly the same cycle indefinitely without reassessing causes or team input", "error",
+        "Reassess reversible causes, CPR quality, and involve the full team/leadership in the decision rather than repeating cycles on autopilot.", "2025 AHA ACLS Cardiac Arrest Algorithm", 15, () => "endCase"),
+      opt("c", "Stop resuscitation on your own without discussing with the team", "critical",
+        "This is a team decision guided by clinical criteria and local protocol — never a unilateral, undiscussed stop.", "2025 AHA — Team-Based Resuscitation", 10, () => "endCase")
+    ]);
+
+  nodes.rosc = node("rosc", "Post-Cardiac-Arrest Care", "Post-Cardiac Arrest Care",
+    (s) => `ROSC achieved at ${fmtTime(s.timerSec)}. Vitals: ${vitalsLine(s)}. What is your immediate post-ROSC priority?`,
+    [
+      opt("a", "Optimize oxygenation/ventilation (avoid hyperoxia and hyperventilation), obtain a 12-lead ECG, and treat hypotension", "ideal",
+        "Correct — titrate oxygen to avoid hyperoxia, avoid excessive ventilation rate, get a 12-lead ECG to evaluate for STEMI/cause, and support blood pressure.", "2025 AHA Post-Cardiac Arrest Care", 15, () => "roscTemp"),
+      opt("b", "Hyperventilate the patient to normalize the strip appearance", "critical",
+        "Avoid hyperventilation post-ROSC — it can reduce cerebral perfusion via hypocapnia and worsen outcomes.", "2025 AHA Post-Cardiac Arrest Care", 15, () => "roscTemp"),
+      opt("c", "Give a large empiric dose of sodium bicarbonate to 'stabilize' the patient", "error",
+        "Not indicated routinely post-ROSC without a specific metabolic indication.", "2025 AHA Post-Cardiac Arrest Care", 12, () => "roscTemp")
+    ]);
+  nodes.roscTemp = node("roscTemp", "Targeted Temperature Management", "Post-Cardiac Arrest Care",
+    () => `The patient remains comatose (not following commands) after ROSC. What temperature strategy is appropriate?`,
+    [
+      opt("a", "Actively prevent fever and manage temperature in a controlled target range (targeted temperature management), while deferring neurologic prognostication for at least 72 hours using multiple modalities", "ideal",
+        "Correct — actively avoid fever/manage temperature for comatose post-arrest patients, and use delayed, multimodal neuroprognostication (clinical exam, imaging, EEG, and emerging biomarkers such as neurofilament light chain) rather than early single-test judgments.", "2025 AHA Post-Cardiac Arrest Care", 15, () => "roscDebrief"),
+      opt("b", "Let temperature run however it trends since the patient survived", "error",
+        "Fever after cardiac arrest is associated with worse neurologic outcomes — actively manage temperature.", "2025 AHA Post-Cardiac Arrest Care", 10, () => "roscDebrief"),
+      opt("c", "Tell the family definitively about neurologic prognosis right now based on this single exam", "error",
+        "Neuroprognostication should be delayed (generally ≥72 hours) and multimodal — avoid premature, single-data-point predictions, and provide structured emotional support to family/caregivers instead.", "2025 AHA Post-Cardiac Arrest Care", 10, () => "roscDebrief")
+    ]);
+  nodes.roscDebrief = endNode("roscDebrief", "Case Complete — ROSC & Post-Arrest Care");
+  nodes.endCase = endNode("endCase", "Case Complete");
+
+  return { startNodeId: "start", nodes };
+}
+
+function buildHTsOptions(state, nextFn) {
+  const sc = scMod(state);
+  const causes = {
+    hypovolemia: "Hypovolemia — consider IV fluid bolus if suspected blood/fluid loss",
+    hypoxia: "Hypoxia — confirm airway, ventilation, and oxygenation",
+    hydrogenIon: "Acidosis (H+) — usually addressed by effective CPR/ventilation, not routine bicarbonate",
+    hyperHypoK: "Hyper/hypokalemia — check history, consider calcium/insulin-glucose/bicarb if hyperkalemia suspected",
+    hypothermia: "Hypothermia — check core temperature, begin active rewarming if low",
+    tensionPneumo: "Tension pneumothorax — assess breath sounds/JVD, consider needle decompression",
+    tamponade: "Cardiac tamponade — consider if penetrating trauma, recent cardiac surgery, or muffled heart sounds",
+    toxins: "Toxins (e.g., opioids, tricyclics, local anesthetics) — consider antidotes if suspected",
+    thrombosisPulm: "Pulmonary thrombosis (massive PE) — consider if sudden collapse with risk factors; consider fibrinolysis if strongly suspected",
+    thrombosisCoronary: "Coronary thrombosis (acute MI) — consider once ROSC achieved, obtain 12-lead ECG"
+  };
+  let idealKey = "hypoxia";
+  if (sc === "hypothermia") idealKey = "hypothermia";
+  if (sc === "opioid") idealKey = "toxins";
+  const keys = Object.keys(causes);
+  const distractorKeys = keys.filter(k => k !== idealKey);
+  const shown = [idealKey, pick(distractorKeys), pick(distractorKeys), pick(distractorKeys)].filter((v, i, a) => a.indexOf(v) === i);
+  while (shown.length < 3) { const k = pick(distractorKeys); if (!shown.includes(k)) shown.push(k); }
+  return shown.map((k, i) => opt(String(i), causes[k],
+    k === idealKey ? "ideal" : "acceptable",
+    k === idealKey ? "Good pickup — this fits the case context." : "Reasonable to keep on the differential, but not the most specific concern given the case details.",
+    "2025 AHA ACLS Cardiac Arrest Algorithm — Identify & Treat Reversible Causes (H's & T's)", 12, nextFn));
+}
+
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+/* Additional families (pediatric arrest, bradycardia, tachycardia,
+   respiratory arrest, opioid emergency, post-ROSC standalone,
+   BLS→ALS transition) are defined in scenarios2.js to keep file size
+   manageable; they attach themselves to SCENARIO_FAMILIES. */
+const SCENARIO_FAMILIES = {
+  adult_cardiac_arrest: {
+    label: "Adult Cardiac Arrest",
+    ageGroups: ["adult"],
+    build: buildAdultArrest
+  }
+};
+
+/* ============================================================
+   ADDITIONAL SCENARIO FAMILIES
+   ============================================================ */
+
+/* =========================================================================
+   FAMILY 2: PEDIATRIC CARDIAC ARREST
+   ========================================================================= */
+function buildPedsArrest(state) {
+  const nodes = {};
+  const wt = state.weightKg;
+  const isInfant = state.ageGroup === "infant";
+
+  nodes.start = node("start", "Scene Safety & Recognition", "PALS / BLS Algorithm",
+    (s) => `You find ${ageDesc(s)} (~${wt} kg) unresponsive ${s.setting}. ${s.witnessed ? "The collapse was sudden and witnessed." : "The child was found down; onset is unknown — a respiratory cause is common in pediatric arrest."} ${scNote(s)}\n\nYou are alone. What do you do first?`,
+    [
+      opt("a", "Check responsiveness, breathing, and pulse (brachial in infant / carotid or femoral in child) simultaneously for ≤10 seconds", "ideal",
+        "Correct rapid assessment sequence.", "2025 AHA PALS Algorithm", 8, () => "aloneDecision"),
+      opt("b", "Start compressions before checking anything", "error",
+        "Confirm unresponsiveness and absence of normal breathing/pulse first, briefly.", "2025 AHA PALS Algorithm", 8, () => "aloneDecision"),
+      opt("c", "Immediately leave to call EMS before assessing", "error",
+        "Assess first (≤10 sec) — the phone-fast-vs-phone-first decision comes next and depends on whether the collapse was witnessed/sudden.", "2025 AHA PALS Algorithm", 15, () => "aloneDecision")
+    ]);
+
+  nodes.aloneDecision = node("aloneDecision", "Lone Rescuer: Phone Fast vs Phone First", "PALS Algorithm",
+    (s) => `No breathing, no pulse — cardiac arrest confirmed. You are the only rescuer with no phone that allows hands-free calling. ${s.witnessed ? "This was a sudden, witnessed collapse (arrhythmia is more likely)." : "This looks like an unwitnessed/likely asphyxial arrest (respiratory cause is more likely)."} What do you do?`,
+    [
+      opt("a", state.witnessed ? "Phone first: activate emergency response / get an AED immediately, then start CPR" : "Phone fast: give about 2 minutes of CPR first, then leave briefly to activate emergency response and get an AED",
+        "ideal", "Correct for this presentation — sudden witnessed collapse in a child raises suspicion for an arrhythmia needing rapid defibrillation (phone first); an unwitnessed/likely-asphyxial arrest benefits from 2 minutes of CPR before leaving to call (phone fast).",
+        "2025 AHA PALS Algorithm — Lone Rescuer Sequence", 10, () => "startCpr"),
+      opt("b", "Always call first no matter what, before any CPR", "error",
+        "For a likely asphyxial/unwitnessed pediatric arrest, give ~2 minutes of CPR before leaving to call if you're alone. For a sudden witnessed collapse, call/get the AED first.", "2025 AHA PALS Algorithm", 20, () => "startCpr"),
+      opt("c", "Never leave the child, regardless of how long CPR continues", "error",
+        "You do need to activate the emergency response system and get a defibrillator at some point — the timing depends on the witnessed/likely-cause distinction.", "2025 AHA PALS Algorithm", 25, () => "startCpr")
+    ]);
+
+  nodes.startCpr = node("startCpr", "High-Quality Pediatric CPR", "PALS Algorithm",
+    () => `Begin CPR. What are the correct parameters?`,
+    [
+      opt("a", `Rate 100–120/min, depth about ${isInfant ? "1.5 in (4 cm)" : "2 in (5 cm)"} (about 1/3 the AP chest diameter), full recoil, ratio 30:2 (single rescuer) or 15:2 (two rescuers), minimizing pauses to <10 seconds`, "ideal",
+        "Correct pediatric CPR parameters per the 2025 update.", "2025 AHA High-Quality CPR standards (pediatric)", 10, () => "rhythmCheck1"),
+      opt("b", "Use adult depth and adult ratio regardless of size", "error",
+        "Pediatric compression depth is about 1/3 the AP chest diameter, not the adult 2–2.4 inch target, and two-rescuer ratio differs (15:2).", "2025 AHA High-Quality CPR standards (pediatric)", 12, () => "rhythmCheck1"),
+      opt("c", "Compress very lightly to avoid injuring the child", "critical",
+        "Compressions must still be adequately deep (about 1/3 AP diameter) to generate effective perfusion — being too gentle is ineffective.", "2025 AHA High-Quality CPR standards (pediatric)", 15, () => "rhythmCheck1")
+    ]);
+  nodes.startCpr.category = "cpr";
+
+  nodes.rhythmCheck1 = node("rhythmCheck1", "Rhythm Check #1", "PALS Algorithm",
+    (s) => {
+      const shockable = chance(0.35); // pediatric arrest is more often non-shockable (respiratory etiology)
+      s.rhythmType = shockable ? pick(["vf_coarse", "vt_pulseless"]) : pick(["asystole", "pea_organized"]);
+      s.vitals.hr = null; s.vitals.bpSys = null; s.vitals.bpDia = null;
+      return `Monitor attached. Read the rhythm.`;
+    },
+    [
+      opt("shock", "Shockable → charge, deliver ONE shock at 2 J/kg, resume CPR immediately",
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "Correct — weight-based first shock at 2 J/kg, then resume CPR immediately." : "This rhythm was non-shockable — a shock will not help and interrupts CPR.",
+        "2025 AHA PALS — Defibrillation dosing", 15,
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock1" : "epi1"),
+      opt("noshock", "Non-shockable → no shock, resume CPR, prioritize airway/oxygenation and IV/IO epinephrine",
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "Correct — no shock, resume CPR, prioritize access/epinephrine and airway." : "That rhythm was actually shockable (VF/pulseless VT) — defibrillation was indicated.",
+        "2025 AHA PALS Algorithm", 8,
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "epi1" : "shock1")
+    ]);
+  nodes.rhythmCheck1.category = "rhythm";
+  nodes.wrongShock = infoNode("wrongShock", "Error", "PALS Algorithm", () => "That rhythm was non-shockable — resuming CPR and prioritizing epinephrine + airway.", () => "epi1");
+  nodes.missedShock = infoNode("missedShock", "Error", "PALS Algorithm", () => "That rhythm was shockable — defibrillation was indicated.", () => "shock1");
+
+  nodes.shock1 = infoNode("shock1", "Defibrillation", "PALS Algorithm",
+    (s) => { s.events.push({ t: s.timerSec, label: `Defibrillation at 2 J/kg (~${Math.round(2 * wt)} J)` }); s.flags.firstShockTime = s.timerSec; return `Shock delivered at 2 J/kg (~${Math.round(2 * wt)} J). Compressions resume immediately.`; },
+    () => "epi1");
+
+  nodes.epi1 = medNode("epi1", "Medication — Epinephrine (weight-based)", "PALS Algorithm",
+    (s) => `Order epinephrine. Correct pediatric dosing is weight-based: 0.01 mg/kg IV/IO (max single dose 1 mg), repeated every 3–5 minutes. For this ~${wt} kg patient that is about ${(0.01 * wt).toFixed(2)} mg.`,
+    ["epinephrine_arrest", "atropine", "sodiumBicarb"], "epinephrine_arrest", [],
+    () => "hAndTsPeds");
+
+  nodes.hAndTsPeds = node("hAndTsPeds", "Reversible Causes", "PALS Algorithm",
+    (s) => `Pediatric arrest is frequently caused by a reversible respiratory or metabolic problem. ${scNote(s)} What should the team prioritize checking?`,
+    buildHTsOptions(state, () => "rhythmCheck2"));
+
+  nodes.rhythmCheck2 = node("rhythmCheck2", "Rhythm Check #2", "PALS Algorithm",
+    () => `Reassess the rhythm.`,
+    [
+      opt("shock", "Shockable → shock at 4 J/kg (escalating), resume CPR",
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "Correct — escalate to 4 J/kg and resume CPR immediately." : "That rhythm was non-shockable — a shock will not help.",
+        "2025 AHA PALS — Defibrillation dosing", 12,
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock2" : "wrongShock2"),
+      opt("noshock", "Non-shockable → continue CPR, repeat epinephrine, reassess airway",
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "Correct — continue CPR, repeat epinephrine, reassess airway." : "That rhythm was shockable — defibrillation was indicated.",
+        "2025 AHA PALS Algorithm", 8,
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "epi2" : "missedShock2")
+    ]);
+  nodes.rhythmCheck2.category = "rhythm";
+  nodes.wrongShock2 = infoNode("wrongShock2", "Error", "PALS Algorithm", () => "Non-shockable — continuing CPR and epinephrine.", () => "epi2");
+  nodes.missedShock2 = infoNode("missedShock2", "Error", "PALS Algorithm", () => "That was shockable — defibrillation was indicated.", () => "shock2");
+  nodes.shock2 = infoNode("shock2", "Defibrillation #2", "PALS Algorithm",
+    (s) => { s.rhythmType = pick(["vf_coarse", "asystole", "pea_organized", "sinus_normal"]); s.events.push({ t: s.timerSec, label: `Defibrillation at 4 J/kg (~${Math.round(4 * wt)} J)` }); return `Shock delivered at 4 J/kg. Compressions resume.`; },
+    () => "amioPeds");
+  nodes.amioPeds = medNode("amioPeds", "Medication — Antiarrhythmic (weight-based)", "PALS Algorithm",
+    (s) => `Refractory shockable rhythm. Weight-based amiodarone is 5 mg/kg IV/IO (≈${Math.round(5 * wt)} mg), may repeat up to 3 total doses; lidocaine 1 mg/kg is an alternative.`,
+    ["amiodarone", "lidocaine", "sodiumBicarb"], "amiodarone", ["lidocaine"], () => "epi2");
+  nodes.epi2 = medNode("epi2", "Medication — Repeat Epinephrine", "PALS Algorithm",
+    (s) => `Repeat weight-based epinephrine (0.01 mg/kg, max 1 mg) now.`,
+    ["epinephrine_arrest"], "epinephrine_arrest", [], () => "reassessPeds");
+  nodes.reassessPeds = infoNode("reassessPeds", "Reassessment", "PALS Algorithm",
+    (s) => {
+      const converts = chance(0.5 + (s._qualityBonus || 0));
+      if (converts) { s.flags.rosc = true; s.rhythmType = "sinus_tachy"; s.vitals.hr = 128; s.vitals.bpSys = 92; s.vitals.bpDia = 58; s.vitals.spo2 = 95; s.vitals.etco2 = 38; s.vitals.rr = 22; return "Pulse and organized rhythm return — ROSC achieved."; }
+      s.rhythmType = pick(["asystole", "pea_organized", "vf_coarse"]);
+      return "No ROSC yet — continue the PALS cardiac arrest algorithm.";
+    },
+    (s) => s.flags.rosc ? "rosc" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock2" : "endArrestPeds"));
+  nodes.endArrestPeds = endNode("endArrestPeds", "Case Complete — Prolonged Resuscitation");
+  nodes.rosc = node("rosc", "Post-ROSC Priorities", "Post-Cardiac Arrest Care (Pediatric)",
+    (s) => `ROSC achieved at ${fmtTime(s.timerSec)}. What's the immediate priority?`,
+    [
+      opt("a", "Titrate oxygen/ventilation to avoid hyperoxia and hyperventilation, support blood pressure for age, and identify/treat the underlying cause", "ideal",
+        "Correct post-ROSC priorities for pediatric patients.", "2025 AHA Post-Cardiac Arrest Care", 12, () => "endPeds"),
+      opt("b", "Hyperventilate to keep the child alert", "critical", "Avoid hyperventilation — it can worsen cerebral perfusion.", "2025 AHA Post-Cardiac Arrest Care", 12, () => "endPeds"),
+      opt("c", "No specific priority — just observe", "error", "Active post-ROSC management (oxygenation, hemodynamics, cause-finding) is required.", "2025 AHA Post-Cardiac Arrest Care", 10, () => "endPeds")
+    ]);
+  nodes.endPeds = endNode("endPeds", "Case Complete — ROSC & Post-Arrest Care");
+
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 3: BRADYCARDIA (adult, with pulse)
+   ========================================================================= */
+function buildBradycardia(state) {
+  const nodes = {};
+  nodes.start = node("start", "Assessment", "Bradycardia Algorithm",
+    (s) => { s.rhythmType = pick(["sinus_brady", "heart_block_3rd", "heart_block_2", "junctional_brady"]); s.vitals.hr = randInt(28, 48); s.vitals.bpSys = randInt(76, 100); s.vitals.bpDia = randInt(44, 60); s.vitals.spo2 = randInt(90, 97); s.vitals.rr = randInt(14, 20);
+      return `${ageDesc(s)} ${s.setting} is bradycardic and symptomatic (${pick(["lightheaded", "confused", "reports chest discomfort", "diaphoretic and weak"])}). Monitor shows the rhythm strip; vitals: ${vitalsLine(s)}. What is your first step?`; },
+    [
+      opt("a", "Identify and treat the underlying cause, give oxygen if hypoxemic, and determine if bradycardia is causing hemodynamic instability (hypotension, altered mental status, signs of shock, ischemic chest pain, acute heart failure)", "ideal",
+        "Correct — confirm the bradycardia is truly the cause of instability and address reversible contributors before/while treating.", "2025 AHA Adult Bradycardia Algorithm", 10, () => "unstableCheck"),
+      opt("b", "Immediately start transcutaneous pacing on every bradycardic patient", "error",
+        "Reserve pacing for patients unstable or unlikely to respond to atropine — assess first.", "2025 AHA Adult Bradycardia Algorithm", 10, () => "unstableCheck"),
+      opt("c", "Give a fluid bolus and reassess in an hour", "error",
+        "Symptomatic bradycardia needs prompt assessment and likely pharmacologic/electrical treatment, not deferred reassessment.", "2025 AHA Adult Bradycardia Algorithm", 20, () => "unstableCheck")
+    ]);
+  nodes.unstableCheck = node("unstableCheck", "Stability Assessment", "Bradycardia Algorithm",
+    (s) => `The patient has signs of poor perfusion. Is this patient stable or unstable?`,
+    [
+      opt("a", "Unstable — hypotension, altered mental status, or signs of shock are present; proceed to treatment now", "ideal",
+        "Correct — this patient meets instability criteria and needs prompt treatment.", "2025 AHA Adult Bradycardia Algorithm", 8, () => "atropineDecision"),
+      opt("b", "Stable — just monitor and observe with no intervention", "critical",
+        "This patient has symptoms/signs of instability and needs treatment now, not observation alone.", "2025 AHA Adult Bradycardia Algorithm", 25, () => "atropineDecision")
+    ]);
+  nodes.atropineDecision = medNode("atropineDecision", "Medication — Atropine", "Bradycardia Algorithm",
+    (s) => {
+      const highGradeBlock = s.rhythmType === "heart_block_3rd";
+      s._highGradeBlock = highGradeBlock;
+      return `${highGradeBlock ? "Note: this looks like a high-degree (3rd-degree) AV block with a wide escape rhythm — atropine is often ineffective here and you should be ready to move quickly to pacing." : ""} Order your first-line medication.`;
+    },
+    ["atropine", "epinephrine_bradycardia", "dopamine"], "atropine", [],
+    (s) => "reassessBrady1");
+  nodes.reassessBrady1 = infoNode("reassessBrady1", "Reassessment", "Bradycardia Algorithm",
+    (s) => {
+      const improves = !s._highGradeBlock && chance(0.5);
+      if (improves) { s.vitals.hr = randInt(58, 75); s.vitals.bpSys = randInt(104, 120); s.vitals.bpDia = randInt(62, 76); s.flags.stabilized = true; return "Heart rate and blood pressure improve after atropine."; }
+      return "Little or no improvement after atropine (as expected for higher-degree block or if refractory).";
+    },
+    (s) => s.flags.stabilized ? "resolved" : "escalate");
+  nodes.escalate = node("escalate", "Escalation", "Bradycardia Algorithm",
+    () => `Atropine was ineffective or unlikely to work. What's next?`,
+    [
+      opt("a", "Begin transcutaneous pacing (with analgesia/sedation as needed) and/or start a dopamine or epinephrine infusion while pacing is arranged; obtain expert consultation", "ideal",
+        "Correct — escalate to pacing and/or catecholamine infusion, and involve expert consultation for refractory bradycardia.", "2025 AHA Adult Bradycardia Algorithm", 15, () => "resolved"),
+      opt("b", "Repeat atropine many more times beyond the max dose", "error",
+        "Atropine is capped at a 3 mg total dose — beyond that (or in high-degree block), escalate to pacing/infusions instead.", "2025 AHA Adult Bradycardia Algorithm", 20, () => "resolved"),
+      opt("c", "Do nothing further and wait", "critical",
+        "An unstable, refractory bradycardia needs escalation — pacing and/or infusion support, not watchful waiting.", "2025 AHA Adult Bradycardia Algorithm", 30, () => "resolved")
+    ]);
+  nodes.resolved = endNode("resolved", "Case Complete — Bradycardia Managed");
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 4: TACHYCARDIA (adult, with pulse)
+   ========================================================================= */
+function buildTachycardia(state) {
+  const nodes = {};
+  nodes.start = node("start", "Assessment", "Tachycardia Algorithm",
+    (s) => {
+      const wide = chance(0.35);
+      const regular = chance(0.7);
+      s._wide = wide; s._regular = regular;
+      s.rhythmType = wide ? (regular ? "vt_mono_stable" : "torsades") : (regular ? pick(["svt", "sinus_tachy"]) : "afib_rvr");
+      s.vitals.hr = randInt(150, 190);
+      s.vitals.bpSys = randInt(84, 118); s.vitals.bpDia = randInt(50, 74); s.vitals.spo2 = randInt(92, 98); s.vitals.rr = randInt(18, 26);
+      return `${ageDesc(s)} ${s.setting} has a rapid heart rate and a palpable pulse. Vitals: ${vitalsLine(s)}. First step?`;
+    },
+    [
+      opt("a", "Assess for signs of instability caused by the tachycardia: hypotension, acutely altered mental status, signs of shock, ischemic chest discomfort, or acute heart failure", "ideal",
+        "Correct — the presence of instability determines whether you go straight to cardioversion.", "2025 AHA Adult Tachycardia Algorithm", 8, () => "stableCheck"),
+      opt("b", "Immediately cardiovert every fast rhythm regardless of stability", "error",
+        "Reserve immediate cardioversion for unstable patients; stable patients get further evaluation first.", "2025 AHA Adult Tachycardia Algorithm", 10, () => "stableCheck"),
+      opt("c", "Give adenosine to every tachycardia regardless of QRS width/regularity", "error",
+        "Adenosine is used for stable, regular narrow-complex (or select regular monomorphic wide-complex) tachycardia — not universally.", "2025 AHA Adult Tachycardia Algorithm", 10, () => "stableCheck")
+    ]);
+  nodes.stableCheck = node("stableCheck", "Stability", "Tachycardia Algorithm",
+    (s) => `Based on the vitals and exam, is the patient stable or unstable?`,
+    [
+      opt("unstable", "Unstable due to the tachycardia → prepare for synchronized cardioversion (sedate if possible without delaying care)", (s) => (s.vitals.bpSys < 90 ? "ideal" : "acceptable"),
+        "", "2025 AHA Adult Tachycardia Algorithm", 12, () => "cardioversion"),
+      opt("stable", "Stable → proceed to further rhythm evaluation (12-lead ECG, QRS width/regularity)", (s) => (s.vitals.bpSys >= 90 ? "ideal" : "critical"),
+        "", "2025 AHA Adult Tachycardia Algorithm", 8, () => "widthCheck")
+    ]);
+  nodes.cardioversion = infoNode("cardioversion", "Synchronized Cardioversion", "Tachycardia Algorithm",
+    (s) => { s.events.push({ t: s.timerSec, label: "Synchronized cardioversion delivered" }); const converts = chance(0.75); if (converts) { s.rhythmType = "sinus_normal"; s.vitals.hr = 84; s.vitals.bpSys = 118; s.vitals.bpDia = 74; s.flags.stabilized = true; } return converts ? "Synchronized cardioversion converts the rhythm; the patient stabilizes." : "The rhythm persists after cardioversion — reassess energy/pad placement and consider antiarrhythmic support with expert consultation."; },
+    (s) => s.flags.stabilized ? "resolved" : "expertConsult");
+  nodes.expertConsult = node("expertConsult", "Refractory Unstable Tachycardia", "Tachycardia Algorithm",
+    () => `The tachycardia persists despite cardioversion. What now?`,
+    [opt("a", "Obtain expert consultation and consider antiarrhythmic therapy while repeating cardioversion attempts as indicated", "ideal", "Correct — refractory unstable tachycardia warrants expert help.", "2025 AHA Adult Tachycardia Algorithm", 15, () => "resolved")]);
+  nodes.widthCheck = node("widthCheck", "QRS Width & Regularity", "Tachycardia Algorithm",
+    (s) => `12-lead obtained. The QRS is ${s._wide ? "wide (≥0.12 sec)" : "narrow"} and the rhythm is ${s._regular ? "regular" : "irregular"}. What's your next step?`,
+    []);
+
+  return { startNodeId: "start", nodes };
+}
+
+/* Tachycardia needs per-instance dynamic options since branch depends on
+   randomized wide/regular flags chosen at runtime; the engine calls
+   getDynamicOptions(node, state) when node.dynamicOptions is set. */
+function attachTachyDynamicOptions(nodes) {
+  nodes.widthCheck.dynamicOptions = (s) => {
+    if (!s._wide && s._regular) {
+      return [
+        opt("a", "Try vagal maneuvers, then adenosine 6 mg rapid IV push (may repeat 12 mg once) if no conversion", "ideal",
+          "Correct approach for stable regular narrow-complex tachycardia (e.g., SVT).", "2025 AHA Adult Tachycardia Algorithm", 12, () => "narrowRegularMed"),
+        opt("b", "Go straight to synchronized cardioversion despite the patient being stable", "error",
+          "Reserve cardioversion for unstable patients or after failed medical therapy per algorithm — try vagal maneuvers/adenosine first here.", "2025 AHA Adult Tachycardia Algorithm", 15, () => "narrowRegularMed"),
+        opt("c", "Give amiodarone as first-line for stable narrow regular SVT", "acceptable", "Adenosine (or vagal maneuvers) is preferred first-line for this presentation; amiodarone is not the typical first choice here.", "2025 AHA Adult Tachycardia Algorithm", 12, () => "narrowRegularMed")
+      ];
+    }
+    if (!s._wide && !s._regular) {
+      return [
+        opt("a", "Consider this atrial fibrillation with RVR — control rate/rhythm per duration of onset and risk factors, consider anticoagulation, and involve expert/cardiology consultation", "ideal",
+          "Correct approach for irregular narrow-complex tachycardia (e.g., AFib with RVR).", "2025 AHA Adult Tachycardia Algorithm", 15, () => "resolved"),
+        opt("b", "Give adenosine expecting it to convert the rhythm", "error",
+          "Adenosine is not expected to convert atrial fibrillation/flutter and is not the standard approach here.", "2025 AHA Adult Tachycardia Algorithm", 12, () => "resolved")
+      ];
+    }
+    if (s._wide && s._regular) {
+      return [
+        opt("a", "Consider this monomorphic VT (or SVT with aberrancy); treat with an antiarrhythmic infusion (e.g., procainamide or amiodarone) and obtain expert consultation; adenosine may be considered only if truly regular and monomorphic per protocol", "ideal",
+          "Reasonable, guideline-aligned approach for stable regular wide-complex tachycardia.", "2025 AHA Adult Tachycardia Algorithm", 15, () => "resolved"),
+        opt("b", "Assume it's always SVT with aberrancy and ignore the possibility of VT", "critical",
+          "Treat regular wide-complex tachycardia of uncertain origin as VT until proven otherwise — don't assume benign aberrancy.", "2025 AHA Adult Tachycardia Algorithm", 15, () => "resolved")
+      ];
+    }
+    // wide + irregular -> possible torsades/polymorphic VT or pre-excited AFib
+    return [
+      opt("a", "Consider polymorphic VT/torsades — give magnesium sulfate, correct electrolytes/QT-prolonging drugs, and avoid AV-nodal blocking agents in case this is pre-excited atrial fibrillation", "ideal",
+        "Correct — irregular wide-complex tachycardia should raise concern for torsades or pre-excited AFib; magnesium and avoiding AV nodal blockers are appropriate.", "2025 AHA Adult Tachycardia Algorithm", 15, () => "resolved"),
+      opt("b", "Give adenosine or a calcium-channel blocker to slow it down", "critical",
+        "AV-nodal blocking agents can be dangerous in pre-excited atrial fibrillation with irregular wide complexes — avoid them here.", "2025 AHA Adult Tachycardia Algorithm", 20, () => "resolved")
+    ];
+  };
+  nodes.narrowRegularMed = medNode("narrowRegularMed", "Medication — Adenosine", "Tachycardia Algorithm",
+    () => `Vagal maneuvers alone didn't convert the rhythm. Order your medication.`,
+    ["adenosine", "amiodarone", "atropine"], "adenosine", [], () => "resolved");
+  nodes.resolved = endNode("resolved", "Case Complete — Tachycardia Managed");
+}
+
+/* =========================================================================
+   FAMILY 5: RESPIRATORY ARREST
+   ========================================================================= */
+function buildRespiratoryArrest(state) {
+  const nodes = {};
+  nodes.start = node("start", "Assessment", "Respiratory Arrest",
+    (s) => { s.vitals.hr = randInt(50, 90); s.vitals.bpSys = randInt(96, 128); s.vitals.bpDia = randInt(58, 80); s.vitals.spo2 = randInt(70, 84); s.vitals.rr = 0; s.rhythmType = "sinus_brady"; s.flags.pulsePresent = true;
+      return `${ageDesc(s)} ${s.setting} is unresponsive, not breathing, but has a palpable pulse (${s.vitals.hr}/min). ${scNote(s)} What's your first action?`; },
+    [
+      opt("a", "Open the airway and begin rescue breaths — 1 breath every 6 seconds (10/min) for an adult — while monitoring the pulse", "ideal",
+        "Correct — this is respiratory arrest with a pulse; ventilate and recheck pulse frequently.", "2025 AHA Respiratory Arrest management", 8, () => "reassessResp"),
+      opt("b", "Start chest compressions immediately since the patient is unresponsive", "error",
+        "A pulse is present — compressions aren't indicated yet; provide rescue breathing and monitor the pulse closely instead.", "2025 AHA Respiratory Arrest management", 10, () => "reassessResp"),
+      opt("c", "Wait and observe — the patient may start breathing on their own", "critical",
+        "Respiratory arrest requires immediate rescue breathing — waiting risks hypoxic cardiac arrest.", "2025 AHA Respiratory Arrest management", 30, () => "reassessResp")
+    ]);
+  nodes.reassessResp = infoNode("reassessResp", "Reassessment (every ~2 min)", "Respiratory Arrest",
+    (s) => {
+      const pulseLost = chance(0.3);
+      if (pulseLost) { s.flags.pulsePresent = false; s.rhythmType = pick(["asystole", "pea_organized"]); s.vitals.hr = null; s.vitals.bpSys = null; return "The pulse is lost on recheck — this has progressed to cardiac arrest."; }
+      s.vitals.spo2 = Math.min(98, s.vitals.spo2 + randInt(8, 14));
+      return "Pulse remains present and oxygenation improves with ventilation.";
+    },
+    (s) => s.flags.pulsePresent ? "airwayCheck" : "progressToArrest");
+  nodes.progressToArrest = infoNode("progressToArrest", "Progression", "Respiratory Arrest → Cardiac Arrest",
+    () => "Begin high-quality CPR and follow the cardiac arrest algorithm now.", () => "endRespToArrest");
+  nodes.endRespToArrest = endNode("endRespToArrest", "Case Complete — Progressed to Cardiac Arrest");
+  nodes.airwayCheck = node("airwayCheck", "Airway Adequacy", "Respiratory Arrest",
+    () => `Bag-mask ventilation is being given. Chest rise is inconsistent. What should you do?`,
+    [
+      opt("a", "Reposition the airway (head-tilt/chin-lift, consider jaw thrust, airway adjunct) and reassess seal/technique before escalating to an advanced airway", "ideal",
+        "Correct — optimize basic technique first; escalate to an advanced airway if ventilation remains inadequate.", "2025 AHA Airway Management", 10, () => "resolvedResp"),
+      opt("b", "Immediately proceed to advanced airway without trying to fix basic technique", "acceptable",
+        "Reasonable if basic maneuvers clearly fail, but usually try optimizing bag-mask technique first.", "2025 AHA Airway Management", 12, () => "resolvedResp"),
+      opt("c", "Continue without changing anything despite poor chest rise", "critical",
+        "Inadequate ventilation must be corrected — don't continue ineffective technique.", "2025 AHA Airway Management", 20, () => "resolvedResp")
+    ]);
+  nodes.resolvedResp = endNode("resolvedResp", "Case Complete — Respiratory Arrest Managed");
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 6: OPIOID-ASSOCIATED EMERGENCY (2025 algorithm)
+   ========================================================================= */
+function buildOpioidEmergency(state) {
+  const nodes = {};
+  nodes.start = node("start", "Recognition", "Opioid-Associated Emergency Algorithm (2025)",
+    (s) => { s.vitals.hr = randInt(50, 80); s.vitals.bpSys = randInt(90, 120); s.vitals.bpDia = randInt(55, 75); s.vitals.spo2 = randInt(75, 88); s.vitals.rr = randInt(0, 6); s.rhythmType = "sinus_brady";
+      return `You find ${ageDesc(s)} ${s.setting}, unresponsive with slow/absent breathing and pinpoint pupils. Paraphernalia is visible nearby. What's your first action?`; },
+    [
+      opt("a", "Check responsiveness and breathing; activate emergency response, and if breathing is absent/abnormal, begin rescue breathing/CPR right away — do not wait on naloxone", "ideal",
+        "Correct — the 2025 opioid emergency algorithm emphasizes ventilation/CPR first; never delay these for naloxone.", "2025 AHA Opioid-Associated Emergency Algorithm", 8, () => "naloxoneDecision"),
+      opt("b", "Look for naloxone first before doing anything else", "critical",
+        "Never delay rescue breathing/CPR to search for or administer naloxone — ventilation comes first.", "2025 AHA Opioid-Associated Emergency Algorithm", 30, () => "naloxoneDecision"),
+      opt("c", "Assume this is simple intoxication and just place in recovery position without checking breathing", "critical",
+        "You must assess breathing/pulse first — absent/abnormal breathing needs immediate rescue breathing, not just positioning.", "2025 AHA Opioid-Associated Emergency Algorithm", 25, () => "naloxoneDecision")
+    ]);
+  nodes.naloxoneDecision = medNode("naloxoneDecision", "Medication — Naloxone", "Opioid-Associated Emergency Algorithm (2025)",
+    () => `While continuing rescue breathing, naloxone is available. Administer it.`,
+    ["naloxone"], "naloxone", [], () => "reassessOpioid");
+  nodes.reassessOpioid = infoNode("reassessOpioid", "Reassessment (every 2–3 min)", "Opioid-Associated Emergency Algorithm (2025)",
+    (s) => {
+      const pulseCheck = chance(0.15);
+      if (pulseCheck) { s.flags.pulsePresent = false; s.rhythmType = pick(["asystole", "pea_organized"]); s.vitals.hr = null; return "No pulse is found on recheck — this has progressed to cardiac arrest."; }
+      const responds = chance(0.55);
+      if (responds) { s.vitals.rr = randInt(12, 18); s.vitals.spo2 = randInt(93, 98); s.flags.stabilized = true; return "Breathing improves after naloxone and continued ventilation."; }
+      return "Still minimal spontaneous breathing — continue ventilation; consider repeating naloxone.";
+    },
+    (s) => s.flags.pulsePresent === false ? "progressArrestOpioid" : (s.flags.stabilized ? "monitorOpioid" : "repeatNaloxone"));
+  nodes.progressArrestOpioid = infoNode("progressArrestOpioid", "Progression", "Cardiac Arrest Algorithm", () => "Begin full CPR and follow the cardiac arrest algorithm — naloxone does not substitute for CPR once arrest occurs.", () => "endOpioidArrest");
+  nodes.endOpioidArrest = endNode("endOpioidArrest", "Case Complete — Progressed to Cardiac Arrest");
+  nodes.repeatNaloxone = medNode("repeatNaloxone", "Medication — Repeat Naloxone", "Opioid-Associated Emergency Algorithm (2025)",
+    () => `Repeat naloxone while continuing ventilation.`,
+    ["naloxone"], "naloxone", [], () => "monitorOpioid");
+  nodes.monitorOpioid = node("monitorOpioid", "Ongoing Monitoring", "Opioid-Associated Emergency Algorithm (2025)",
+    () => `The patient is breathing adequately now. What's the appropriate next step?`,
+    [
+      opt("a", "Place in the recovery position if breathing adequately, continue close monitoring for re-sedation as naloxone wears off, and arrange transport/handoff — naloxone's effect is shorter than many opioids", "ideal",
+        "Correct — re-sedation can occur as naloxone wears off before the opioid does; continued monitoring and transport are essential.", "2025 AHA Opioid-Associated Emergency Algorithm", 10, () => "endOpioidResolved"),
+      opt("b", "Consider the emergency fully resolved and leave the patient unmonitored", "critical",
+        "Re-sedation is common as naloxone wears off — never leave the patient unmonitored.", "2025 AHA Opioid-Associated Emergency Algorithm", 20, () => "endOpioidResolved")
+    ]);
+  nodes.endOpioidResolved = endNode("endOpioidResolved", "Case Complete — Opioid Emergency Managed");
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 7: POST-CARDIAC-ARREST CARE (standalone entry, already at ROSC)
+   ========================================================================= */
+function buildPostArrestStandalone(state) {
+  const nodes = {};
+  nodes.start = node("start", "Post-ROSC Priorities", "Post-Cardiac Arrest Care",
+    (s) => { s.flags.rosc = true; s.rhythmType = "sinus_tachy"; s.vitals.hr = randInt(95, 130); s.vitals.bpSys = randInt(78, 96); s.vitals.bpDia = randInt(45, 58); s.vitals.spo2 = randInt(88, 99); s.vitals.etco2 = randInt(20, 45); s.vitals.rr = randInt(8, 24);
+      return `${ageDesc(s)} just achieved ROSC after a resuscitation ${s.setting}. Vitals: ${vitalsLine(s)}. The patient remains comatose. What's your immediate priority?`; },
+    [
+      opt("a", "Titrate oxygen to avoid hyperoxia, target normal ventilation (avoid hyperventilation), obtain a 12-lead ECG, and address hypotension", "ideal",
+        "Correct primary post-ROSC bundle.", "2025 AHA Post-Cardiac Arrest Care", 12, () => "hemodynamics"),
+      opt("b", "Maximize FiO2 to 100% indefinitely and hyperventilate to 'blow off' acid", "critical",
+        "Avoid sustained hyperoxia and hyperventilation post-ROSC — both are associated with worse outcomes.", "2025 AHA Post-Cardiac Arrest Care", 15, () => "hemodynamics"),
+      opt("c", "No specific priorities beyond confirming a pulse", "error",
+        "A structured post-ROSC bundle (oxygenation, ventilation, hemodynamics, ECG, cause-finding) is required.", "2025 AHA Post-Cardiac Arrest Care", 10, () => "hemodynamics")
+    ]);
+  nodes.hemodynamics = node("hemodynamics", "Hemodynamic Support", "Post-Cardiac Arrest Care",
+    (s) => `BP is ${s.vitals.bpSys}/${s.vitals.bpDia}. How do you support hemodynamics?`,
+    [
+      opt("a", "Give IV fluids and start a vasopressor if hypotension persists, targeting an adequate mean arterial pressure", "ideal",
+        "Correct — treat post-ROSC hypotension proactively.", "2025 AHA Post-Cardiac Arrest Care", 10, () => "ecgCheck"),
+      opt("b", "Ignore the blood pressure since a pulse is present", "critical",
+        "Untreated post-ROSC hypotension worsens secondary brain injury — treat it.", "2025 AHA Post-Cardiac Arrest Care", 15, () => "ecgCheck")
+    ]);
+  nodes.ecgCheck = node("ecgCheck", "Identify the Cause", "Post-Cardiac Arrest Care",
+    () => `A 12-lead ECG is obtained. It shows ST-elevation. What's next?`,
+    [
+      opt("a", "Activate the cardiac catheterization pathway / discuss emergent coronary angiography per your institution's STEMI protocol", "ideal",
+        "Correct — STEMI post-ROSC should prompt consideration of emergent angiography per protocol.", "2025 AHA Post-Cardiac Arrest Care", 12, () => "ttm"),
+      opt("b", "Disregard the ECG since the patient already survived the arrest", "critical",
+        "Identifying and treating the cause (e.g., acute coronary occlusion) is a core part of post-arrest care.", "2025 AHA Post-Cardiac Arrest Care", 15, () => "ttm")
+    ]);
+  nodes.ttm = node("ttm", "Targeted Temperature Management & Prognostication", "Post-Cardiac Arrest Care",
+    () => `The patient remains comatose. How do you manage temperature and prognosis counseling?`,
+    [
+      opt("a", "Actively prevent fever / manage temperature in a controlled range, and delay neuroprognostication (generally ≥72 hours, multimodal) while offering structured emotional support to the family", "ideal",
+        "Correct — active temperature control plus delayed, multimodal neuroprognostication and family support are 2025-aligned priorities.", "2025 AHA Post-Cardiac Arrest Care", 15, () => "endPostArrest"),
+      opt("b", "Give an early, definitive prognosis to the family based on this single exam", "critical",
+        "Avoid premature single-exam prognostication — use a delayed, multimodal approach.", "2025 AHA Post-Cardiac Arrest Care", 15, () => "endPostArrest")
+    ]);
+  nodes.endPostArrest = endNode("endPostArrest", "Case Complete — Post-Arrest Care");
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 8: BLS → ALS TRANSITION
+   ========================================================================= */
+function buildBlsAlsTransition(state) {
+  const nodes = {};
+  nodes.start = node("start", "Handoff Arrival", "Team-Based Resuscitation / BLS→ALS Transition",
+    (s) => `You are the arriving code team / EMS crew. Bystanders have been performing CPR on ${ageDesc(s)} ${s.setting} for several minutes with an AED already applied (${s.witnessed ? "1 shock delivered" : "no shocks advised so far"}). What's your first priority as you take over?`,
+    [
+      opt("a", "Get a rapid, structured handoff (down time, witnessed?, bystander CPR quality, shocks delivered, current rhythm) while minimizing any interruption to ongoing compressions", "ideal",
+        "Correct — a brief structured handoff (SBAR-style) while compressions continue is the safest transition.", "2025 AHA Team-Based Resuscitation", 10, () => "switchCompressor"),
+      opt("b", "Stop compressions immediately to get a full history before continuing", "critical",
+        "Don't stop compressions for a history — get a brief structured handoff while CPR continues.", "2025 AHA High-Quality CPR standards", 25, () => "switchCompressor"),
+      opt("c", "Ignore the bystanders' information entirely and start over from scratch", "error",
+        "Bystander information (down time, shocks given, rhythm) is valuable and changes your next steps — don't discard it.", "2025 AHA Team-Based Resuscitation", 15, () => "switchCompressor")
+    ]);
+  nodes.switchCompressor = node("switchCompressor", "Switching Personnel & Equipment", "Team-Based Resuscitation",
+    () => `You need to switch to your own monitor/defibrillator and rotate in a fresh compressor. How do you do this?`,
+    [
+      opt("a", "Apply your own pads/monitor and switch the compressor during a brief, planned pause (or without pausing where possible), timed around the next rhythm check to avoid extra interruptions", "ideal",
+        "Correct — coordinate equipment/personnel changes to minimize additional pauses in compressions.", "2025 AHA High-Quality CPR standards", 12, () => "assignRoles"),
+      opt("b", "Take as long as needed since the bystanders were probably doing it wrong anyway", "critical",
+        "Prolonged pauses reduce coronary perfusion pressure — transition efficiently.", "2025 AHA High-Quality CPR standards", 25, () => "assignRoles")
+    ]);
+  nodes.assignRoles = node("assignRoles", "Team Roles & Closed-Loop Communication", "Team-Based Resuscitation",
+    () => `Your team is now in place. As team leader, how do you communicate the next order (e.g., epinephrine 1 mg IV)?`,
+    [
+      opt("a", "Direct the order to a specific named person, using clear closed-loop communication (they repeat the order back before giving it)", "ideal",
+        "Correct — closed-loop communication to a specifically named team member reduces errors.", "2025 AHA Team-Based Resuscitation", 8, () => "continueAlgo"),
+      opt("b", "Announce the order generally to the room without directing it to anyone", "error",
+        "Undirected orders are often missed or duplicated — assign tasks to specific people by name.", "2025 AHA Team-Based Resuscitation", 10, () => "continueAlgo"),
+      opt("c", "Give the medication yourself instead of delegating as team leader", "acceptable",
+        "Workable in a small team, but as team leader you generally direct and monitor the overall resuscitation rather than performing every task yourself.", "2025 AHA Team-Based Resuscitation", 8, () => "continueAlgo")
+    ]);
+  nodes.continueAlgo = infoNode("continueAlgo", "Transition Complete", "ACLS Cardiac Arrest Algorithm",
+    () => "The transition is complete — continue with the standard ACLS cardiac arrest algorithm (rhythm checks every 2 minutes, one-shock defibrillation strategy, epinephrine every 3–5 minutes, search for reversible causes).",
+    () => "endTransition");
+  nodes.endTransition = endNode("endTransition", "Case Complete — BLS→ALS Transition");
+  return { startNodeId: "start", nodes };
+}
+
+/* ---------- register all families ---------- */
+Object.assign(SCENARIO_FAMILIES, {
+  pediatric_cardiac_arrest: { label: "Pediatric Cardiac Arrest", ageGroups: ["child", "infant"], build: buildPedsArrest },
+  bradycardia: { label: "Bradycardia (with pulse)", ageGroups: ["adult"], build: buildBradycardia },
+  tachycardia: { label: "Tachycardia (with pulse)", ageGroups: ["adult"], build: (s) => { const r = buildTachycardia(s); attachTachyDynamicOptions(r.nodes); return r; } },
+  respiratory_arrest: { label: "Respiratory Arrest", ageGroups: ["adult", "child"], build: buildRespiratoryArrest },
+  opioid_emergency: { label: "Opioid-Associated Emergency", ageGroups: ["adult"], build: buildOpioidEmergency },
+  post_arrest_care: { label: "Post-Cardiac-Arrest Care", ageGroups: ["adult", "child"], build: buildPostArrestStandalone },
+  bls_als_transition: { label: "BLS → ALS Transition", ageGroups: ["adult"], build: buildBlsAlsTransition }
+});
+
+/* ============================================================
+   FAMILY 9: RHYTHM RECOGNITION DRILL
+   A focused, rapid-fire rhythm classification practice mode that
+   reuses the same engine (monitor, scoring, debrief).
+   ============================================================ */
+function buildRhythmDrill(state) {
+  const nodes = {};
+  const pool = Object.keys(RHYTHM_LIBRARY);
+  const sequenceLength = 8;
+  const sequence = [];
+  while (sequence.length < sequenceLength) {
+    const t = pick(pool);
+    if (sequence.filter(x => x === t).length < 2) sequence.push(t);
+  }
+  function classify(type) {
+    const info = RHYTHM_LIBRARY[type];
+    if (info.category === "arrest") return info.shockable ? "shockable_arrest" : "nonshockable_arrest";
+    if (info.category === "brady") return "bradycardia";
+    if (info.category === "tachy_narrow" || info.category === "tachy_narrow_irregular") return "tachycardia_narrow";
+    if (info.category === "tachy_wide") return "tachycardia_wide";
+    return "perfusing_normal";
+  }
+  const CHOICES = [
+    { id: "shockable_arrest", label: "Cardiac arrest, SHOCKABLE (VF / pulseless VT) → defibrillate" },
+    { id: "nonshockable_arrest", label: "Cardiac arrest, non-shockable (asystole / PEA) → CPR + epinephrine, no shock" },
+    { id: "bradycardia", label: "Bradycardia (with pulse) → assess stability, consider atropine/pacing" },
+    { id: "tachycardia_narrow", label: "Narrow-complex tachycardia (with pulse) → vagal/adenosine or rate control" },
+    { id: "tachycardia_wide", label: "Wide-complex tachycardia (with pulse) → assess stability, antiarrhythmic/cardioversion" },
+    { id: "perfusing_normal", label: "Normal perfusing rhythm → no rhythm-specific treatment needed" }
+  ];
+  sequence.forEach((type, i) => {
+    const id = "q" + i;
+    const nextId = i === sequenceLength - 1 ? "end" : "q" + (i + 1);
+    const correct = classify(type);
+    const options = shuffleArr(CHOICES).slice(0, 4);
+    if (!options.find(o => o.id === correct)) options[0] = CHOICES.find(o => o.id === correct);
+    nodes[id] = {
+      id, stage: `Rhythm ${i + 1} of ${sequenceLength}`, algoTag: "Rhythm Recognition", category: "rhythm",
+      type: "decision",
+      prompt: (s) => { s.rhythmType = type; s.vitals.hr = RHYTHM_LIBRARY[type].category === "arrest" ? null : randInt(35, 190); return "Classify this rhythm and choose the appropriate initial action."; },
+      options: shuffleArr(options).map((o, idx) => opt(String(idx), o.label,
+        o.id === correct ? "ideal" : "critical",
+        o.id === correct ? `Correct — this is ${RHYTHM_LIBRARY[type].label}.` : `Not quite — this is actually ${RHYTHM_LIBRARY[type].label}.`,
+        "2025 AHA Rhythm Recognition", 6, () => nextId))
+    };
+  });
+  nodes.end = endNode("end", "Drill Complete");
+  return { startNodeId: "q0", nodes };
+}
+function shuffleArr(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+Object.assign(SCENARIO_FAMILIES, {
+  rhythm_drill: { label: "Rhythm Recognition Drill", ageGroups: ["adult"], build: buildRhythmDrill, isDrill: true }
+});
+
+</script>
+<script>
+/* ============================================================
+   PROTOCOL MODE — static, no-time-pressure algorithm walkthroughs
+   Each algorithm: { label, startId, nodes: { id: { text, options:[{label,next}] } } }
+   ============================================================ */
+
+const PROTOCOLS = {
+  bls: {
+    label: "BLS Algorithm (Adult)",
+    startId: "n1",
+    nodes: {
+      n1: { text: "Verify scene safety.", options: [{ label: "Scene is safe → continue", next: "n2" }] },
+      n2: { text: "Check responsiveness. Shout for help / activate emergency response and get an AED/defibrillator (or send someone).", options: [{ label: "No response → continue", next: "n3" }] },
+      n3: { text: "Assess breathing and pulse simultaneously, ≤10 seconds.", options: [
+        { label: "No normal breathing, no pulse → cardiac arrest", next: "n4" },
+        { label: "No normal breathing, pulse present → respiratory arrest", next: "n_resp" },
+        { label: "Normal breathing, pulse present → monitor, recovery position if needed", next: "n_end_normal" }
+      ] },
+      n4: { text: "Begin CPR: rate 100–120/min, depth 2–2.4 in (adult), full recoil, ratio 30:2, minimize interruptions.", options: [{ label: "AED/defibrillator arrives → continue", next: "n5" }] },
+      n5: { text: "Turn on the AED/attach the defibrillator with minimal interruption to compressions and analyze the rhythm.", options: [
+        { label: "Shockable rhythm", next: "n6" },
+        { label: "Non-shockable rhythm", next: "n7" }
+      ] },
+      n6: { text: "Deliver ONE shock (one-shock strategy — no stacked shocks), then immediately resume CPR. Continue rhythm checks every 2 minutes. Transition to the ACLS Cardiac Arrest algorithm as advanced providers/equipment arrive.", options: [] },
+      n7: { text: "No shock — resume CPR immediately. Continue rhythm checks every 2 minutes. Transition to the ACLS Cardiac Arrest algorithm as advanced providers/equipment arrive.", options: [] },
+      n_resp: { text: "Give rescue breaths: 1 breath every 6 seconds (10/min) for an adult. Recheck pulse about every 2 minutes. If pulse is lost, begin CPR.", options: [] },
+      n_end_normal: { text: "No resuscitation needed at this time — monitor closely and reassess.", options: [] }
+    }
+  },
+  acls_arrest: {
+    label: "ACLS Adult Cardiac Arrest Algorithm",
+    startId: "a1",
+    nodes: {
+      a1: { text: "CPR in progress. Attach monitor/defibrillator with minimal interruption. Give oxygen; obtain IV/IO access (IV first-line if quickly achievable).", options: [{ label: "Check rhythm →", next: "a2" }] },
+      a2: { text: "Rhythm check (≤10 sec).", options: [{ label: "Shockable (VF/pVT)", next: "a3" }, { label: "Non-shockable (asystole/PEA)", next: "a8" }] },
+      a3: { text: "Deliver ONE shock. Resume CPR immediately (no pulse/rhythm check pause).", options: [{ label: "Continue CPR 2 min →", next: "a4" }] },
+      a4: { text: "During CPR: confirm IV/IO access; give epinephrine 1 mg IV/IO after the 2nd shock if VF/pVT persists, then every 3–5 min; consider advanced airway/capnography.", options: [{ label: "Check rhythm →", next: "a5" }] },
+      a5: { text: "Rhythm check.", options: [{ label: "Still shockable", next: "a6" }, { label: "Organized rhythm → check pulse", next: "a_pulsecheck" }, { label: "Asystole/PEA", next: "a8" }] },
+      a6: { text: "Shock again; resume CPR. Give amiodarone 300 mg IV/IO (first dose) — or lidocaine as an alternative — for refractory VF/pVT; a second amiodarone dose is 150 mg. Identify/treat reversible causes (H's & T's).", options: [{ label: "Continue cycles / check rhythm →", next: "a5" }, { label: "ROSC achieved →", next: "a7" }] },
+      a7: { text: "Begin Post-Cardiac-Arrest Care: optimize oxygenation/ventilation (avoid hyperoxia/hyperventilation), treat hypotension, 12-lead ECG, targeted temperature management if comatose, delayed multimodal neuroprognostication, structured family/emotional support.", options: [] },
+      a_pulsecheck: { text: "Pulse check.", options: [{ label: "Pulse present → ROSC", next: "a7" }, { label: "No pulse → treat as PEA", next: "a8" }] },
+      a8: { text: "No shock. Resume CPR immediately. Prioritize IV/IO access and epinephrine 1 mg IV/IO as soon as feasible, then every 3–5 min. Identify/treat reversible causes (H's & T's): hypovolemia, hypoxia, H+ (acidosis), hyper/hypokalemia, hypothermia, tension pneumothorax, tamponade, toxins, pulmonary thrombosis, coronary thrombosis.", options: [{ label: "Check rhythm →", next: "a9" }] },
+      a9: { text: "Rhythm check.", options: [{ label: "Shockable now", next: "a3" }, { label: "Still non-shockable", next: "a8" }, { label: "ROSC signs (organized rhythm + pulse)", next: "a7" }] }
+    }
+  },
+  bradycardia: {
+    label: "Adult Bradycardia Algorithm (with pulse)",
+    startId: "b1",
+    nodes: {
+      b1: { text: "Identify and treat the underlying cause. Maintain airway, give oxygen if hypoxemic, monitor rhythm/BP/SpO2, obtain IV access, obtain 12-lead ECG if available.", options: [{ label: "Assess for instability →", next: "b2" }] },
+      b2: { text: "Is bradycardia causing hypotension, acutely altered mental status, signs of shock, ischemic chest discomfort, or acute heart failure?", options: [
+        { label: "No — stable", next: "b_stable" },
+        { label: "Yes — unstable", next: "b3" }
+      ] },
+      b_stable: { text: "Monitor and observe; treat underlying/contributing causes; no immediate pharmacologic/electrical treatment required.", options: [] },
+      b3: { text: "Give atropine 1 mg IV bolus; repeat every 3–5 min to a maximum total dose of 3 mg. (Atropine is often ineffective for high-degree AV block with a wide QRS — move faster to pacing in that setting.)", options: [{ label: "Reassess →", next: "b4" }] },
+      b4: { text: "Adequate response to atropine?", options: [
+        { label: "Yes → improved", next: "b_resolved" },
+        { label: "No / unlikely to work", next: "b5" }
+      ] },
+      b5: { text: "Begin transcutaneous pacing (with analgesia/sedation as needed) and/or a dopamine (5–20 mcg/kg/min) or epinephrine (2–10 mcg/min) infusion. Obtain expert consultation.", options: [{ label: "Continue →", next: "b_resolved" }] },
+      b_resolved: { text: "Continue monitoring, treat the underlying cause, and arrange appropriate disposition.", options: [] }
+    }
+  },
+  tachycardia: {
+    label: "Adult Tachycardia Algorithm (with pulse)",
+    startId: "t1",
+    nodes: {
+      t1: { text: "Assess appropriateness for clinical condition. Identify and treat underlying cause. Maintain airway, give oxygen if hypoxemic, monitor rhythm/BP/SpO2, obtain IV access, obtain 12-lead ECG if available.", options: [{ label: "Assess for instability →", next: "t2" }] },
+      t2: { text: "Is the patient unstable due to the tachycardia? (hypotension, acutely altered mental status, signs of shock, ischemic chest discomfort, acute heart failure)", options: [
+        { label: "Yes → unstable", next: "t3" },
+        { label: "No → stable", next: "t4" }
+      ] },
+      t3: { text: "Synchronized cardioversion (sedate if possible without delaying care). Consider adenosine if the rhythm is regular and narrow.", options: [{ label: "Persistent tachycardia →", next: "t_expert" }, { label: "Resolved →", next: "t_end" }] },
+      t_expert: { text: "Obtain expert consultation; consider antiarrhythmic therapy and repeat cardioversion as indicated.", options: [{ label: "Continue →", next: "t_end" }] },
+      t4: { text: "Is the QRS narrow (<0.12 sec) or wide (≥0.12 sec)?", options: [{ label: "Narrow", next: "t5" }, { label: "Wide", next: "t6" }] },
+      t5: { text: "Is the narrow-complex rhythm regular or irregular?", options: [{ label: "Regular (e.g., SVT)", next: "t5a" }, { label: "Irregular (e.g., AFib/flutter)", next: "t5b" }] },
+      t5a: { text: "Try vagal maneuvers; give adenosine 6 mg rapid IV push (may repeat 12 mg once) if no conversion. Consider expert consultation for recurrence.", options: [{ label: "Continue →", next: "t_end" }] },
+      t5b: { text: "Control rate/rhythm per duration of onset and risk factors; consider anticoagulation; obtain expert/cardiology consultation.", options: [{ label: "Continue →", next: "t_end" }] },
+      t6: { text: "Is the wide-complex rhythm regular or irregular?", options: [{ label: "Regular", next: "t6a" }, { label: "Irregular", next: "t6b" }] },
+      t6a: { text: "Consider monomorphic VT (or SVT with aberrancy); treat with an antiarrhythmic infusion (e.g., procainamide or amiodarone) and obtain expert consultation.", options: [{ label: "Continue →", next: "t_end" }] },
+      t6b: { text: "Consider polymorphic VT/torsades or pre-excited atrial fibrillation. Give magnesium sulfate, correct electrolytes/QT-prolonging drugs, and avoid AV-nodal blocking agents (in case of pre-excited AFib). If pulseless, treat as cardiac arrest.", options: [{ label: "Continue →", next: "t_end" }] },
+      t_end: { text: "Continue monitoring, treat the underlying cause, and arrange appropriate disposition.", options: [] }
+    }
+  }
+};
+
+</script>
+<script>
+/* ============================================================
+   CORE ENGINE: state machine, timer, scoring, adaptive learning
+   ============================================================ */
+
+function rv(field, state) { return typeof field === "function" ? field(state) : field; }
+
+const DIFFICULTIES = {
+  beginner: { label: "Beginner", hints: true, countdown: 0, complicationChance: 0, criticalPenalty: 8 },
+  intermediate: { label: "Intermediate", hints: false, countdown: 0, complicationChance: 0.12, criticalPenalty: 10 },
+  advanced: { label: "Advanced", hints: false, countdown: 25, complicationChance: 0.28, criticalPenalty: 14 },
+  expert: { label: "Expert", hints: false, countdown: 15, complicationChance: 0.42, criticalPenalty: 18 }
+};
+
+const COMPLICATIONS = [
+  "🔋 The defibrillator pad has poor skin contact — you'll need to reapply it before the next shock.",
+  "💉 The IV line appears to have infiltrated — reassess your access.",
+  "😟 A distressed family member enters the room asking questions.",
+  "📟 A monitor alarm is malfunctioning and flickering, momentarily obscuring the rhythm.",
+  "🫁 Bag-mask seal is difficult to maintain — chest rise is inconsistent.",
+  "🛏️ A second patient nearby also urgently needs attention, splitting team focus.",
+  "🔊 It's loud and chaotic in the room, making closed-loop communication harder.",
+  "🧊 Equipment (backboard / IO drill / airway cart) is not immediately at the bedside."
+];
+
+const TEAM_ROLES = ["Team Leader", "Compressor", "Airway", "Defibrillator/Monitor", "IV/IO & Medications", "Recorder"];
+
+/* ---------- global app state ---------- */
+const App = {
+  screen: "home",
+  run: null,           // active single-case run
+  exam: null,          // active exam run
+  history: [],         // completed case summaries
+  adaptiveTags: {},     // tag -> count of error/critical occurrences
+  protocolState: null
+};
+
+/* ---------- patient / config generation ---------- */
+function familyDefaultAgeGroup(familyId) {
+  const fam = SCENARIO_FAMILIES[familyId];
+  return pick(fam.ageGroups);
+}
+
+function generateConfig(overrides) {
+  overrides = overrides || {};
+  const familyIds = Object.keys(SCENARIO_FAMILIES);
+  const family = overrides.family || pick(familyIds);
+  const ageGroup = overrides.ageGroup || familyDefaultAgeGroup(family);
+  let ageValue, weightKg;
+  if (ageGroup === "adult") { ageValue = randInt(19, 84); weightKg = randInt(55, 100); }
+  else if (ageGroup === "child") { ageValue = randInt(1, 11); weightKg = estimateChildWeightKg(ageValue); }
+  else { ageValue = randInt(1, 11); weightKg = estimateChildWeightKg(ageValue / 12); }
+  const setting = pick(ageGroup === "adult" ? SETTINGS_ADULT : SETTINGS_PEDS);
+  const witnessed = overrides.witnessed !== undefined ? overrides.witnessed : chance(0.5);
+  const specialCircumstance = overrides.specialCircumstance || weightedPick(SPECIAL_CIRCUMSTANCES).id;
+  const difficulty = overrides.difficulty || "intermediate";
+  const teamMode = overrides.teamMode || false;
+  return {
+    family, ageGroup, ageValue, weightKg,
+    sex: pick(["male", "female"]),
+    setting, witnessed, specialCircumstance, difficulty, teamMode
+  };
+}
+
+function freshVitals() {
+  return { hr: 80, bpSys: 118, bpDia: 74, spo2: 97, rr: 16, etco2: 35, temp: 37.0 };
+}
+
+function createRunState(config) {
+  const state = {
+    id: uid(),
+    config,
+    family: config.family,
+    ageGroup: config.ageGroup,
+    ageValue: config.ageValue,
+    weightKg: config.weightKg,
+    sex: config.sex,
+    setting: config.setting,
+    witnessed: config.witnessed,
+    specialCircumstance: config.specialCircumstance,
+    difficulty: config.difficulty,
+    teamMode: config.teamMode,
+    roles: config.roles || null,
+    vitals: freshVitals(),
+    rhythmType: "sinus_normal",
+    timerSec: 0,
+    events: [],
+    log: [],
+    flags: {},
+    tierCounts: { ideal: 0, acceptable: 0, error: 0, critical: 0 },
+    domainCounts: {}, // category -> {correct,total}
+    criticalErrors: [],
+    currentComplication: null,
+    currentNodeId: null,
+    nodes: null,
+    _qualityBonus: 0,
+    examMode: false,
+    finished: false
+  };
+  const built = SCENARIO_FAMILIES[config.family].build(state);
+  state.currentNodeId = built.startNodeId;
+  state.nodes = built.nodes;
+  return state;
+}
+
+function currentNode(state) { return state.nodes[state.currentNodeId]; }
+function getNodeOptions(node, state) { return node.dynamicOptions ? node.dynamicOptions(state) : (node.options || []); }
+
+function recordDomain(state, category, tier) {
+  if (!state.domainCounts[category]) state.domainCounts[category] = { correct: 0, total: 0 };
+  state.domainCounts[category].total++;
+  if (tier === "ideal" || tier === "acceptable") state.domainCounts[category].correct++;
+}
+
+function mistakeTagFor(node, tier) {
+  if (tier !== "error" && tier !== "critical") return null;
+  const cat = node.category || "general";
+  if (cat === "rhythm") return "rhythm_recognition";
+  if (cat === "medication") return "medication_dosing";
+  if (cat === "cpr") return "cpr_technique";
+  if ((node.algoTag || "").toLowerCase().includes("bradycardia")) return "bradycardia_management";
+  if ((node.algoTag || "").toLowerCase().includes("tachycardia")) return "tachycardia_management";
+  if ((node.algoTag || "").toLowerCase().includes("post-cardiac")) return "post_arrest_care";
+  return "protocol_timing_delay";
+}
+
+function applyDecision(state, node, option) {
+  const tier = rv(option.tier, state);
+  const feedback = rv(option.feedback, state);
+  const timeCost = option.timeCost || 5;
+  state.timerSec += timeCost;
+  if (option.vitalsEffect) option.vitalsEffect(state);
+  state.tierCounts[tier] = (state.tierCounts[tier] || 0) + 1;
+  const category = node.category || "general";
+  recordDomain(state, category, tier);
+  if (tier === "critical") {
+    state.criticalErrors.push({ stage: node.stage, text: option.text, feedback });
+    state._qualityBonus -= 0.06;
+  } else if (tier === "ideal") {
+    state._qualityBonus += 0.02;
+  }
+  const tag = mistakeTagFor(node, tier);
+  if (tag) App.adaptiveTags[tag] = (App.adaptiveTags[tag] || 0) + 1;
+  state.log.push({
+    t: state.timerSec, stage: node.stage, algoTag: node.algoTag,
+    choice: option.text, tier, feedback, ref: option.ref || ""
+  });
+  state.events.push({ t: state.timerSec, label: node.stage + ": " + option.text.slice(0, 60) });
+  const nextId = option.next(state);
+  return { tier, feedback, nextId };
+}
+
+function applyMedicationChoice(state, node, phase, key, doseOpt) {
+  // phase 'drug' returns tier for drug pick; phase 'dose' finalizes
+  if (phase === "drug") {
+    let tier;
+    if (key === node.correctKey) tier = "ideal";
+    else if ((node.acceptableKeys || []).includes(key)) tier = "acceptable";
+    else tier = "error";
+    return tier;
+  }
+}
+
+function finalizeMedication(state, node, drugKey, drugTier, doseTier) {
+  const finalTier = drugTier === "error" ? "error" : (doseTier === "ideal" ? drugTier : "error");
+  const ref = MED_REFERENCE[drugKey] ? MED_REFERENCE[drugKey].indication : "";
+  const timeCost = 12;
+  state.timerSec += timeCost;
+  state.tierCounts[finalTier] = (state.tierCounts[finalTier] || 0) + 1;
+  recordDomain(state, "medication", finalTier);
+  if (finalTier === "critical" || finalTier === "error") {
+    if (finalTier === "critical") state.criticalErrors.push({ stage: node.stage, text: "Medication order", feedback: "Incorrect medication/dose for this indication." });
+    App.adaptiveTags["medication_dosing"] = (App.adaptiveTags["medication_dosing"] || 0) + 1;
+  } else if (finalTier === "ideal") { state._qualityBonus += 0.02; }
+  const correctRef = MED_REFERENCE[node.correctKey];
+  const label = MED_REFERENCE[drugKey] ? MED_REFERENCE[drugKey].name : drugKey;
+  state.log.push({
+    t: state.timerSec, stage: node.stage, algoTag: node.algoTag,
+    choice: "Ordered " + label, tier: finalTier,
+    feedback: finalTier === "ideal" ? `Correct — ${correctRef.name} ${correctRef.dose}${correctRef.repeat ? ", repeat " + correctRef.repeat : ""}.` :
+      `Reference: ${correctRef.name} ${correctRef.dose}. ${correctRef.notes || ""}`,
+    ref: "2025 AHA Medication Reference — " + correctRef.indication
+  });
+  state.events.push({ t: state.timerSec, label: node.stage + ": " + label + " ordered" });
+  const nextId = node.next(state, finalTier);
+  return { tier: finalTier, nextId };
+}
+
+/* ---------- scoring & debrief ---------- */
+function computeScoreSummary(state) {
+  const total = Object.values(state.tierCounts).reduce((a, b) => a + b, 0) || 1;
+  const weight = { ideal: 100, acceptable: 70, error: 30, critical: 0 };
+  let sum = 0;
+  Object.keys(state.tierCounts).forEach(k => { sum += (state.tierCounts[k] || 0) * (weight[k] || 0); });
+  let score = sum / total;
+  const diffCfg = DIFFICULTIES[state.difficulty] || DIFFICULTIES.intermediate;
+  score -= state.criticalErrors.length * diffCfg.criticalPenalty;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const adherence = Math.round(((state.tierCounts.ideal || 0) + (state.tierCounts.acceptable || 0)) / total * 100);
+  const domain = {};
+  Object.keys(state.domainCounts).forEach(k => {
+    const d = state.domainCounts[k];
+    domain[k] = Math.round((d.correct / (d.total || 1)) * 100);
+  });
+  return { score, adherence, domain, total, criticalCount: state.criticalErrors.length };
+}
+
+function scoreLabel(score) {
+  if (score >= 90) return { text: "Excellent", cls: "good" };
+  if (score >= 75) return { text: "Proficient", cls: "good" };
+  if (score >= 55) return { text: "Developing", cls: "warn" };
+  return { text: "Needs Focused Practice", cls: "bad" };
+}
+
+function buildDebrief(state) {
+  const summary = computeScoreSummary(state);
+  const good = state.log.filter(l => l.tier === "ideal").slice(0, 6);
+  const bad = state.log.filter(l => l.tier === "error" || l.tier === "critical");
+  const idealSteps = state.log.map(l => `${l.stage}: ${l.tier === "ideal" ? l.choice : "(review: " + l.feedback + ")"}`);
+  const learningPoints = [];
+  const seenRefs = new Set();
+  state.log.forEach(l => { if ((l.tier === "error" || l.tier === "critical") && l.ref && !seenRefs.has(l.ref)) { seenRefs.add(l.ref); learningPoints.push(l.ref + " — " + l.feedback); } });
+  if (learningPoints.length < 3) {
+    state.log.filter(l => l.tier === "ideal").forEach(l => { if (learningPoints.length < 5 && l.ref && !seenRefs.has(l.ref)) { seenRefs.add(l.ref); learningPoints.push(l.ref); } });
+  }
+  const famLabel = SCENARIO_FAMILIES[state.family].label;
+  const summaryText = `${famLabel} case — ${ageDesc(state)} ${state.setting}${state.specialCircumstance !== "none" ? ", with " + (SPECIAL_CIRCUMSTANCES.find(x => x.id === state.specialCircumstance) || {}).label : ""}. Total resuscitation time: ${fmtTime(state.timerSec)}. ${state.flags.rosc ? "ROSC was achieved." : "Case concluded per the branching pathway you took."}`;
+  return {
+    summary, good, bad, idealSteps: idealSteps.slice(0, 12),
+    learningPoints: learningPoints.slice(0, 5), summaryText,
+    timeline: state.events.slice(0, 20)
+  };
+}
+
+function finalizeRun(state) {
+  state.finished = true;
+  const summary = computeScoreSummary(state);
+  App.history.push({
+    id: state.id, family: state.family, familyLabel: SCENARIO_FAMILIES[state.family].label,
+    difficulty: state.difficulty, score: summary.score, adherence: summary.adherence,
+    domain: summary.domain, criticalCount: summary.criticalCount, time: state.timerSec,
+    rosc: !!state.flags.rosc, date: new Date().toISOString()
+  });
+  return summary;
+}
+
+/* ---------- adaptive learning ---------- */
+const ADAPTIVE_INFO = {
+  rhythm_recognition: { label: "Rhythm recognition", suggestion: "Run more rhythm-heavy cardiac arrest cases or the Rhythm Recognition Drill.", families: ["adult_cardiac_arrest", "pediatric_cardiac_arrest", "tachycardia"] },
+  medication_dosing: { label: "Medication dosing/timing", suggestion: "Practice cases with dense medication decisions (arrest and bradycardia cases).", families: ["adult_cardiac_arrest", "bradycardia", "pediatric_cardiac_arrest"] },
+  cpr_technique: { label: "CPR technique fundamentals", suggestion: "Review Protocol Mode's BLS pathway, then repeat arrest scenarios.", families: ["adult_cardiac_arrest", "pediatric_cardiac_arrest"] },
+  bradycardia_management: { label: "Bradycardia algorithm", suggestion: "Repeat focused bradycardia cases.", families: ["bradycardia"] },
+  tachycardia_management: { label: "Tachycardia algorithm", suggestion: "Repeat focused tachycardia cases (narrow vs wide, regular vs irregular).", families: ["tachycardia"] },
+  post_arrest_care: { label: "Post-cardiac-arrest care", suggestion: "Repeat post-ROSC management cases.", families: ["post_arrest_care", "adult_cardiac_arrest"] },
+  protocol_timing_delay: { label: "Timing / sequence delays", suggestion: "Practice under Advanced/Expert time pressure to sharpen response speed.", families: ["adult_cardiac_arrest", "opioid_emergency", "respiratory_arrest"] }
+};
+
+function getTopWeakness() {
+  const entries = Object.entries(App.adaptiveTags).filter(([, v]) => v >= 2);
+  if (!entries.length) return null;
+  entries.sort((a, b) => b[1] - a[1]);
+  const [tag, count] = entries[0];
+  return { tag, count, info: ADAPTIVE_INFO[tag] };
+}
+
+</script>
+<script>
+/* ============================================================
+   UI RENDERING & EVENT WIRING
+   ============================================================ */
+function $(sel, root) { return (root || document).querySelector(sel); }
+function $all(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+
+let stripRenderer = null;
+let countdownInterval = null;
+let countdownRemaining = 0;
+const TEAMMATE_NAMES = ["Alex", "Priya", "Sam", "Jordan", "Casey", "Morgan"];
+let builderSel = { family: null, ageGroup: null, difficulty: "intermediate", teamMode: false };
+let protocolCurrentKey = "bls";
+let protocolPath = [];
+
+function showScreen(id) {
+  clearCountdown();
+  $all(".screen").forEach(s => s.classList.remove("active"));
+  const el = $("#screen-" + id);
+  if (el) el.classList.add("active");
+  $all("#topbar nav button").forEach(b => b.classList.toggle("active", b.dataset.nav === id));
+  App.screen = id;
+  if (id === "home") renderHomeAdaptive();
+  if (id === "dashboard") renderDashboard();
+  if (id === "about") renderAbout();
+  if (id === "protocol") renderProtocol();
+}
+
+/* ---------- HOME ---------- */
+function renderHomeAdaptive() {
+  const w = getTopWeakness();
+  const box = $("#adaptiveHomeBox");
+  if (!w || !w.info) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  $("#adaptiveHomeContent").innerHTML = `
+    <p>You've had <b>${w.count}</b> recent errors related to <b>${esc(w.info.label)}</b>. ${esc(w.info.suggestion)}</p>
+    <button class="btn primary" id="btnAdaptiveGo">Start a Targeted Case</button>`;
+  $("#btnAdaptiveGo").onclick = () => {
+    const fam = pick(w.info.families);
+    startSimWithConfig(generateConfig({ family: fam, difficulty: "intermediate" }));
+  };
+}
+
+/* ---------- BUILDER ---------- */
+function renderPills(containerId, items, selectedId, onSelect) {
+  const c = $("#" + containerId);
+  c.innerHTML = "";
+  items.forEach(it => {
+    const b = document.createElement("div");
+    b.className = "pill" + (it.id === selectedId ? " selected" : "");
+    b.textContent = it.label;
+    b.onclick = () => { onSelect(it.id); renderBuilder(); };
+    c.appendChild(b);
+  });
+}
+function renderBuilder() {
+  const famItems = Object.keys(SCENARIO_FAMILIES).filter(k => !SCENARIO_FAMILIES[k].isDrill).map(k => ({ id: k, label: SCENARIO_FAMILIES[k].label }));
+  if (!builderSel.family) builderSel.family = famItems[0].id;
+  renderPills("pillFamily", famItems, builderSel.family, (id) => { builderSel.family = id; builderSel.ageGroup = null; });
+
+  const fam = SCENARIO_FAMILIES[builderSel.family];
+  const ageLabels = { adult: "Adult", child: "Child", infant: "Infant" };
+  const ageItems = fam.ageGroups.map(g => ({ id: g, label: ageLabels[g] }));
+  if (!builderSel.ageGroup || !fam.ageGroups.includes(builderSel.ageGroup)) builderSel.ageGroup = fam.ageGroups[0];
+  renderPills("pillAge", ageItems, builderSel.ageGroup, (id) => { builderSel.ageGroup = id; });
+
+  const diffItems = Object.keys(DIFFICULTIES).map(k => ({ id: k, label: DIFFICULTIES[k].label }));
+  renderPills("pillDifficulty", diffItems, builderSel.difficulty, (id) => { builderSel.difficulty = id; });
+
+  const teamItems = [{ id: "solo", label: "Solo" }, { id: "team", label: "Team-Based (assign roles)" }];
+  renderPills("pillTeam", teamItems, builderSel.teamMode ? "team" : "solo", (id) => { builderSel.teamMode = (id === "team"); });
+}
+
+/* ---------- ROLES ---------- */
+function renderRoleAssign(config) {
+  const shuffled = shuffleArr(TEAMMATE_NAMES);
+  const roles = {};
+  roles["Team Leader"] = "You";
+  TEAM_ROLES.filter(r => r !== "Team Leader").forEach((r, i) => { roles[r] = shuffled[i]; });
+  config.roles = roles;
+  const card = $("#roleAssignCard");
+  card.innerHTML = Object.entries(roles).map(([role, person]) =>
+    `<div class="kv"><span>${esc(role)}</span><b>${esc(person)}</b></div>`).join("");
+  $("#btnRolesContinue").onclick = () => startSimWithConfig(config);
+}
+
+/* ---------- SIM ---------- */
+function startSimWithConfig(config) {
+  App.run = createRunState(config);
+  showScreen("sim");
+  $("#examProgress").classList.add("hidden");
+  if (!stripRenderer) { stripRenderer = new RhythmStrip($("#stripCanvas")); stripRenderer.start(); }
+  enterNode(App.run);
+}
+
+function ageGroupLabel(g) { return { adult: "Adult", child: "Child", infant: "Infant" }[g] || g; }
+
+function renderPatientCard(state) {
+  $("#patientName").textContent = ageDesc(state).replace(/^\w/, c => c.toUpperCase());
+  $("#patientDifficultyBadge").textContent = (DIFFICULTIES[state.difficulty] || {}).label || "";
+  const sc = SPECIAL_CIRCUMSTANCES.find(x => x.id === state.specialCircumstance);
+  const chips = [
+    `<span class="tag info">${esc(SCENARIO_FAMILIES[state.family].label)}</span>`,
+    `<span class="tag">${esc(state.setting)}</span>`,
+    state.witnessed !== undefined ? `<span class="tag ${state.witnessed ? "good" : "warn"}">${state.witnessed ? "Witnessed" : "Unwitnessed"}</span>` : "",
+    (sc && sc.id !== "none") ? `<span class="tag warn">${esc(sc.label)}</span>` : "",
+    state.teamMode ? `<span class="tag info">Team-Based</span>` : ""
+  ].filter(Boolean).join(" ");
+  $("#patientMeta").innerHTML = chips;
+  const chipsBox = $("#roleChipsBox");
+  chipsBox.innerHTML = state.roles ? Object.entries(state.roles).map(([r, p]) => `<span class="roleChip">${esc(r)}: ${esc(p)}</span>`).join("") : "";
+}
+
+function renderMonitor(state) {
+  const v = state.vitals;
+  $("#vHR").textContent = v.hr === null || v.hr === undefined ? "--" : v.hr;
+  $("#vBP").textContent = (v.bpSys === null || v.bpSys === undefined) ? "--/--" : `${v.bpSys}/${v.bpDia}`;
+  $("#vSpO2").textContent = v.spo2 === null || v.spo2 === undefined ? "--" : v.spo2;
+  $("#vRR").textContent = v.rr === null || v.rr === undefined ? "--" : v.rr;
+  $("#vEtCO2").textContent = v.etco2 === null || v.etco2 === undefined ? "--" : v.etco2;
+  $("#vTemp").textContent = v.temp === null || v.temp === undefined ? "--" : v.temp.toFixed ? v.temp.toFixed(1) : v.temp;
+  if (stripRenderer) {
+    if (stripRenderer.type !== state.rhythmType) stripRenderer.setRhythm(state.rhythmType, v.hr || 60);
+    else stripRenderer.rate = v.hr || stripRenderer.rate;
+  }
+  const info = RHYTHM_LIBRARY[state.rhythmType] || {};
+  let pulseText;
+  if (info.category === "arrest") pulseText = "No pulse — arrest rhythm on monitor";
+  else if (state.flags.pulsePresent === false) pulseText = "No pulse";
+  else pulseText = "Pulse present";
+  $("#pulseStatus").textContent = "Pulse: " + pulseText;
+}
+
+function renderTimer(state) {
+  $("#timerDisplay").textContent = fmtTime(state.timerSec);
+  const last = state.events[state.events.length - 1];
+  $("#lastEventLabel").textContent = last ? last.label : "No events yet";
+}
+
+function renderActionLog(state) {
+  const box = $("#actionLog");
+  if (!state.log.length) { box.innerHTML = '<p class="small muted">No actions yet.</p>'; return; }
+  box.innerHTML = state.log.slice().reverse().map(l => `
+    <div class="entry">
+      <div><span class="tm">${fmtTime(l.t)}</span><span class="tag ${tierClass(l.tier)}">${tierShort(l.tier)}</span></div>
+      <div>${esc(l.stage)}</div>
+      <div class="muted">${esc(l.choice)}</div>
+    </div>`).join("");
+}
+function tierClass(t) { return t === "ideal" ? "good" : t === "acceptable" ? "info" : t === "error" ? "warn" : "bad"; }
+function tierShort(t) { return t === "ideal" ? "IDEAL" : t === "acceptable" ? "OK" : t === "error" ? "ERROR" : "CRITICAL"; }
+function tierHeading(t) { return t === "ideal" ? "✅ Ideal action" : t === "acceptable" ? "🟦 Acceptable" : t === "error" ? "⚠️ Suboptimal" : "🛑 Critical error"; }
+
+function showFeedback(tier, feedback, ref) {
+  $("#feedbackContainer").innerHTML = `
+    <div class="feedbackBox ${tier}">
+      <h4>${tierHeading(tier)}</h4>
+      <p>${esc(feedback || "")}</p>
+      ${ref ? `<div class="ref">Reference: ${esc(ref)}</div>` : ""}
+    </div>`;
+}
+
+function clearCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = null;
+  const box = $("#countdownBox");
+  if (box) box.classList.add("hidden");
+}
+
+function startCountdown(state, node, onTimeout) {
+  const cfg = DIFFICULTIES[state.difficulty] || {};
+  if (!cfg.countdown) return;
+  countdownRemaining = cfg.countdown;
+  const box = $("#countdownBox");
+  box.classList.remove("hidden");
+  const render = () => { box.innerHTML = `⏳ Decide within <b style="color:${countdownRemaining <= 5 ? "var(--bad)" : "var(--warn)"}">${countdownRemaining}s</b> — real resuscitations don't pause.`; };
+  render();
+  countdownInterval = setInterval(() => {
+    countdownRemaining--;
+    render();
+    if (countdownRemaining <= 0) { clearCountdown(); onTimeout(); }
+  }, 1000);
+}
+
+function renderComplication(state, node) {
+  const slot = $("#complicationSlot");
+  if ((node.type === "decision" || node.type === "medication") && state.difficulty !== "beginner" && chance((DIFFICULTIES[state.difficulty] || {}).complicationChance || 0)) {
+    state.currentComplication = pick(COMPLICATIONS);
+  } else {
+    state.currentComplication = null;
+  }
+  slot.innerHTML = state.currentComplication ? `<div class="complicationBanner">${esc(state.currentComplication)}</div>` : "";
+}
+
+function enterNode(state) {
+  const node = currentNode(state);
+  if (node.type === "end") { finishRun(state); return; }
+  state._currentPromptText = node.prompt ? node.prompt(state) : "";
+  renderComplication(state, node);
+  renderMonitor(state);
+  renderPatientCard(state);
+  renderTimer(state);
+  renderActionLog(state);
+  $("#stageTag").textContent = node.stage || "";
+  $("#algoTag").textContent = node.algoTag || "";
+  $("#scenarioPrompt").textContent = state._currentPromptText;
+  $("#feedbackContainer").innerHTML = "";
+  $("#continueRow").classList.add("hidden");
+  const optsBox = $("#optionsContainer");
+  optsBox.innerHTML = "";
+
+  if (node.type === "info") {
+    const btn = document.createElement("button");
+    btn.className = "btn primary lg block";
+    btn.textContent = "Continue →";
+    btn.onclick = () => { const nextId = node.next(state); goToNext(state, nextId); };
+    optsBox.appendChild(btn);
+    return;
+  }
+
+  if (node.type === "medication") {
+    renderMedicationPhaseDrug(state, node);
+    startCountdown(state, node, () => handleMedTimeout(state, node));
+    return;
+  }
+
+  // decision node
+  if (DIFFICULTIES[state.difficulty] && DIFFICULTIES[state.difficulty].hints) {
+    const hint = document.createElement("p");
+    hint.className = "small muted";
+    hint.style.marginTop = "-6px";
+    hint.textContent = `💡 Beginner tip: you're in the "${node.stage}" stage of the ${node.algoTag || "algorithm"}. Think about what the 2025 AHA guidance prioritizes here before choosing.`;
+    $("#scenarioPrompt").after(hint);
+  }
+  const options = getNodeOptions(node, state);
+  options.forEach((option, i) => {
+    const btn = document.createElement("button");
+    btn.className = "optionBtn";
+    btn.innerHTML = `<span class="k">${String.fromCharCode(65 + i)}</span>${esc(option.text)}`;
+    btn.onclick = () => handleDecision(state, node, option);
+    optsBox.appendChild(btn);
+  });
+  startCountdown(state, node, () => handleTimeout(state, node));
+}
+
+function goToNext(state, nextId) { state.currentNodeId = nextId; enterNode(state); }
+
+function handleDecision(state, node, option) {
+  clearCountdown();
+  $all(".optionBtn", $("#optionsContainer")).forEach(b => b.classList.add("disabledOpt"));
+  const result = applyDecision(state, node, option);
+  renderMonitor(state); renderTimer(state); renderActionLog(state); renderPatientCard(state);
+  if (state.examMode) { setTimeout(() => goToNext(state, result.nextId), 300); return; }
+  showFeedback(result.tier, result.feedback, option.ref);
+  $("#continueRow").classList.remove("hidden");
+  $("#btnContinue").onclick = () => goToNext(state, result.nextId);
+}
+
+function handleTimeout(state, node) {
+  $all(".optionBtn", $("#optionsContainer")).forEach(b => b.classList.add("disabledOpt"));
+  const options = getNodeOptions(node, state);
+  const fallback = options[0];
+  const nextId = fallback.next(state);
+  state.timerSec += 20;
+  state.tierCounts.critical = (state.tierCounts.critical || 0) + 1;
+  recordDomain(state, node.category || "general", "critical");
+  const feedback = "Time ran out before a decision was made. In a real resuscitation, hesitation itself causes harmful delay.";
+  state.criticalErrors.push({ stage: node.stage, text: "(no action taken)", feedback });
+  App.adaptiveTags["protocol_timing_delay"] = (App.adaptiveTags["protocol_timing_delay"] || 0) + 1;
+  state.log.push({ t: state.timerSec, stage: node.stage, algoTag: node.algoTag, choice: "(hesitated — no action taken in time)", tier: "critical", feedback, ref: "2025 AHA — Time-Critical Practice" });
+  state.events.push({ t: state.timerSec, label: node.stage + ": no action taken (timeout)" });
+  renderMonitor(state); renderTimer(state); renderActionLog(state);
+  if (state.examMode) { setTimeout(() => goToNext(state, nextId), 300); return; }
+  showFeedback("critical", feedback, "2025 AHA — Time-Critical Practice");
+  $("#continueRow").classList.remove("hidden");
+  $("#btnContinue").onclick = () => goToNext(state, nextId);
+}
+
+/* ---------- medication two-phase UI ---------- */
+function renderMedicationPhaseDrug(state, node) {
+  const optsBox = $("#optionsContainer");
+  optsBox.innerHTML = "";
+  const keys = shuffleArr(node.drugKeys);
+  keys.forEach((key, i) => {
+    const ref = MED_REFERENCE[key];
+    const btn = document.createElement("button");
+    btn.className = "optionBtn";
+    btn.innerHTML = `<span class="k">${String.fromCharCode(65 + i)}</span><b>${esc(ref.name)}</b><br><span class="small muted">${esc(ref.indication)}</span>`;
+    btn.onclick = () => {
+      clearCountdown();
+      $all(".optionBtn", optsBox).forEach(b => b.classList.add("disabledOpt"));
+      const drugTier = applyMedicationChoice(state, node, "drug", key);
+      if (drugTier === "error") {
+        const result = finalizeMedication(state, node, key, "error", "error");
+        renderMonitor(state); renderTimer(state); renderActionLog(state);
+        finishMedication(state, node, result);
+      } else {
+        renderMedicationPhaseDose(state, node, key, drugTier);
+      }
+    };
+    optsBox.appendChild(btn);
+  });
+}
+function renderMedicationPhaseDose(state, node, key, drugTier) {
+  const optsBox = $("#optionsContainer");
+  optsBox.innerHTML = "";
+  const ref = MED_REFERENCE[key];
+  const correctLabel = `${ref.dose}${ref.route ? " (" + ref.route.join("/") + ")" : ""}${ref.repeat ? ", repeat " + ref.repeat : ""}`;
+  const distractors = (ref.distractors || []).slice(0, 3);
+  const choices = shuffleArr([{ label: correctLabel, correct: true }, ...distractors.map(d => ({ label: d, correct: false }))]);
+  choices.forEach((c, i) => {
+    const btn = document.createElement("button");
+    btn.className = "optionBtn";
+    btn.innerHTML = `<span class="k">${String.fromCharCode(65 + i)}</span>${esc(c.label)}`;
+    btn.onclick = () => {
+      $all(".optionBtn", optsBox).forEach(b => b.classList.add("disabledOpt"));
+      const doseTier = c.correct ? "ideal" : "error";
+      const result = finalizeMedication(state, node, key, drugTier, doseTier);
+      renderMonitor(state); renderTimer(state); renderActionLog(state);
+      finishMedication(state, node, result);
+    };
+    optsBox.appendChild(btn);
+  });
+}
+function finishMedication(state, node, result) {
+  if (state.examMode) { setTimeout(() => goToNext(state, result.nextId), 300); return; }
+  const logEntry = state.log[state.log.length - 1];
+  showFeedback(result.tier, logEntry.feedback, logEntry.ref);
+  $("#continueRow").classList.remove("hidden");
+  $("#btnContinue").onclick = () => goToNext(state, result.nextId);
+}
+function handleMedTimeout(state, node) {
+  $all(".optionBtn", $("#optionsContainer")).forEach(b => b.classList.add("disabledOpt"));
+  const result = finalizeMedication(state, node, node.correctKey, "error", "error");
+  renderMonitor(state); renderTimer(state); renderActionLog(state);
+  finishMedication(state, node, result);
+}
+
+/* ---------- DEBRIEF ---------- */
+function finishRun(state) {
+  if (state.examMode) { finishExamCase(state); return; }
+  const summary = finalizeRun(state);
+  const debrief = buildDebrief(state);
+  renderDebrief(state, summary, debrief);
+  showScreen("debrief");
+}
+
+function renderDebrief(state, summary, debrief) {
+  $("#debriefScore").textContent = summary.score + "%";
+  const lbl = scoreLabel(summary.score);
+  $("#debriefScoreLabel").className = "tag " + lbl.cls;
+  $("#debriefScoreLabel").textContent = lbl.text;
+  $("#debriefMetrics").innerHTML = `
+    <div class="metricRow"><span>Protocol adherence</span><span>${summary.adherence}%</span></div>
+    <div class="meter"><div style="width:${summary.adherence}%;background:var(--good)"></div></div>
+    <div class="metricRow"><span>Critical errors</span><span>${summary.criticalCount}</span></div>
+    <div class="metricRow"><span>Total time</span><span>${fmtTime(state.timerSec)}</span></div>
+    ${Object.keys(summary.domain).map(k => `
+      <div class="metricRow"><span>${esc(domainLabel(k))} accuracy</span><span>${summary.domain[k]}%</span></div>
+      <div class="meter"><div style="width:${summary.domain[k]}%;background:${summary.domain[k] >= 70 ? "var(--good)" : summary.domain[k] >= 40 ? "var(--warn)" : "var(--bad)"}"></div></div>
+    `).join("")}
+  `;
+  $("#debriefSummary").textContent = debrief.summaryText;
+  $("#debriefTimeline").innerHTML = debrief.timeline.map(e => `<div class="kv"><span>${fmtTime(e.t)}</span><span>${esc(e.label)}</span></div>`).join("") || '<p class="muted">No timestamped events.</p>';
+  $("#debriefGood").innerHTML = debrief.good.length ? debrief.good.map(l => `<li>${esc(l.stage)}: ${esc(l.choice)}</li>`).join("") : "<li>Keep practicing — small wins will show up here.</li>";
+  $("#debriefBad").innerHTML = debrief.bad.length ? debrief.bad.map(l => `<li><b>${esc(l.stage)}:</b> ${esc(l.choice)} — <span class="muted">${esc(l.feedback)}</span></li>`).join("") : "<li>No errors recorded — great work!</li>";
+  $("#debriefIdeal").innerHTML = debrief.idealSteps.map(s => `<li>${esc(s)}</li>`).join("");
+  $("#debriefLearning").innerHTML = debrief.learningPoints.map(s => `<li>${esc(s)}</li>`).join("") || "<li>Review the 2025 AHA algorithm for this case family in Protocol Mode.</li>";
+
+  $("#btnAnotherCase").onclick = () => startSimWithConfig(generateConfig({ family: state.family, difficulty: state.difficulty, teamMode: state.teamMode }));
+  $("#btnToDashboard").onclick = () => showScreen("dashboard");
+  $("#btnDebriefHome").onclick = () => showScreen("home");
+}
+function domainLabel(k) {
+  return { rhythm: "Rhythm recognition & defibrillation", medication: "Medication", cpr: "CPR technique", general: "General decision-making" }[k] || k;
+}
+
+/* ---------- PROTOCOL MODE ---------- */
+function renderProtocol() {
+  const picker = $("#protocolPicker");
+  picker.innerHTML = "";
+  Object.keys(PROTOCOLS).forEach(key => {
+    const p = document.createElement("div");
+    p.className = "pill" + (key === protocolCurrentKey ? " selected" : "");
+    p.textContent = PROTOCOLS[key].label;
+    p.onclick = () => { protocolCurrentKey = key; protocolPath = [PROTOCOLS[key].startId]; renderProtocol(); };
+    picker.appendChild(p);
+  });
+  if (!protocolPath.length) protocolPath = [PROTOCOLS[protocolCurrentKey].startId];
+  const proto = PROTOCOLS[protocolCurrentKey];
+  const nodeId = protocolPath[protocolPath.length - 1];
+  const node = proto.nodes[nodeId];
+  $("#protocolTitle").textContent = proto.label;
+  $("#protocolStepBadge").textContent = `Step ${protocolPath.length}`;
+  $("#protocolNodeText").textContent = node.text;
+  const optsBox = $("#protocolOptions");
+  optsBox.innerHTML = "";
+  if (!node.options.length) {
+    const done = document.createElement("div");
+    done.className = "tag good";
+    done.textContent = "End of this pathway — use Restart to try another branch";
+    optsBox.appendChild(done);
+  }
+  node.options.forEach(o => {
+    const b = document.createElement("div");
+    b.className = "pill";
+    b.textContent = o.label;
+    b.onclick = () => { protocolPath.push(o.next); renderProtocol(); };
+    optsBox.appendChild(b);
+  });
+  $("#btnProtocolBack").onclick = () => { if (protocolPath.length > 1) { protocolPath.pop(); renderProtocol(); } };
+  $("#btnProtocolRestart").onclick = () => { protocolPath = [proto.startId]; renderProtocol(); };
+  $("#protocolFlow").innerHTML = protocolPath.map((id, i) => `
+    <span class="flowNode ${i === protocolPath.length - 1 ? "current" : ""}"><div class="t">Step ${i + 1}</div>${esc(proto.nodes[id].text.slice(0, 90))}${proto.nodes[id].text.length > 90 ? "…" : ""}</span>
+    ${i < protocolPath.length - 1 ? '<span class="flowArrow">→</span>' : ""}
+  `).join("");
+}
+
+/* ---------- DASHBOARD ---------- */
+function renderDashboard() {
+  const h = App.history;
+  const tiles = $("#dashboardTiles");
+  const avgScore = h.length ? Math.round(h.reduce((a, c) => a + c.score, 0) / h.length) : 0;
+  const totalCrit = h.reduce((a, c) => a + c.criticalCount, 0);
+  const arrestCases = h.filter(c => ["adult_cardiac_arrest", "pediatric_cardiac_arrest"].includes(c.family));
+  const roscRate = arrestCases.length ? Math.round(100 * arrestCases.filter(c => c.rosc).length / arrestCases.length) : 0;
+  tiles.innerHTML = `
+    <div class="statTile"><div class="n">${h.length}</div><div class="l">Cases completed</div></div>
+    <div class="statTile"><div class="n">${avgScore}%</div><div class="l">Average score</div></div>
+    <div class="statTile"><div class="n">${totalCrit}</div><div class="l">Total critical errors</div></div>
+    <div class="statTile"><div class="n">${arrestCases.length ? roscRate + "%" : "—"}</div><div class="l">ROSC rate (arrest cases)</div></div>
+  `;
+  const domainAgg = {};
+  h.forEach(c => Object.keys(c.domain || {}).forEach(k => {
+    if (!domainAgg[k]) domainAgg[k] = [];
+    domainAgg[k].push(c.domain[k]);
+  }));
+  const meters = $("#dashboardMeters");
+  const keys = Object.keys(domainAgg);
+  meters.innerHTML = keys.length ? keys.map(k => {
+    const avg = Math.round(domainAgg[k].reduce((a, b) => a + b, 0) / domainAgg[k].length);
+    return `<div class="metricRow"><span>${esc(domainLabel(k))}</span><span>${avg}%</span></div><div class="meter"><div style="width:${avg}%;background:${avg >= 70 ? "var(--good)" : avg >= 40 ? "var(--warn)" : "var(--bad)"}"></div></div>`;
+  }).join("") : '<p class="muted small">Complete a case to see domain accuracy.</p>';
+
+  const adaptiveBox = $("#dashboardAdaptive");
+  const entries = Object.entries(App.adaptiveTags).sort((a, b) => b[1] - a[1]);
+  adaptiveBox.innerHTML = entries.length ? entries.map(([tag, count]) => {
+    const info = ADAPTIVE_INFO[tag];
+    if (!info) return "";
+    return `<div style="margin-bottom:10px;"><b>${esc(info.label)}</b> — ${count} occurrence${count > 1 ? "s" : ""}<br><span class="muted">${esc(info.suggestion)}</span></div>`;
+  }).join("") : '<p class="muted">No recurring error patterns yet — keep practicing.</p>';
+
+  const histBox = $("#dashboardHistory");
+  histBox.innerHTML = h.length ? '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">' +
+    '<tr class="muted"><th style="text-align:left;padding:4px;">Date</th><th style="text-align:left;">Case</th><th>Difficulty</th><th>Score</th><th>Critical</th></tr>' +
+    h.slice().reverse().map(c => `<tr style="border-top:1px solid var(--border);">
+      <td style="padding:4px;">${new Date(c.date).toLocaleString()}</td>
+      <td>${esc(c.familyLabel)}</td><td style="text-align:center;">${esc(c.difficulty)}</td>
+      <td style="text-align:center;">${c.score}%</td><td style="text-align:center;">${c.criticalCount}</td></tr>`).join("") +
+    "</table></div>" : '<p class="muted small">No cases completed yet.</p>';
+}
+
+/* ---------- ABOUT ---------- */
+function renderAbout() {
+  const list = [
+    "A single, unified Chain of Survival replaces separate adult/pediatric and in/out-of-hospital chains: Recognition &amp; Emergency Activation → High-Quality CPR → Defibrillation → Advanced Resuscitation → Post-Cardiac Arrest Care → Recovery &amp; Survivorship.",
+    "A one-shock defibrillation strategy (no stacked shocks) with immediate resumption of compressions after each shock.",
+    "IV access is favored first-line, with IO reasonable only if IV cannot be obtained quickly.",
+    "Routine sodium bicarbonate, calcium, magnesium, or steroids in undifferentiated arrest are not recommended absent a specific indication.",
+    "A new public-facing opioid overdose algorithm, including lay-responder naloxone guidance, that never delays ventilation/CPR for naloxone.",
+    "Updated choking response: alternating 5 back blows and 5 abdominal thrusts for adults/children, and 5 back blows/5 chest thrusts for infants.",
+    "Post-cardiac-arrest care emphasizes avoiding hyperoxia/hyperventilation, active temperature management, delayed multimodal neuroprognostication, and structured emotional support for families.",
+    "Children age 12+ can be taught effective CPR and defibrillation."
+  ];
+  $("#aboutChangesList").innerHTML = list.map(x => `<li>${x}</li>`).join("");
+}
+
+</script>
+<script>
+/* ============================================================
+   BOOT / EXAM MODE / WIRING
+   ============================================================ */
+
+const EXAM_CASE_COUNT = 10;
+const EXAM_PASS_SCORE = 75;
+
+function startExam() {
+  const families = Object.keys(SCENARIO_FAMILIES).filter(k => !SCENARIO_FAMILIES[k].isDrill);
+  const cases = [];
+  for (let i = 0; i < EXAM_CASE_COUNT; i++) {
+    cases.push(generateConfig({ family: pick(families), difficulty: "intermediate" }));
+  }
+  App.exam = { cases, index: 0, results: [] };
+  runExamCase(0);
+}
+
+function runExamCase(i) {
+  const config = App.exam.cases[i];
+  const state = createRunState(config);
+  state.examMode = true;
+  App.run = state;
+  showScreen("sim");
+  $("#examProgress").classList.remove("hidden");
+  if (!stripRenderer) { stripRenderer = new RhythmStrip($("#stripCanvas")); stripRenderer.start(); }
+  renderExamProgress();
+  enterNode(state);
+}
+
+function renderExamProgress() {
+  const box = $("#examProgress");
+  box.innerHTML = "";
+  for (let i = 0; i < App.exam.cases.length; i++) {
+    const d = document.createElement("div");
+    let cls = "dot";
+    if (i < App.exam.results.length) cls += App.exam.results[i].summary.score >= EXAM_PASS_SCORE ? " done-good" : " done-bad";
+    if (i === App.exam.index) cls += " current";
+    d.className = cls;
+    d.title = "Case " + (i + 1);
+    box.appendChild(d);
+  }
+  const timeEl = document.createElement("div");
+  timeEl.className = "small muted";
+  timeEl.style.marginLeft = "10px";
+  timeEl.textContent = `Exam case ${App.exam.index + 1} of ${App.exam.cases.length}`;
+  box.appendChild(timeEl);
+}
+
+function finishExamCase(state) {
+  const summary = computeScoreSummary(state);
+  App.exam.results.push({ config: state.config, summary, familyLabel: SCENARIO_FAMILIES[state.family].label });
+  App.history.push({
+    id: state.id, family: state.family, familyLabel: SCENARIO_FAMILIES[state.family].label,
+    difficulty: state.difficulty, score: summary.score, adherence: summary.adherence,
+    domain: summary.domain, criticalCount: summary.criticalCount, time: state.timerSec,
+    rosc: !!state.flags.rosc, date: new Date().toISOString(), exam: true
+  });
+  App.exam.index++;
+  if (App.exam.index < App.exam.cases.length) runExamCase(App.exam.index);
+  else finishExam();
+}
+
+function finishExam() {
+  const results = App.exam.results;
+  const avgScore = Math.round(results.reduce((a, r) => a + r.summary.score, 0) / results.length);
+  const totalCritical = results.reduce((a, r) => a + r.summary.criticalCount, 0);
+  const passed = avgScore >= EXAM_PASS_SCORE && totalCritical === 0;
+  $("#examTiles").innerHTML = `
+    <div class="statTile"><div class="n">${avgScore}%</div><div class="l">Average score</div></div>
+    <div class="statTile"><div class="n">${totalCritical}</div><div class="l">Critical errors</div></div>
+    <div class="statTile"><div class="n">${results.filter(r => r.summary.score >= EXAM_PASS_SCORE).length}/${results.length}</div><div class="l">Cases at passing level</div></div>
+    <div class="statTile"><div class="n" style="color:${passed ? "var(--good)" : "var(--bad)"}">${passed ? "PASS" : "REVIEW"}</div><div class="l">Overall result (${EXAM_PASS_SCORE}% avg, 0 critical)</div></div>
+  `;
+  $("#examBreakdown").innerHTML = results.map((r, i) => `
+    <div class="kv"><span>Case ${i + 1}: ${esc(r.familyLabel)}</span><span>${r.summary.score}% ${r.summary.criticalCount ? "⚠️ " + r.summary.criticalCount + " critical" : ""}</span></div>
+  `).join("");
+  showScreen("examresult");
+}
+
+/* ---------- boot ---------- */
+function initApp() {
+  $all("#topbar nav button").forEach(b => {
+    b.addEventListener("click", () => showScreen(b.dataset.nav));
+  });
+  $all(".mode-card[data-nav]").forEach(c => c.addEventListener("click", () => showScreen(c.dataset.nav)));
+  $all(".mode-card[data-start]").forEach(c => c.addEventListener("click", () => {
+    const kind = c.dataset.start;
+    if (kind === "random") {
+      startSimWithConfig(generateConfig({ difficulty: pick(["beginner", "intermediate", "intermediate", "advanced", "expert"]) }));
+    } else if (kind === "builder") {
+      renderBuilder();
+      showScreen("builder");
+    } else if (kind === "exam") {
+      startExam();
+    } else if (kind === "drill") {
+      startSimWithConfig(generateConfig({ family: "rhythm_drill", difficulty: "intermediate" }));
+    }
+  }));
+  $("#btnBuildStart").addEventListener("click", () => {
+    const config = generateConfig({ family: builderSel.family, ageGroup: builderSel.ageGroup, difficulty: builderSel.difficulty, teamMode: builderSel.teamMode });
+    if (config.teamMode) { renderRoleAssign(config); showScreen("roles"); }
+    else startSimWithConfig(config);
+  });
+  $("#btnExamHome").addEventListener("click", () => showScreen("home"));
+  protocolPath = [PROTOCOLS[protocolCurrentKey].startId];
+  showScreen("home");
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
+
+</script>
+</body>
+</html>

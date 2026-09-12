@@ -1,0 +1,2658 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ResusSim — 2025 AHA 復甦訓練模擬器</title>
+<style>
+:root{
+  --bg:#0b1016; --panel:#121a24; --panel2:#0e151d; --border:#233041;
+  --text:#e7eef5; --muted:#93a4b8; --accent:#2dd4bf; --accent2:#38bdf8;
+  --good:#34d399; --good-dim:#0f3d31; --warn:#fbbf24; --warn-dim:#3d3110;
+  --bad:#f87171; --bad-dim:#3d1414; --crit:#ff4d4d;
+  --mono-green:#3ef07c; --mono-yellow:#ffd23e; --mono-cyan:#4ad9ff; --mono-red:#ff5a5a; --mono-white:#eef5fb;
+  --radius:12px;
+  --shadow:0 6px 24px rgba(0,0,0,.35);
+  font-size:16px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:radial-gradient(1200px 800px at 20% -10%, #16202c 0%, var(--bg) 55%) fixed, var(--bg);
+  color:var(--text);
+  font-family:"Segoe UI",Roboto,-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+  min-height:100vh;
+  padding-bottom:24px;
+}
+button{font-family:inherit;}
+.hidden{display:none !important;}
+a{color:var(--accent2);}
+.small{font-size:.8em;color:var(--muted);}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.72rem;font-weight:600;letter-spacing:.02em;}
+.tag.good{background:var(--good-dim);color:var(--good);}
+.tag.warn{background:var(--warn-dim);color:var(--warn);}
+.tag.bad{background:var(--bad-dim);color:var(--bad);}
+.tag.info{background:#0f2a3d;color:var(--accent2);}
+
+/* ---------- top bar ---------- */
+#topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg,#0f1620,#0b1016);
+  position:sticky;top:0;z-index:50;
+}
+#topbar .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em;}
+#topbar .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
+#topbar nav{display:flex;gap:6px;flex-wrap:wrap;}
+#topbar nav button{
+  background:transparent;border:1px solid var(--border);color:var(--muted);
+  padding:8px 12px;border-radius:8px;cursor:pointer;font-size:.85rem;transition:.15s;
+}
+#topbar nav button:hover{border-color:var(--accent2);color:var(--text);}
+#topbar nav button.active{background:var(--accent2);color:#04141c;border-color:var(--accent2);font-weight:700;}
+
+.wrap{max-width:1300px;margin:0 auto;padding:20px;}
+.screen{display:none;}
+.screen.active{display:block;animation:fadein .18s ease;}
+@keyframes fadein{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+
+/* ---------- cards / grid ---------- */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);}
+.grid{display:grid;gap:16px;}
+.grid.cols-2{grid-template-columns:1fr 1fr;}
+.grid.cols-3{grid-template-columns:repeat(3,1fr);}
+.grid.cols-4{grid-template-columns:repeat(4,1fr);}
+@media (max-width:900px){.grid.cols-2,.grid.cols-3,.grid.cols-4{grid-template-columns:1fr;}}
+
+h1{font-size:1.7rem;margin:.2em 0;}
+h2{font-size:1.25rem;margin:.3em 0;}
+h3{font-size:1.05rem;margin:.4em 0;}
+p{line-height:1.5;color:var(--text);}
+.muted{color:var(--muted);}
+
+.btn{
+  display:inline-flex;align-items:center;gap:8px;justify-content:center;
+  background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:10px 16px;border-radius:10px;cursor:pointer;font-size:.92rem;font-weight:600;
+  transition:.15s;
+}
+.btn:hover{border-color:var(--accent2);transform:translateY(-1px);}
+.btn.primary{background:linear-gradient(180deg,var(--accent2),#0ea5c9);color:#031722;border:none;}
+.btn.primary:hover{filter:brightness(1.08);}
+.btn.warn{background:linear-gradient(180deg,var(--warn),#b3820f);color:#241a02;border:none;}
+.btn.bad{background:linear-gradient(180deg,var(--bad),#a53939);color:#2a0808;border:none;}
+.btn.ghost{background:transparent;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn.block{width:100%;}
+.btn.lg{padding:16px 20px;font-size:1.05rem;}
+
+.pill-row{display:flex;gap:8px;flex-wrap:wrap;}
+.pill{padding:7px 14px;border-radius:999px;border:1px solid var(--border);cursor:pointer;background:var(--panel2);color:var(--muted);font-size:.85rem;}
+.pill.selected{border-color:var(--accent);color:var(--accent);background:#0d2a26;}
+
+/* ---------- home menu ---------- */
+.mode-card{cursor:pointer;transition:.15s;}
+.mode-card:hover{border-color:var(--accent2);transform:translateY(-2px);}
+.mode-card .icon{font-size:1.6rem;}
+
+/* ---------- simulation layout ---------- */
+#simLayout{display:grid;grid-template-columns:340px 1fr 300px;gap:14px;align-items:start;}
+@media (max-width:1150px){#simLayout{grid-template-columns:1fr;}}
+
+.monitor{
+  background:#000;border:2px solid #1b2733;border-radius:var(--radius);padding:12px;
+  font-family:"Courier New",monospace;box-shadow:inset 0 0 30px rgba(0,0,0,.6);
+}
+.monitor .vitals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.vital{padding:6px 8px;border-radius:6px;background:#050a0f;}
+.vital .label{font-size:.65rem;color:#7f93a8;letter-spacing:.08em;}
+.vital .value{font-size:1.5rem;font-weight:700;line-height:1.1;}
+.vital.hr .value{color:var(--mono-green);}
+.vital.bp .value{color:var(--mono-white);font-size:1.15rem;}
+.vital.spo2 .value{color:var(--mono-cyan);}
+.vital.rr .value{color:var(--mono-yellow);}
+.vital.etco2 .value{color:var(--mono-white);font-size:1.15rem;}
+.vital.temp .value{color:var(--mono-white);font-size:1.15rem;}
+canvas.strip{width:100%;height:70px;background:#000;border-radius:4px;display:block;}
+.strip-label{font-size:.65rem;color:#7f93a8;margin:6px 0 2px;letter-spacing:.06em;}
+
+#timerBox{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:10px;border-radius:8px;background:#050a0f;}
+#timerBox .t{font-family:"Courier New",monospace;font-size:1.8rem;color:var(--mono-red);font-weight:700;}
+#timerBox .lastEvent{font-size:.72rem;color:var(--muted);max-width:170px;text-align:right;}
+
+.roleChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.roleChip{font-size:.68rem;padding:3px 8px;border-radius:999px;background:#0f2a3d;color:var(--accent2);border:1px solid #164a63;}
+
+#patientCard{margin-bottom:12px;}
+#patientCard .metaRow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+
+#centerPanel{min-height:400px;}
+#scenarioPrompt{font-size:1.08rem;line-height:1.55;margin-bottom:14px;white-space:pre-wrap;}
+.optionBtn{
+  display:block;width:100%;text-align:left;background:var(--panel2);
+  border:1px solid var(--border);color:var(--text);padding:14px 16px;
+  border-radius:10px;margin-bottom:10px;cursor:pointer;font-size:.95rem;transition:.12s;
+}
+.optionBtn:hover{border-color:var(--accent2);}
+.optionBtn .k{display:inline-block;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:5px;background:#0f2a3d;color:var(--accent2);font-size:.72rem;margin-right:8px;font-weight:700;}
+.optionBtn.disabledOpt{opacity:.45;pointer-events:none;}
+
+.feedbackBox{border-radius:10px;padding:14px 16px;margin-top:10px;border:1px solid var(--border);}
+.feedbackBox.ideal{background:var(--good-dim);border-color:#1e6f52;}
+.feedbackBox.acceptable{background:#12314f;border-color:#1f5a8a;}
+.feedbackBox.error{background:var(--warn-dim);border-color:#8a6a10;}
+.feedbackBox.critical{background:var(--bad-dim);border-color:#8a2323;}
+.feedbackBox h4{margin:0 0 6px;}
+.feedbackBox .ref{margin-top:8px;font-size:.78rem;color:var(--muted);border-top:1px dashed var(--border);padding-top:8px;}
+
+#actionLog{max-height:420px;overflow-y:auto;}
+#actionLog .entry{padding:8px 0;border-bottom:1px solid var(--border);font-size:.82rem;}
+#actionLog .entry .tm{color:var(--accent2);font-family:"Courier New",monospace;margin-right:6px;}
+
+.complicationBanner{background:#3d1414;border:1px solid #8a2323;color:#ffd6d6;padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:.9rem;}
+
+/* ---------- dashboard ---------- */
+.scoreBig{font-size:3rem;font-weight:800;}
+.meter{background:#0a1017;border:1px solid var(--border);border-radius:999px;height:14px;overflow:hidden;margin:4px 0 10px;}
+.meter > div{height:100%;border-radius:999px;}
+.metricRow{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:2px;}
+.statTile{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;}
+.statTile .n{font-size:1.6rem;font-weight:800;}
+.statTile .l{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+
+/* ---------- protocol mode flowchart ---------- */
+.flowWrap{overflow-x:auto;padding:10px 0;}
+.flowNode{
+  display:inline-block;min-width:200px;max-width:240px;vertical-align:top;
+  background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:12px;margin:6px;cursor:pointer;
+}
+.flowNode:hover{border-color:var(--accent2);}
+.flowNode.current{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;}
+.flowNode .t{font-size:.7rem;color:var(--accent2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.flowArrow{display:inline-block;color:var(--muted);font-size:1.4rem;vertical-align:middle;padding:0 4px;}
+
+/* ---------- exam mode ---------- */
+#examProgress{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap;}
+#examProgress .dot{width:14px;height:14px;border-radius:3px;background:#1c2836;}
+#examProgress .dot.done-good{background:var(--good);}
+#examProgress .dot.done-bad{background:var(--bad);}
+#examProgress .dot.current{outline:2px solid var(--accent2);}
+
+/* misc */
+.footer-note{margin-top:26px;padding:14px;border-radius:10px;background:#0e151d;border:1px dashed var(--border);color:var(--muted);font-size:.78rem;}
+.kv{display:flex;justify-content:space-between;font-size:.85rem;padding:4px 0;border-bottom:1px dashed var(--border);}
+.section-title{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.section-title .badge{background:#0f2a3d;color:var(--accent2);font-size:.68rem;padding:3px 8px;border-radius:6px;}
+select,input[type=text]{
+  background:var(--panel2);border:1px solid var(--border);color:var(--text);
+  padding:8px 10px;border-radius:8px;font-size:.9rem;
+}
+label{font-size:.82rem;color:var(--muted);display:block;margin-bottom:4px;}
+.field{margin-bottom:12px;}
+.close-x{position:absolute;top:10px;right:14px;cursor:pointer;color:var(--muted);font-size:1.3rem;}
+.modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
+.modalBox{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:22px;position:relative;box-shadow:var(--shadow);}
+
+@media (max-width:600px){
+  .wrap{padding:12px;}
+  #topbar{padding:10px 12px;flex-direction:column;align-items:flex-start;gap:8px;}
+  .grid.cols-3,.grid.cols-4{grid-template-columns:1fr 1fr;}
+  .scoreBig{font-size:2.2rem;}
+}
+
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="brand"><span class="dot"></span> ResusSim <span class="small">· 2025 AHA 準則對接訓練平台</span></div>
+  <nav>
+    <button data-nav="home" class="active">首頁</button>
+    <button data-nav="protocol">流程演練模式</button>
+    <button data-nav="dashboard">我的表現</button>
+    <button data-nav="about">關於／安全聲明</button>
+  </nav>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ HOME SCREEN ============ -->
+  <section id="screen-home" class="screen active">
+    <h1>復甦臨床決策模擬平台</h1>
+    <p class="muted">依據 2025 年 AHA《心肺復甦與心臟血管急症照護指引》，練習「思考 → 決策 → 行動 → 觀察結果 → 再評估」的復甦照護流程。請於下方選擇一種模式開始。</p>
+
+    <div class="grid cols-3" style="margin-top:18px;">
+      <div class="card mode-card" data-start="random">
+        <div class="icon">🎲</div>
+        <h3>隨機情境</h3>
+        <p class="muted small">立即產生完全隨機的情境——任意年齡、場景、心律與併發狀況。</p>
+      </div>
+      <div class="card mode-card" data-start="builder">
+        <div class="icon">🩺</div>
+        <h3>情境產生器</h3>
+        <p class="muted small">開始前自行選擇案例類型、年齡層與難度。</p>
+      </div>
+      <div class="card mode-card" data-nav="protocol">
+        <div class="icon">🗺️</div>
+        <h3>流程演練模式</h3>
+        <p class="muted small">在沒有時間壓力的情況下，逐步點選瀏覽 AHA 演算法流程。</p>
+      </div>
+      <div class="card mode-card" data-start="exam">
+        <div class="icon">⏱️</div>
+        <h3>測驗模式</h3>
+        <p class="muted small">計時、多案例評量。所有回饋將於最終報告中一併呈現。</p>
+      </div>
+      <div class="card mode-card" data-start="drill">
+        <div class="icon">📈</div>
+        <h3>心律辨識特訓</h3>
+        <p class="muted small">快速心電圖判讀練習——可電擊與不可電擊心律、心搏過緩與過速的區辨。</p>
+      </div>
+      <div class="card mode-card" data-nav="dashboard">
+        <div class="icon">📊</div>
+        <h3>我的表現</h3>
+        <p class="muted small">檢視你的成績、重複發生的錯誤，以及個人化建議練習方向。</p>
+      </div>
+      <div class="card mode-card" data-nav="about">
+        <div class="icon">⚠️</div>
+        <h3>關於與安全聲明</h3>
+        <p class="muted small">說明本工具的定位（以及非定位），並解讀 AHA 參考依據的使用方式。</p>
+      </div>
+    </div>
+
+    <div id="adaptiveHomeBox" class="card hidden" style="margin-top:18px;border-color:#8a6a10;">
+      <h3>🎯 為你推薦</h3>
+      <div id="adaptiveHomeContent"></div>
+    </div>
+  </section>
+
+  <!-- ============ SCENARIO BUILDER ============ -->
+  <section id="screen-builder" class="screen">
+    <h2>建立情境</h2>
+    <div class="card">
+      <div class="grid cols-2">
+        <div>
+          <div class="field">
+            <label>案例類型</label>
+            <div class="pill-row" id="pillFamily"></div>
+          </div>
+          <div class="field">
+            <label>年齡層</label>
+            <div class="pill-row" id="pillAge"></div>
+          </div>
+        </div>
+        <div>
+          <div class="field">
+            <label>難度</label>
+            <div class="pill-row" id="pillDifficulty"></div>
+          </div>
+          <div class="field">
+            <label>團隊模式</label>
+            <div class="pill-row" id="pillTeam"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn primary lg block" id="btnBuildStart">開始情境</button>
+    </div>
+  </section>
+
+  <!-- ============ ROLE ASSIGNMENT (team mode) ============ -->
+  <section id="screen-roles" class="screen">
+    <h2>組建你的急救團隊</h2>
+    <p class="muted">情境開始前請先分配角色。你將預設擔任<b>團隊領導者</b>——請為其他角色指派人選。</p>
+    <div class="card" id="roleAssignCard"></div>
+    <button class="btn primary lg block" id="btnRolesContinue" style="margin-top:14px;">開始情境</button>
+  </section>
+
+  <!-- ============ SIMULATION SCREEN ============ -->
+  <section id="screen-sim" class="screen">
+    <div id="examProgress" class="hidden"></div>
+    <div id="simLayout">
+      <!-- LEFT: monitor -->
+      <div>
+        <div class="card" id="patientCard">
+          <div class="section-title"><h3 id="patientName">病患</h3><span class="badge" id="patientDifficultyBadge"></span></div>
+          <div class="metaRow" id="patientMeta"></div>
+        </div>
+        <div class="monitor">
+          <div class="vitals">
+            <div class="vital hr"><div class="label">心跳 HR (bpm)</div><div class="value" id="vHR">--</div></div>
+            <div class="vital bp"><div class="label">血壓 BP (mmHg)</div><div class="value" id="vBP">--/--</div></div>
+            <div class="vital spo2"><div class="label">血氧 SpO₂ (%)</div><div class="value" id="vSpO2">--</div></div>
+            <div class="vital rr"><div class="label">呼吸 RR (/min)</div><div class="value" id="vRR">--</div></div>
+            <div class="vital etco2"><div class="label">呼氣末二氧化碳 EtCO₂ (mmHg)</div><div class="value" id="vEtCO2">--</div></div>
+            <div class="vital temp"><div class="label">體溫 Temp (°C)</div><div class="value" id="vTemp">--</div></div>
+          </div>
+          <div class="strip-label">心律</div>
+          <canvas class="strip" id="stripCanvas" width="600" height="80"></canvas>
+          <div id="pulseStatus" class="small" style="margin-top:6px;">脈搏：—</div>
+        </div>
+        <div id="timerBox">
+          <div>
+            <div class="small">復甦時間</div>
+            <div class="t" id="timerDisplay">00:00</div>
+          </div>
+          <div class="lastEvent" id="lastEventLabel">尚無事件記錄</div>
+        </div>
+        <div id="roleChipsBox" class="roleChips"></div>
+      </div>
+
+      <!-- CENTER: decision panel -->
+      <div class="card" id="centerPanel">
+        <div id="complicationSlot"></div>
+        <div id="countdownBox" class="small hidden" style="margin-bottom:8px;"></div>
+        <div class="section-title">
+          <span class="tag info" id="stageTag">評估</span>
+          <span class="tag" id="algoTag"></span>
+        </div>
+        <div id="scenarioPrompt"></div>
+        <div id="optionsContainer"></div>
+        <div id="feedbackContainer"></div>
+        <div id="continueRow" class="hidden" style="margin-top:14px;text-align:right;">
+          <button class="btn primary" id="btnContinue">繼續 →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: action log -->
+      <div class="card">
+        <div class="section-title"><h3>行動紀錄</h3></div>
+        <div id="actionLog"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DEBRIEF SCREEN ============ -->
+  <section id="screen-debrief" class="screen">
+    <h1>案例總結報告</h1>
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="small muted">總體分數</div>
+        <div class="scoreBig" id="debriefScore">--%</div>
+        <div id="debriefScoreLabel" class="tag"></div>
+        <div style="margin-top:16px;" id="debriefMetrics"></div>
+      </div>
+      <div class="card">
+        <h3>A. 案例經過</h3>
+        <p id="debriefSummary" class="small"></p>
+        <h3>關鍵事件時間軸</h3>
+        <div id="debriefTimeline" class="small"></div>
+      </div>
+    </div>
+    <div class="grid cols-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>B. 你做得好的地方</h3>
+        <ul id="debriefGood"></ul>
+      </div>
+      <div class="card">
+        <h3>C. 可以改進的地方</h3>
+        <ul id="debriefBad"></ul>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>D. 理想處置路徑</h3>
+      <ol id="debriefIdeal"></ol>
+    </div>
+    <div class="card" style="margin-top:16px;border-color:#1e6f52;">
+      <h3>E. 關鍵學習重點</h3>
+      <ul id="debriefLearning"></ul>
+    </div>
+    <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn primary" id="btnAnotherCase">再來一個案例</button>
+      <button class="btn" id="btnToDashboard">查看我的表現</button>
+      <button class="btn ghost" id="btnDebriefHome">回到首頁</button>
+    </div>
+  </section>
+
+  <!-- ============ PROTOCOL MODE ============ -->
+  <section id="screen-protocol" class="screen">
+    <h2>流程演練模式</h2>
+    <p class="muted">依自己的步調逐步瀏覽每個 AHA 演算法。每個決策點都會顯示接下來會發生什麼——可使用「上一步」嘗試不同分支。</p>
+    <div class="pill-row" id="protocolPicker" style="margin-bottom:14px;"></div>
+    <div class="card">
+      <div class="section-title"><h3 id="protocolTitle"></h3><span class="badge" id="protocolStepBadge"></span></div>
+      <p id="protocolNodeText"></p>
+      <div id="protocolOptions" class="pill-row"></div>
+      <div style="margin-top:14px;">
+        <button class="btn ghost" id="btnProtocolBack">← 上一步</button>
+        <button class="btn ghost" id="btnProtocolRestart">重新開始演算法</button>
+      </div>
+    </div>
+    <div class="flowWrap card" style="margin-top:14px;">
+      <div id="protocolFlow"></div>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="screen-dashboard" class="screen">
+    <h2>我的表現</h2>
+    <div class="grid cols-4" id="dashboardTiles"></div>
+    <div class="grid cols-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>各面向準確率</h3>
+        <div id="dashboardMeters"></div>
+      </div>
+      <div class="card">
+        <h3>🎯 個人化重點加強項目</h3>
+        <div id="dashboardAdaptive" class="small"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <h3>案例歷史紀錄</h3>
+      <div id="dashboardHistory" class="small"></div>
+    </div>
+  </section>
+
+  <!-- ============ EXAM RESULTS ============ -->
+  <section id="screen-examresult" class="screen">
+    <h1>測驗模式 — 最終報告</h1>
+    <div class="grid cols-4" id="examTiles"></div>
+    <div class="card" style="margin-top:16px;">
+      <h3>各案例明細</h3>
+      <div id="examBreakdown" class="small"></div>
+    </div>
+    <div style="margin-top:18px;">
+      <button class="btn primary" id="btnExamHome">回到首頁</button>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="screen-about" class="screen">
+    <h2>關於本工具與教育安全聲明</h2>
+    <div class="card">
+      <p><strong>ResusSim 是一款教育用模擬工具。</strong>目的是協助醫護學習者依據 <strong>2025 年 AHA《心肺復甦與心臟血管急症照護指引》</strong>練習復甦臨床決策。</p>
+      <p>本工具<strong>無法取代</strong>：</p>
+      <ul>
+        <li>正式的美國心臟協會（AHA）課程完訓（BLS、ACLS、PALS 等）及實際操作技能認證</li>
+        <li>你所屬機構的特定復甦流程與設備規範</li>
+        <li>直接的醫療監督與醫師專業判斷</li>
+        <li>對真實病患的即時臨床判斷</li>
+      </ul>
+      <p>本工具中的所有藥物、劑量、時機與演算法步驟，僅供練習用途，並依善意原則整理自 2025 年 AHA 更新內容之教育性摘要。在將此處所學應用於臨床實務前，<strong>務必對照官方公布之 2025 年 AHA 演算法及所屬機構之在地規範進行核實</strong>。</p>
+      <h3>本模擬器所反映的 2025 年更新重點</h3>
+      <ul id="aboutChangesList"></ul>
+    </div>
+  </section>
+
+</div>
+
+<div id="modalRoot"></div>
+
+<script>
+/* ============================================================
+   AHA 2025 REFERENCE DATA
+   Grounded in: 2025 AHA Guidelines for CPR & ECC (Circulation,
+   Oct/Nov 2025 update) — unified Chain of Survival, one-shock
+   defibrillation strategy, IV-first vascular access, opioid
+   overdose/naloxone algorithm, revised choking response, etc.
+   THIS IS AN EDUCATIONAL SIMULATION ONLY. Values are presented
+   for training/practice purposes and must be cross-checked
+   against the official published 2025 AHA algorithms and local
+   institutional protocol before any clinical use.
+   ============================================================ */
+
+const AHA_META = {
+  version: "教育用版本，內容參考 2025 年 AHA《心肺復甦與心臟血管急症照護指引》",
+  chainOfSurvival: [
+    "辨識與啟動緊急應變",
+    "高品質心肺復甦術（CPR）",
+    "電擊去顫",
+    "進階復甦處置",
+    "心臟停止後照護",
+    "康復與存活者照護"
+  ],
+  disclaimer: "僅供教育模擬使用——無法取代正式 AHA 課程完訓、所屬機構規範、醫師監督或即時臨床判斷。請務必對照 2025 年 AHA 官方教材核實劑量／演算法。"
+};
+
+/* ---------- Medication reference table ---------- */
+const MED_REFERENCE = {
+  epinephrine_arrest: {
+    name: "腎上腺素 Epinephrine",
+    indication: "心臟停止（所有心律）",
+    dose: "1 mg IV/IO",
+    repeat: "每 3–5 分鐘重複一次",
+    route: ["IV", "IO"],
+    notes: "可電擊心律：第 2 次電擊後若 VF/pVT 仍持續則給藥，之後每隔一輪給予一次；PEA／心搏停止：建立 IV/IO 通路後應盡快給藥。",
+    distractors: ["0.1 mg IV/IO", "1 mg IM", "10 mg IV/IO", "每 10 分鐘給予 1 mg"]
+  },
+  epinephrine_bradycardia: {
+    name: "腎上腺素輸注 Epinephrine infusion",
+    indication: "對 atropine 無反應之心搏過緩（可作為 dopamine 之替代方案）",
+    dose: "2–10 mcg/min 靜脈輸注",
+    route: ["IV", "IO"],
+    notes: "依病患反應調整劑量。",
+    distractors: ["1 mg IV 推注", "0.5 mcg/min", "20 mg IV 單次注射"]
+  },
+  amiodarone: {
+    name: "amiodarone（安可律）",
+    indication: "頑固性 VF／無脈性 VT",
+    dose: "首劑 300 mg IV/IO",
+    repeatDose: "第二劑 150 mg IV/IO",
+    route: ["IV", "IO"],
+    notes: "於 epinephrine 之後給予，用於持續性可電擊心律；第二劑用於復發或頑固性 VF/pVT。",
+    distractors: ["300 mg IM", "30 mg IV/IO", "900 mg IV 快速推注", "150 mg IV 輸注超過 1 分鐘，每 3 分鐘重複一次"]
+  },
+  lidocaine: {
+    name: "lidocaine（利多卡因）",
+    indication: "頑固性 VF／無脈性 VT（amiodarone 之替代藥物）",
+    dose: "首劑 1–1.5 mg/kg IV/IO",
+    repeatDose: "追加 0.5–0.75 mg/kg IV/IO（總量上限 3 mg/kg）",
+    route: ["IV", "IO"],
+    notes: "屬替代性抗心律不整藥物；不建議常規同時併用兩種抗心律不整藥物。",
+    distractors: ["1–1.5 mg/kg IM", "5 mg/kg IV 單次注射", "100 mg IV 每小時一次"]
+  },
+  atropine: {
+    name: "atropine（阿托品）",
+    indication: "有症狀之心搏過緩（心跳通常 <50/分，併有症狀）",
+    dose: "1 mg IV 推注",
+    repeat: "每 3–5 分鐘重複一次，總量上限 3 mg",
+    route: ["IV", "IO"],
+    notes: "對於合併寬 QRS 的高度房室傳導阻滯（第二度 Type II 或第三度）並非首選——應盡快進行體外節律調節（pacing）／使用兒茶酚胺類藥物。不適用於心搏停止／無脈性電活動。",
+    distractors: ["0.5 mg IV 推注", "每 10 分鐘給予 1 mg IV", "單次給予 3 mg", "1 mg IM"]
+  },
+  dopamine: {
+    name: "dopamine 輸注（多巴胺）",
+    indication: "對 atropine 無反應之心搏過緩",
+    dose: "5–20 mcg/kg/min 靜脈輸注",
+    route: ["IV", "IO"],
+    notes: "依反應調整劑量；減量時應緩慢遞減。",
+    distractors: ["1–2 mcg/kg/min", "50 mcg/kg/min", "5 mg IV 推注"]
+  },
+  adenosine: {
+    name: "adenosine（腺苷）",
+    indication: "穩定、規則之窄複合波心搏過速（SVT）",
+    dose: "6 mg 快速靜脈推注",
+    repeatDose: "12 mg 快速靜脈推注（可再重複一次）",
+    route: ["IV（快速推注＋生理食鹽水沖管）"],
+    notes: "應選用較粗大之近端靜脈，推注後立即以生理食鹽水沖管，並提醒病患可能出現短暫潮紅或胸悶不適。應避免用於不規則寬複合波／預激症候群合併心房顫動之情形。",
+    distractors: ["6 mg IV 輸注超過 5 分鐘", "0.6 mg IV 推注", "12 mg IM", "6 mg IV 推注，再重複兩次 6 mg"]
+  },
+  naloxone: {
+    name: "naloxone（那洛酮）",
+    indication: "疑似鴉片類藥物相關之危及生命緊急狀況（呼吸消失或異常）",
+    dose: "0.4–2 mg IV/IM/IN（一般民眾施救者常用鼻噴劑，例如 4 mg 鼻噴劑）",
+    repeat: "若無反應，可每 2–3 分鐘重複一次",
+    route: ["IN", "IM", "IV"],
+    notes: "2025 年更新：首次納入面向一般民眾之 AHA naloxone 使用指引。切勿為了取得或施打 naloxone 而延遲 CPR／人工呼吸／胸外按壓——若病患呼吸不正常，應優先給予通氣與按壓。",
+    distractors: ["僅單次給予 4 mg IV 推注", "0.04 mg IN", "僅於三輪 CPR 後給予", "10 mg IM"]
+  },
+  sodiumBicarb: {
+    name: "碳酸氫鈉 Sodium bicarbonate",
+    indication: "病因未明之心臟停止「不建議」常規使用",
+    dose: "不建議常規給予",
+    notes: "2025 年指引：於病因未明之心臟停止期間，不建議常規給予碳酸氫鈉、鈣劑、鎂劑或類固醇，除非有特定適應症（如已知高血鉀、三環抗憂鬱劑中毒、嚴重代謝性酸中毒）。",
+    isDistractorDrug: true
+  },
+  calciumChloride: {
+    name: "氯化鈣 Calcium chloride",
+    indication: "非常規用藥——僅保留用於高血鉀、低血鈣、鈣離子通道阻斷劑中毒",
+    dose: "不建議常規給予",
+    isDistractorDrug: true
+  },
+  magnesium: {
+    name: "硫酸鎂 Magnesium sulfate",
+    indication: "僅用於 torsades de pointes（尖端扭轉型心室頻脈）／已知低血鎂",
+    dose: "1–2 g IV/IO，輸注數分鐘以上（僅於無脈性 torsades 時可快速推注）",
+    isDistractorDrug: true
+  }
+};
+
+/* ---------- CPR / defibrillation quality parameters ---------- */
+const CPR_STANDARDS = {
+  compressionRateAdult: "每分鐘 100–120 下",
+  compressionDepthAdult: "至少 2 吋（5 公分），不超過 2.4 吋（6 公分）",
+  compressionRatioSingleRescuer: "30:2",
+  compressionDepthChild: "約 2 吋（5 公分），或約為前後胸徑的 1/3",
+  compressionDepthInfant: "約 1.5 吋（4 公分），或約為前後胸徑的 1/3",
+  pauseTarget: "盡量減少中斷；兒童病患的中斷時間應小於 10 秒",
+  rhythmCheckInterval: "每 2 分鐘檢查一次，且應盡量簡短",
+  defibStrategy: "單次電擊策略——不連續疊加電擊；每次電擊後應立即恢復胸外按壓，不需先暫停檢查心律或脈搏",
+  ventilationRateAdvancedAirway: "建立進階呼吸道後，每 6 秒給予一次呼吸（每分鐘 10 次），並持續不間斷胸外按壓",
+  accessPriority: "優先建立 IV（靜脈）通路；若無法迅速取得 IV 通路，可合理選擇 IO（骨內）通路，惟不應因此延誤關鍵處置",
+  mechanicalCPR: "當高品質人工胸外按壓執行困難或不安全時（如搬運途中、長時間復甦），可考慮使用機械式心肺復甦裝置"
+};
+
+/* ---------- Choking response (2025) ---------- */
+const CHOKING_RESPONSE = {
+  adultChild: "交替進行 5 次背部拍擊與 5 次腹部推擠，直到異物排出或病患失去反應為止。",
+  infant: "交替進行 5 次背部拍擊與 5 次胸部按壓（以單手掌根進行）——嬰兒應避免使用腹部推擠。"
+};
+
+/* ---------- Age / weight helpers ---------- */
+function estimateChildWeightKg(ageYears) {
+  if (ageYears < 1) return Math.round((3.5 + ageYears * 9) * 10) / 10;
+  return Math.round((2 * ageYears + 8) * 10) / 10; // rough weight-for-age formula, education only
+}
+
+/* ---------- Random helpers ---------- */
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function chance(p) { return Math.random() < p; }
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+/* ---------- Settings / context pools ---------- */
+const SETTINGS_ADULT = [
+  "在家中客廳，家屬在場",
+  "在超市走道，旁有路人圍觀",
+  "在醫院外科病房",
+  "在急診室急救區",
+  "在加護病房，已接上心電監視器",
+  "在健身房運動時",
+  "在牙科診所候診室",
+  "在客機巡航途中",
+  "在戶外運動賽事現場",
+  "在護理之家"
+];
+const SETTINGS_PEDS = [
+  "在家中，由家長發現",
+  "在托兒所",
+  "在兒科病房",
+  "在兒科加護病房，已接上監視器",
+  "在社區游泳池（溺水後）",
+  "在急診室",
+  "在學校下課時間",
+  "在新生兒室"
+];
+
+const SPECIAL_CIRCUMSTANCES = [
+  { id: "none", label: "無特殊狀況", weight: 6 },
+  { id: "opioid", label: "疑似合併鴉片類藥物使用", weight: 2 },
+  { id: "hypothermia", label: "明顯低體溫（冷水浸泡／低溫暴露所致）", weight: 1 },
+  { id: "pregnancy", label: "病患懷孕中（>20 週）", weight: 1 },
+  { id: "lvad", label: "病患裝有 LVAD（左心室輔助裝置）", weight: 1 },
+  { id: "drowning", label: "溺水事件", weight: 1 },
+  { id: "anaphylaxis", label: "疑似過敏性休克誘因", weight: 1 }
+];
+
+function weightedPick(pool) {
+  const total = pool.reduce((s, x) => s + x.weight, 0);
+  let r = Math.random() * total;
+  for (const item of pool) { if ((r -= item.weight) <= 0) return item; }
+  return pool[0];
+}
+
+</script>
+<script>
+/* ============================================================
+   ECG RHYTHM STRIP RENDERER
+   Stylized (not diagnostic-grade) waveform generator used for
+   rhythm-recognition practice. Draws a scrolling strip on a
+   canvas element based on a rhythm type + rate.
+   ============================================================ */
+
+const RHYTHM_LIBRARY = {
+  sinus_normal:   { label: "正常竇性心律", shockable: false, category: "perfusing" },
+  sinus_brady:    { label: "竇性心搏過緩", shockable: false, category: "brady" },
+  sinus_tachy:    { label: "竇性心搏過速", shockable: false, category: "tachy_narrow" },
+  afib_rvr:       { label: "心房顫動合併快速心室反應", shockable: false, category: "tachy_narrow_irregular" },
+  svt:            { label: "陣發性上心室頻脈（SVT）", shockable: false, category: "tachy_narrow" },
+  heart_block_3rd:{ label: "完全性（第三度）房室傳導阻滯", shockable: false, category: "brady" },
+  heart_block_2:  { label: "第二度房室傳導阻滯（Type II）", shockable: false, category: "brady" },
+  junctional_brady:{ label: "交界性心搏過緩", shockable: false, category: "brady" },
+  vt_mono_stable: { label: "單型性心室頻脈（有脈搏）", shockable: false, category: "tachy_wide" },
+  vt_pulseless:   { label: "無脈性心室頻脈", shockable: true, category: "arrest" },
+  torsades:       { label: "尖端扭轉型心室頻脈（多型性 VT）", shockable: true, category: "arrest" },
+  vf_coarse:      { label: "粗顫型心室顫動", shockable: true, category: "arrest" },
+  vf_fine:        { label: "細顫型心室顫動", shockable: true, category: "arrest" },
+  pea_organized:  { label: "有規則心電活動但無脈搏（PEA）", shockable: false, category: "arrest" },
+  asystole:       { label: "心搏停止（Asystole）", shockable: false, category: "arrest" }
+};
+
+function buildBeatUnit(type, rng) {
+  // returns array of y offsets (-1..1) representing one "beat cell" of fixed width=100
+  const n = 100;
+  const arr = new Float32Array(n);
+  const noise = () => (rng() - 0.5) * 0.03;
+  switch (type) {
+    case "sinus_normal": case "sinus_brady": case "sinus_tachy": {
+      for (let i = 0; i < n; i++) {
+        let y = 0;
+        if (i >= 8 && i < 14) y = 0.12 * Math.sin(((i - 8) / 6) * Math.PI); // P
+        if (i >= 20 && i < 24) y = -0.15 * ((i - 20) / 4);
+        if (i >= 24 && i < 28) y = 1.0 * ((28 - i) / 4);
+        if (i >= 28 && i < 32) y = -0.25 * ((32 - i) / 4);
+        if (i >= 40 && i < 60) y = 0.22 * Math.sin(((i - 40) / 20) * Math.PI); // T
+        arr[i] = y + noise();
+      }
+      break;
+    }
+    case "afib_rvr": case "svt": {
+      for (let i = 0; i < n; i++) {
+        let y = 0;
+        if (i >= 20 && i < 24) y = -0.1 * ((i - 20) / 4);
+        if (i >= 24 && i < 28) y = 0.9 * ((28 - i) / 4);
+        if (i >= 28 && i < 32) y = -0.2 * ((32 - i) / 4);
+        if (i >= 42 && i < 58) y = 0.15 * Math.sin(((i - 42) / 16) * Math.PI);
+        arr[i] = y + noise() + (type === "afib_rvr" ? (rng() - 0.5) * 0.06 : 0);
+      }
+      break;
+    }
+    case "heart_block_3rd": case "heart_block_2": case "junctional_brady": {
+      for (let i = 0; i < n; i++) {
+        let y = 0;
+        if (i >= 4 && i < 10) y = 0.1 * Math.sin(((i - 4) / 6) * Math.PI); // dissociated P waves
+        if (i >= 45 && i < 49) y = -0.15;
+        if (i >= 49 && i < 53) y = 1.0 * ((53 - i) / 4);
+        if (i >= 53 && i < 57) y = -0.3;
+        if (i >= 65 && i < 85) y = 0.2 * Math.sin(((i - 65) / 20) * Math.PI);
+        arr[i] = y + noise();
+      }
+      break;
+    }
+    case "vt_mono_stable": case "vt_pulseless": {
+      for (let i = 0; i < n; i++) {
+        const phase = (i / n) * Math.PI * 2;
+        arr[i] = 0.85 * Math.sin(phase) + 0.25 * Math.sin(phase * 2) + noise();
+      }
+      break;
+    }
+    case "torsades": {
+      for (let i = 0; i < n; i++) {
+        const envPhase = (i / n) * Math.PI * 2;
+        const env = Math.sin(envPhase * 0.5 + rng() * 0.1);
+        arr[i] = env * (0.7 + 0.3 * Math.sin(i * 0.9)) + noise();
+      }
+      break;
+    }
+    case "vf_coarse": {
+      for (let i = 0; i < n; i++) arr[i] = 0.75 * Math.sin(i * 0.9 + rng()) * (0.6 + 0.4 * Math.sin(i * 0.13)) + (rng() - 0.5) * 0.25;
+      break;
+    }
+    case "vf_fine": {
+      for (let i = 0; i < n; i++) arr[i] = 0.25 * Math.sin(i * 1.1 + rng()) * (0.6 + 0.4 * Math.sin(i * 0.2)) + (rng() - 0.5) * 0.12;
+      break;
+    }
+    case "pea_organized": {
+      for (let i = 0; i < n; i++) {
+        let y = 0;
+        if (i >= 8 && i < 14) y = 0.08 * Math.sin(((i - 8) / 6) * Math.PI);
+        if (i >= 24 && i < 28) y = 0.55 * ((28 - i) / 4);
+        if (i >= 40 && i < 60) y = 0.12 * Math.sin(((i - 40) / 20) * Math.PI);
+        arr[i] = y + noise();
+      }
+      break;
+    }
+    case "asystole": {
+      for (let i = 0; i < n; i++) arr[i] = (rng() - 0.5) * 0.03;
+      break;
+    }
+    default: {
+      for (let i = 0; i < n; i++) arr[i] = noise();
+    }
+  }
+  return arr;
+}
+
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+class RhythmStrip {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.type = "asystole";
+    this.rate = 0;
+    this.phase = 0;
+    this.rng = mulberry32(12345);
+    this.unit = buildBeatUnit(this.type, this.rng);
+    this._raf = null;
+    this._last = performance.now();
+    this.arrestFlutter = false;
+  }
+  setRhythm(type, rate) {
+    this.type = type;
+    this.rate = rate || 0;
+    this.rng = mulberry32(Math.floor(Math.random() * 1e9));
+    this.unit = buildBeatUnit(type, this.rng);
+  }
+  start() {
+    if (this._raf) return;
+    const loop = (now) => {
+      const dt = Math.min(0.06, (now - this._last) / 1000);
+      this._last = now;
+      const info = RHYTHM_LIBRARY[this.type] || {};
+      let speed;
+      if (info.category === "arrest" && this.type !== "asystole" && this.type !== "pea_organized") {
+        speed = 220; // chaotic rhythms scroll fast regardless of "rate"
+      } else {
+        const bpm = this.rate || 60;
+        speed = (bpm / 60) * 100 * 1.15;
+      }
+      this.phase += speed * dt;
+      this.draw();
+      this._raf = requestAnimationFrame(loop);
+    };
+    this._raf = requestAnimationFrame(loop);
+  }
+  stop() {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    this._raf = null;
+  }
+  draw() {
+    const ctx = this.ctx, canvas = this.canvas;
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    // grid
+    ctx.strokeStyle = "rgba(60,90,60,0.25)";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+    for (let y = 0; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+
+    const color = (RHYTHM_LIBRARY[this.type] && RHYTHM_LIBRARY[this.type].shockable) ? "#ff5a5a" : "#3ef07c";
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    const mid = h / 2;
+    const ampScale = h * 0.42;
+    const pxPerUnit = 2.2;
+    const totalUnits = Math.ceil(w / pxPerUnit) + 2;
+    const startUnit = Math.floor(this.phase / pxPerUnit) - totalUnits;
+    for (let i = 0; i < w; i++) {
+      const u = (i + this.phase) / pxPerUnit;
+      const idx = Math.floor(u) % 100;
+      const safeIdx = ((idx % 100) + 100) % 100;
+      const y = mid - this.unit[safeIdx] * ampScale;
+      if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
+    }
+    ctx.stroke();
+    // sweep glow line
+    ctx.fillStyle = "rgba(255,255,255,0.04)";
+  }
+}
+
+</script>
+<script>
+/* ============================================================
+   SCENARIO ENGINE — DECISION-TREE CONTENT
+   Each family exposes build(state) -> { startNodeId, nodes }
+   Node shapes:
+     decision node:  { id, stage, algoTag, prompt(state), type:'decision', options:[...] }
+     medication node:{ id, stage, algoTag, prompt(state), type:'medication', drugSet, correctKey, acceptableKeys, next(state,tier) }
+     info node:      { id, stage, algoTag, prompt(state), type:'info', next(state) }
+     end node:       { id, stage, type:'end' }
+   Option shape:
+     { id, text, tier:'ideal'|'acceptable'|'error'|'critical', feedback, ref, timeCost,
+       vitalsEffect(state), next(state) }
+   ============================================================ */
+
+function opt(id, text, tier, feedback, ref, timeCost, next, vitalsEffect) {
+  return { id, text, tier, feedback, ref, timeCost: timeCost || 5, next, vitalsEffect: vitalsEffect || function () {} };
+}
+function node(id, stage, algoTag, promptFn, options) {
+  return { id, stage, algoTag, prompt: promptFn, type: "decision", options };
+}
+function infoNode(id, stage, algoTag, promptFn, next, vitalsEffect) {
+  return { id, stage, algoTag, prompt: promptFn, type: "info", next, vitalsEffect: vitalsEffect || function () {} };
+}
+function endNode(id, stage) { return { id, stage, type: "end" }; }
+
+function medNode(id, stage, algoTag, promptFn, drugKeys, correctKey, acceptableKeys, next) {
+  return {
+    id, stage, algoTag, prompt: promptFn, type: "medication", category: "medication",
+    drugKeys, correctKey, acceptableKeys: acceptableKeys || [],
+    next
+  };
+}
+
+/* ---------- shared narrative helpers ---------- */
+function ageDesc(state) {
+  if (state.ageGroup === "adult") return `${state.ageValue} 歲${state.sex === "male" ? "男性" : "女性"}`;
+  if (state.ageGroup === "child") return `${state.ageValue} 歲兒童`;
+  if (state.ageGroup === "infant") return `${state.ageValue} 個月大嬰兒`;
+  return `${state.ageValue} 歲`;
+}
+function vitalsLine(state) {
+  const v = state.vitals;
+  return `心跳 HR ${v.hr === null ? "—" : v.hr}，血壓 BP ${v.bpSys === null ? "—" : v.bpSys + "/" + v.bpDia}，血氧 SpO₂ ${v.spo2 === null ? "—" : v.spo2 + "%"}，呼吸 RR ${v.rr === null ? "—" : v.rr}，EtCO₂ ${v.etco2 === null ? "—" : v.etco2}`;
+}
+
+function scMod(state) { return state.specialCircumstance || "none"; }
+function scNote(state) {
+  const sc = scMod(state);
+  const notes = {
+    opioid: "你注意到病患瞳孔呈針尖狀，周圍還有相關用藥器具——可能與鴉片類藥物有關。",
+    hypothermia: "觸摸病患皮膚感覺非常冰冷；核心體溫明顯偏低。",
+    pregnancy: "病患外觀明顯懷孕，推估已超過妊娠 20 週。",
+    lvad: "你注意到病患身上有控制器與傳動線——病患裝有 LVAD（左心室輔助裝置）。",
+    drowning: "病患剛被從水中救起，發生溺水事件。",
+    anaphylaxis: "你注意到病患出現蕁麻疹、臉部腫脹，並有近期新暴露於食物或藥物的病史。"
+  };
+  return notes[sc] || "";
+}
+
+/* =========================================================================
+   FAMILY 1: ADULT CARDIAC ARREST
+   ========================================================================= */
+function buildAdultArrest(state) {
+  const nodes = {};
+  const sc = scMod(state);
+
+  nodes.start = node("start", "現場安全與病患辨識", "BLS 演算法",
+    (s) => `你${s.setting}，發現一名${ageDesc(s)}呈現無反應。${s.witnessed ? "此為目擊倒下，剛發生不久。" : "倒下多久並不清楚。"} ${scNote(s)}\n\n現場看起來安全。你的第一步是？`,
+    [
+      opt("a", "先確認病患反應，再同時評估呼吸與脈搏，時間不超過 10 秒", "ideal",
+        "正確。2025 年 BLS 準則主張快速、同時評估反應、呼吸與脈搏，且應在 10 秒內完成，以避免延誤 CPR。",
+        "2025 年 AHA BLS 演算法 — 辨識與啟動緊急應變", 8, () => "callForHelp"),
+      opt("b", "什麼都不檢查，立刻開始胸外按壓", "error",
+        "太過躁進——應先簡短確認病患無反應、無正常呼吸／脈搏（≤10 秒），否則可能對不需要 CPR 的病患進行按壓。本案例病患確實需要 CPR，但正確的評估順序在實務中很重要。",
+        "2025 年 AHA BLS 演算法", 5, () => "callForHelp"),
+      opt("c", "只檢查脈搏就做出判斷", "error",
+        "只檢查脈搏並不足夠，且在壓力下容易判斷不準確或耗時過久。應同時、簡短地評估呼吸與脈搏。", "2025 年 AHA BLS 演算法", 12, () => "callForHelp"),
+      opt("d", "先離開去找家屬，之後再處理", "critical",
+        "嚴重延誤。辨識與啟動 CPR 的時間是影響存活率最關鍵的因素——絕不可延誤評估。", "2025 年 AHA 存活鏈 — 辨識與啟動緊急應變", 30, () => "callForHelp")
+    ]);
+
+  nodes.callForHelp = node("callForHelp", "啟動緊急應變", "BLS 演算法",
+    (s) => `無正常呼吸、無脈搏。病患已進入心臟停止狀態。\n\n你接下來要做什麼？`,
+    [
+      opt("a", "呼叫求救／啟動緊急應變系統，並取得去顫器（或請他人協助取得），同時立即開始 CPR", "ideal",
+        "正確——在不延誤 CPR 的前提下，啟動應變系統並取得去顫器／AED。", "2025 年 AHA 存活鏈", 6, () => "startCpr"),
+      opt("b", "自己先去找去顫器，之後才開始 CPR", "error",
+        "這會延誤胸外按壓。應盡量請他人協助取得去顫器／AED，自己則留下立即開始 CPR。", "2025 年 AHA BLS 演算法", 25, () => "startCpr"),
+      opt("c", "等待更多人力／救護車抵達後才開始處置", "critical",
+        "嚴重延誤——應立即開始高品質 CPR，不應等待。", "2025 年 AHA 存活鏈", 40, () => "startCpr")
+    ]);
+
+  nodes.startCpr = node("startCpr", "高品質心肺復甦術", "BLS／ACLS 心臟停止演算法",
+    (s) => `你開始進行復甦處置。應採用什麼樣的按壓方式？`,
+    [
+      opt("a", "每分鐘 100–120 下，深度至少 2 吋（5 公分）但不超過 2.4 吋（6 公分），確保完全回彈，盡量減少中斷，在建立進階呼吸道前維持 30:2 比例", "ideal",
+        "正確——這是 2025 年 AHA 對成人高品質 CPR 的標準。", "2025 年 AHA 高品質 CPR 標準", 10, () => "attachMonitor"),
+      opt("b", "每分鐘約 80 下，深度約 1 吋，速度優先於深度", "critical",
+        "太慢也太淺——按壓不足將無法產生足夠的冠狀動脈灌流壓。", "2025 年 AHA 高品質 CPR 標準", 15, () => "attachMonitor"),
+      opt("c", "每分鐘 140 下以上、越快越好，回彈與否不重要", "error",
+        "太快，且按壓間回彈不完全會降低靜脈回流／心臟前負荷。應以每分鐘 100–120 下、完全回彈為目標。", "2025 年 AHA 高品質 CPR 標準", 12, () => "attachMonitor")
+    ]);
+  nodes.startCpr.category = "cpr";
+
+  nodes.attachMonitor = infoNode("attachMonitor", "心律評估", "ACLS 心臟停止演算法",
+    (s) => {
+      const shockable = chance(0.62);
+      s._pendingShockable = shockable;
+      if (sc === "lvad") {
+        s.rhythmType = shockable ? "vf_coarse" : "pea_organized";
+      } else {
+        s.rhythmType = shockable ? pick(["vf_coarse", "vf_fine", "vt_pulseless"]) : pick(["asystole", "pea_organized"]);
+      }
+      s.vitals.hr = null; s.vitals.bpSys = null; s.vitals.bpDia = null;
+      return `在盡量不中斷按壓的情況下接上去顫器／監視器。請注意觀察監視器上的心律。${sc === "lvad" ? "請記得：LVAD 病患即使在基礎狀態下，也可能摸不到脈搏或波形異常——可聽診裝置運轉聲，並盡可能檢查裝置參數。" : ""}`;
+    },
+    () => "rhythmCheck1");
+
+  function rhythmCheckNode(id, cycleLabel, nextShockable, nextNonshockable) {
+    const n = node(id, "心律檢查 — " + cycleLabel, "ACLS 心臟停止演算法",
+      (s) => `心律檢查（應保持簡短，≤10 秒）。請判讀監視器上的心律，你要怎麼做？`,
+      [
+        opt("shock", "可電擊心律 → 充電期間持續 CPR，隨後給予「一次」電擊並立即恢復按壓（不需暫停檢查脈搏／心律）",
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "正確——單次電擊策略，不連續疊加電擊；電擊後應立即恢復 CPR。" : "此心律其實是不可電擊的——電擊不會有幫助，反而會中斷有效的 CPR。",
+          "2025 年 AHA — 單次電擊策略，不連續疊加電擊", 15,
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? nextShockable(s) : nextNonshockable(s)),
+        opt("noshock", "不可電擊、外觀規則的心律 → 簡短檢查脈搏",
+          (s) => (!RHYTHM_LIBRARY[s.rhythmType].shockable && s.rhythmType === "pea_organized") ? "ideal" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "critical" : "acceptable"),
+          (s) => (!RHYTHM_LIBRARY[s.rhythmType].shockable && s.rhythmType === "pea_organized") ? "正確——外觀規則的心律應簡短檢查脈搏。" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "此心律其實是可電擊的（VF/pVT）——延遲電擊將錯失最有效的治療時機。" : "這其實是心搏停止（asystole），並非規則心律——不需檢查脈搏，應直接恢復 CPR 並優先給予腎上腺素。"),
+          "2025 年 AHA ACLS 心臟停止演算法", 10,
+          (s) => (!RHYTHM_LIBRARY[s.rhythmType].shockable && s.rhythmType === "pea_organized") ? "checkPulseAfterRhythm" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? nextShockable(s) : nextNonshockable(s))),
+        opt("noshock2", "不可電擊（心搏停止／PEA）→ 不予電擊，立即恢復 CPR，優先建立 IV/IO 通路並給予腎上腺素",
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "critical" : "ideal",
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "此心律其實是可電擊的（VF/pVT）——延遲電擊將錯失最有效的治療時機。" : "正確——不可電擊心律應接受 CPR、建立 IV/IO 通路並給予腎上腺素，而非電擊。",
+          "2025 年 AHA ACLS 心臟停止演算法", 8,
+          (s) => (!RHYTHM_LIBRARY[s.rhythmType].shockable) ? nextNonshockable(s) : nextShockable(s)),
+        opt("unsure", "不確定——先暫停久一點（>10 秒）仔細判讀心律再決定", "error",
+          "心律／脈搏檢查應保持簡短（≤10 秒）。過長的暫停會使按壓累積的冠狀動脈灌流壓下降。",
+          "2025 年 AHA 高品質 CPR 標準", 20,
+          (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? nextShockable(s) : nextNonshockable(s))
+      ]);
+    n.category = "rhythm";
+    return n;
+  }
+  nodes.wrongNonshockableShocked = infoNode("wrongNonshockableShocked", "心律判讀 — 錯誤", "ACLS 心臟停止演算法",
+    () => `該心律其實是不可電擊的——電擊在此不會有幫助，反而會中斷有效的 CPR。現在恢復按壓。`, () => "postFirstCheckNonshockPath", null);
+  nodes.missedShockable = infoNode("missedShockable", "心律判讀 — 錯誤", "ACLS 心臟停止演算法",
+    () => `該心律其實是可電擊的（VF/pVT）——延遲電擊將錯失此心律最有效的治療方式。`, () => "postFirstCheckShockPath", null);
+
+  nodes.rhythmCheck1 = rhythmCheckNode("rhythmCheck1", "第 1 次", () => "shock1", () => "nonshockCycle1Cpr");
+  nodes.checkPulseAfterRhythm = node("checkPulseAfterRhythm", "脈搏檢查", "ACLS 心臟停止演算法",
+    () => `心律看起來是規則的。你檢查脈搏（≤10 秒）。`,
+    [
+      opt("pulse", "有脈搏 → 這是 ROSC（自發性循環恢復）。開始心臟停止後照護。", "ideal",
+        "正確——規則心律合併可觸及之脈搏，即為自發性循環恢復（ROSC）。", "2025 年 AHA ACLS 心臟停止演算法", 10,
+        (s) => { s.flags.rosc = true; s.vitals.hr = 96; s.vitals.bpSys = 102; s.vitals.bpDia = 66; s.vitals.spo2 = 93; s.vitals.etco2 = 38; return "rosc"; }),
+      opt("nopulse", "無脈搏 → 這是 PEA。恢復 CPR，並依不可電擊心律之心臟停止處置。", "acceptable",
+        "此案例中此判斷合理，不過此心律的確曾出現過脈搏——請務必以完整評估重新確認。", "2025 年 AHA ACLS 心臟停止演算法", 10,
+        () => "nonshockCycle1Cpr")
+    ]);
+
+  // ---- Shockable branch ----
+  nodes.shock1 = infoNode("shock1", "第 1 次電擊去顫", "ACLS 心臟停止演算法",
+    (s) => { s.events.push({ t: s.timerSec, label: "已給予第 1 次電擊" }); s.flags.firstShockTime = s.timerSec; return `電擊已給予。立即恢復按壓——不暫停重新檢查心律或脈搏。`; },
+    () => "postShock1Cpr");
+  nodes.postShock1Cpr = node("postShock1Cpr", "CPR 循環（2 分鐘）", "ACLS 心臟停止演算法",
+    () => `你執行一輪 2 分鐘的高品質 CPR。此期間應同步進行什麼處置？`,
+    [
+      opt("a", "建立 IV/IO 通路（若能迅速取得，以 IV 為優先）並準備腎上腺素", "ideal",
+        "正確——2025 年準則建議以 IV 通路為優先，若無法迅速取得 IV，可合理選擇 IO，惟不應因此延誤關鍵處置。", "2025 年 AHA — 血管通路優先順序", 15, () => "epi1"),
+      opt("b", "暫停按壓以放置中央靜脈導管", "critical",
+        "在積極復甦期間，不應為了非緊急處置（如放置中央靜脈導管）而中斷按壓。", "2025 年 AHA 高品質 CPR 標準", 30, () => "epi1"),
+      opt("c", "等到下次心律檢查時再考慮通路問題", "error",
+        "建立通路與準備藥物應在 CPR 循環期間同步進行，不應延後。", "2025 年 AHA ACLS 心臟停止演算法", 15, () => "epi1")
+    ]);
+  nodes.epi1 = medNode("epi1", "給藥 — 腎上腺素", "ACLS 心臟停止演算法",
+    () => `IV/IO 通路已建立。請下達你的第一個藥物醫囑。`,
+    ["epinephrine_arrest", "amiodarone", "sodiumBicarb", "calciumChloride"], "epinephrine_arrest", [],
+    (s, tier) => "rhythmCheck2");
+  nodes.rhythmCheck2 = rhythmCheckNode("rhythmCheck2", "第 2 次", () => "shock2", () => "convertedToNonshock");
+  nodes.shock2 = infoNode("shock2", "第 2 次電擊去顫", "ACLS 心臟停止演算法",
+    (s) => { s.events.push({ t: s.timerSec, label: "已給予第 2 次電擊" }); return `第二次電擊已給予。立即恢復按壓。`; },
+    () => "amio1");
+  nodes.amio1 = medNode("amio1", "給藥 — 抗心律不整藥物", "ACLS 心臟停止演算法",
+    () => `第二次電擊後 VF/pVT 仍持續。請下達抗心律不整藥物醫囑。`,
+    ["amiodarone", "lidocaine", "sodiumBicarb", "magnesium"], "amiodarone", ["lidocaine"],
+    () => "hAndTs1");
+  nodes.hAndTs1 = node("hAndTs1", "可逆病因（H's & T's）", "ACLS 心臟停止演算法",
+    (s) => `在 CPR 持續進行的同時，團隊應找尋可逆病因。此案例為頑固性 VF/pVT${scNote(s) ? "，且" + scNote(s) : ""}，現在最應優先考慮的是？`,
+    buildHTsOptions(state, () => "rhythmCheck3")
+  );
+  nodes.rhythmCheck3 = rhythmCheckNode("rhythmCheck3", "第 3 次", () => "shock3", () => "convertedToNonshock");
+  nodes.shock3 = infoNode("shock3", "第 3 次電擊去顫", "ACLS 心臟停止演算法",
+    (s) => { s.events.push({ t: s.timerSec, label: "已給予第 3 次電擊" }); return `第三次電擊已給予，恢復按壓。`; }, () => "epi2");
+  nodes.epi2 = medNode("epi2", "給藥 — 重複給予腎上腺素", "ACLS 心臟停止演算法",
+    () => `距上次腎上腺素給藥已 3–5 分鐘。請下達下一劑醫囑。`,
+    ["epinephrine_arrest", "amiodarone"], "epinephrine_arrest", [],
+    () => "rosc_or_continue_shockable");
+  nodes.rosc_or_continue_shockable = infoNode("rosc_or_continue_shockable", "再評估", "ACLS 心臟停止演算法",
+    (s) => {
+      const converts = chance(0.55 + (s._qualityBonus || 0));
+      if (converts) { s.flags.rosc = true; s.rhythmType = "sinus_normal"; s.vitals.hr = 100; s.vitals.bpSys = 104; s.vitals.bpDia = 64; s.vitals.spo2 = 94; s.vitals.etco2 = 40; s.vitals.rr = 14; return `心律轉為規則心律，並確認有脈搏——已達成自發性循環恢復（ROSC）！`; }
+      s.rhythmType = pick(["vf_coarse", "vt_pulseless", "asystole", "pea_organized"]);
+      return `再評估顯示心臟停止仍持續。團隊持續依演算法處置。`;
+    },
+    (s) => s.flags.rosc ? "rosc" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock1b" : "nonshockCycle1Cpr"));
+  nodes.shock1b = infoNode("shock1b", "電擊去顫（持續）", "ACLS 心臟停止演算法",
+    (s) => { s.events.push({ t: s.timerSec, label: "已給予電擊" }); return "電擊已給予，立即恢復按壓。"; }, () => "endArrestNoRosc");
+
+  // ---- Non-shockable branch ----
+  nodes.nonshockCycle1Cpr = node("nonshockCycle1Cpr", "CPR — PEA／心搏停止", "ACLS 心臟停止演算法",
+    () => `心律為不可電擊（PEA／心搏停止）。此刻的優先處置是？`,
+    [
+      opt("a", "持續高品質 CPR、建立 IV/IO 通路，並儘速給予腎上腺素", "ideal",
+        "正確——不可電擊心律應在建立通路後儘速給予腎上腺素，之後每 3–5 分鐘重複一次。", "2025 年 AHA ACLS 心臟停止演算法", 10, () => "epiNonshock1"),
+      opt("b", "先電擊看看，以防萬一", "critical",
+        "不應對不可電擊心律進行電擊——不僅無效，還會中斷有效的 CPR。", "2025 年 AHA ACLS 心臟停止演算法", 20, () => "epiNonshock1"),
+      opt("c", "先不給腎上腺素，等進階呼吸道建立後再給", "error",
+        "不應為了建立呼吸道而延遲腎上腺素——只要 IV/IO 通路可行，就應儘速給藥。", "2025 年 AHA ACLS 心臟停止演算法", 20, () => "epiNonshock1")
+    ]);
+  nodes.epiNonshock1 = medNode("epiNonshock1", "給藥 — 腎上腺素", "ACLS 心臟停止演算法",
+    () => `現在請下達你的藥物醫囑。`,
+    ["epinephrine_arrest", "atropine", "sodiumBicarb", "calciumChloride"], "epinephrine_arrest", [],
+    () => "hAndTsNonshock");
+  nodes.hAndTsNonshock = node("hAndTsNonshock", "可逆病因（H's & T's）", "ACLS 心臟停止演算法",
+    (s) => `PEA／心搏停止經常是由可逆病因所導致。${scNote(s) ? scNote(s) + " " : ""}團隊應優先積極排查哪一項？`,
+    buildHTsOptions(state, () => "rhythmCheckNonshock2")
+  );
+  nodes.rhythmCheckNonshock2 = rhythmCheckNode("rhythmCheckNonshock2", "第 2 次", () => "convertedToShock", () => "epiNonshock2");
+  nodes.convertedToShock = infoNode("convertedToShock", "心律轉變", "ACLS 心臟停止演算法",
+    () => `心律已轉變為可電擊心律。`, () => "shock1");
+  nodes.convertedToNonshock = infoNode("convertedToNonshock", "心律轉變", "ACLS 心臟停止演算法",
+    () => `心律已轉變為不可電擊心律。`, () => "nonshockCycle1Cpr");
+  nodes.epiNonshock2 = medNode("epiNonshock2", "給藥 — 重複給予腎上腺素", "ACLS 心臟停止演算法",
+    () => `已過 3–5 分鐘。是否重複給藥？`,
+    ["epinephrine_arrest"], "epinephrine_arrest", [],
+    () => "reassessNonshock");
+  nodes.reassessNonshock = infoNode("reassessNonshock", "再評估", "ACLS 心臟停止演算法",
+    (s) => {
+      const converts = chance(0.30 + (s._qualityBonus || 0));
+      if (converts) { s.flags.rosc = true; s.rhythmType = "sinus_normal"; s.vitals.hr = 92; s.vitals.bpSys = 96; s.vitals.bpDia = 60; s.vitals.spo2 = 92; s.vitals.etco2 = 36; s.vitals.rr = 14; return "脈搏隨規則心律恢復——已達成 ROSC。"; }
+      s.rhythmType = pick(["asystole", "pea_organized", "vf_coarse"]);
+      return "尚未達成 ROSC。團隊持續依演算法處置，每 3–5 分鐘給予一次腎上腺素，並每 2 分鐘再評估心律。";
+    },
+    (s) => s.flags.rosc ? "rosc" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock1" : "endArrestNoRosc"));
+
+  nodes.endArrestNoRosc = node("endArrestNoRosc", "長時間復甦", "ACLS 心臟停止演算法",
+    () => `儘管已給予適當 CPR、藥物治療並處置可逆病因，仍歷經多輪循環未達成 ROSC。現在該怎麼做？`,
+    [
+      opt("a", "團隊領導者與全體團隊討論復甦可能無效的情形，並依所屬機構規範考量終止復甦的準則，而非獨自無限期持續下去", "ideal",
+        "正確做法——是否終止復甦應由團隊／臨床領導共同依持續時間、病因與所屬機構規範決定，而非單方面決定，也不應在未再評估的情況下無限期持續。", "2025 年 AHA — 團隊導向復甦與臨床判斷", 20, () => "endCase"),
+      opt("b", "在未重新評估病因或徵詢團隊意見的情況下，持續進行完全相同的循環", "error",
+        "應重新評估可逆病因、CPR 品質，並讓整個團隊／領導階層共同參與決策，而非機械式地重複循環。", "2025 年 AHA ACLS 心臟停止演算法", 15, () => "endCase"),
+      opt("c", "未與團隊討論，就自行決定停止復甦", "critical",
+        "此為應由團隊依臨床準則與所屬機構規範共同決定之事項——絕不應未經討論即單方面停止。", "2025 年 AHA — 團隊導向復甦", 10, () => "endCase")
+    ]);
+
+  nodes.rosc = node("rosc", "心臟停止後照護", "心臟停止後照護",
+    (s) => `已於 ${fmtTime(s.timerSec)} 達成 ROSC。生命徵象：${vitalsLine(s)}。你在 ROSC 後的立即優先處置是？`,
+    [
+      opt("a", "優化給氧與通氣（避免過度給氧與過度通氣）、進行十二導程心電圖，並處置低血壓", "ideal",
+        "正確——調整氧氣濃度以避免過度給氧、避免過快的通氣速率，進行十二導程心電圖以評估 STEMI／病因，並支持血壓。", "2025 年 AHA 心臟停止後照護", 15, () => "roscTemp"),
+      opt("b", "讓病患過度換氣，使監視器波形看起來『正常』", "critical",
+        "ROSC 後應避免過度通氣——可能因低碳酸血症而降低腦部灌流，使預後惡化。", "2025 年 AHA 心臟停止後照護", 15, () => "roscTemp"),
+      opt("c", "經驗性地給予大劑量碳酸氫鈉以『穩定』病患", "error",
+        "若無特定代謝性適應症，ROSC 後不建議常規給予。", "2025 年 AHA 心臟停止後照護", 12, () => "roscTemp")
+    ]);
+  nodes.roscTemp = node("roscTemp", "目標體溫管理", "心臟停止後照護",
+    () => `病患 ROSC 後仍處於昏迷狀態（無法遵從指令）。此時適當的體溫處置策略是？`,
+    [
+      opt("a", "積極預防發燒，並將體溫控制在目標範圍內（目標體溫管理），同時以多種方式延遲至少 72 小時後再進行神經預後評估", "ideal",
+        "正確——對於 ROSC 後仍昏迷的病患，應積極避免發燒／控制體溫，並採延遲、多模式的神經預後評估（臨床檢查、影像、腦波，以及如神經絲輕鏈等新興生物標記），而非依單一早期檢查就下判斷。", "2025 年 AHA 心臟停止後照護", 15, () => "roscDebrief"),
+      opt("b", "既然病患已存活，體溫就順其自然發展即可", "error",
+        "心臟停止後發燒與較差的神經學預後有關——應積極處置體溫。", "2025 年 AHA 心臟停止後照護", 10, () => "roscDebrief"),
+      opt("c", "現在就依這一次檢查結果，明確告知家屬神經學預後", "error",
+        "神經預後評估應延遲（一般建議 ≥72 小時）並採多模式評估——避免根據單一早期資料就做出預測，應改為向家屬／照顧者提供結構化的情緒支持。", "2025 年 AHA 心臟停止後照護", 10, () => "roscDebrief")
+    ]);
+  nodes.roscDebrief = endNode("roscDebrief", "案例結束 — ROSC 與心臟停止後照護");
+  nodes.endCase = endNode("endCase", "案例結束");
+
+  return { startNodeId: "start", nodes };
+}
+
+function buildHTsOptions(state, nextFn) {
+  const sc = scMod(state);
+  const causes = {
+    hypovolemia: "血容不足（Hypovolemia）——若懷疑失血／體液流失，可考慮輸液",
+    hypoxia: "缺氧（Hypoxia）——確認呼吸道、通氣與給氧狀況",
+    hydrogenIon: "酸中毒（H+）——通常靠有效的 CPR／通氣改善，而非常規給予碳酸氫鈉",
+    hyperHypoK: "高血鉀／低血鉀——確認病史，若疑似高血鉀可考慮鈣劑／胰島素—葡萄糖／碳酸氫鈉",
+    hypothermia: "低體溫——檢查核心體溫，若偏低應開始積極復溫",
+    tensionPneumo: "張力性氣胸——評估呼吸音／頸靜脈怒張，考慮針刺減壓",
+    tamponade: "心包填塞——若有穿刺傷、近期心臟手術病史或心音低沉，應納入考量",
+    toxins: "中毒（如鴉片類藥物、三環抗憂鬱劑、局部麻醉劑）——若懷疑，考慮給予解毒劑",
+    thrombosisPulm: "肺栓塞（大量 PE）——若合併危險因子的突發性倒下，應納入考量；高度懷疑時可考慮溶栓治療",
+    thrombosisCoronary: "冠狀動脈栓塞（急性心肌梗塞）——ROSC 後應納入考量，並進行十二導程心電圖"
+  };
+  let idealKey = "hypoxia";
+  if (sc === "hypothermia") idealKey = "hypothermia";
+  if (sc === "opioid") idealKey = "toxins";
+  const keys = Object.keys(causes);
+  const distractorKeys = keys.filter(k => k !== idealKey);
+  const shown = [idealKey, pick(distractorKeys), pick(distractorKeys), pick(distractorKeys)].filter((v, i, a) => a.indexOf(v) === i);
+  while (shown.length < 3) { const k = pick(distractorKeys); if (!shown.includes(k)) shown.push(k); }
+  return shown.map((k, i) => opt(String(i), causes[k],
+    k === idealKey ? "ideal" : "acceptable",
+    k === idealKey ? "掌握得很好——這符合本案例的臨床脈絡。" : "納入鑑別診斷是合理的，但依本案例細節來看，並非最應優先考慮的問題。",
+    "2025 年 AHA ACLS 心臟停止演算法 — 找出並處置可逆病因（H's & T's）", 12, nextFn));
+}
+
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}
+
+/* Additional families (pediatric arrest, bradycardia, tachycardia,
+   respiratory arrest, opioid emergency, post-ROSC standalone,
+   BLS→ALS transition) are defined in scenarios2.js to keep file size
+   manageable; they attach themselves to SCENARIO_FAMILIES. */
+const SCENARIO_FAMILIES = {
+  adult_cardiac_arrest: {
+    label: "成人心臟停止",
+    ageGroups: ["adult"],
+    build: buildAdultArrest
+  }
+};
+
+/* ============================================================
+   ADDITIONAL SCENARIO FAMILIES
+   ============================================================ */
+
+/* =========================================================================
+   FAMILY 2: PEDIATRIC CARDIAC ARREST
+   ========================================================================= */
+function buildPedsArrest(state) {
+  const nodes = {};
+  const wt = state.weightKg;
+  const isInfant = state.ageGroup === "infant";
+
+  nodes.start = node("start", "現場安全與病患辨識", "PALS／BLS 演算法",
+    (s) => `你${s.setting}，發現一名${ageDesc(s)}（體重約 ${wt} 公斤）呈現無反應。${s.witnessed ? "此為突發且目擊之倒下。" : "孩童被發現時已呈現此狀態，發生時間不明——兒童心臟停止常見肇因為呼吸道問題。"} ${scNote(s)}\n\n現場只有你一人。你的第一步是？`,
+    [
+      opt("a", "同時評估反應、呼吸與脈搏（嬰兒觸診肱動脈／兒童觸診頸動脈或股動脈），時間不超過 10 秒", "ideal",
+        "正確的快速評估順序。", "2025 年 AHA PALS 演算法", 8, () => "aloneDecision"),
+      opt("b", "什麼都不檢查，直接開始按壓", "error",
+        "應先簡短確認病患無反應、無正常呼吸／脈搏。", "2025 年 AHA PALS 演算法", 8, () => "aloneDecision"),
+      opt("c", "評估前先離開去打求救電話", "error",
+        "應先評估（≤10 秒）——接下來要決定的是「先打電話」或「先做 2 分鐘 CPR 再打電話」，這取決於倒下是否為目擊／突發事件。", "2025 年 AHA PALS 演算法", 15, () => "aloneDecision")
+    ]);
+
+  nodes.aloneDecision = node("aloneDecision", "單人施救者：先做 CPR 或先打電話", "PALS 演算法",
+    (s) => `無呼吸、無脈搏——確認為心臟停止。你是唯一的施救者，且手邊沒有可免持通話的電話。${s.witnessed ? "此為突發且有目擊之倒下（較可能為心律不整所致）。" : "此情況較像未被目擊、可能因窒息導致的心臟停止（較可能為呼吸道病因）。"} 你會怎麼做？`,
+    [
+      opt("a", state.witnessed ? "先打電話：立即啟動緊急應變系統／取得 AED，然後再開始 CPR" : "先做 CPR：先進行約 2 分鐘 CPR，再暫時離開去啟動緊急應變系統並取得 AED",
+        "ideal", "此案例的正確做法——孩童突發且被目擊的倒下，較令人懷疑是需要儘速電擊去顫的心律不整（應先打電話）；未被目擊、可能為窒息所致的心臟停止，則應先進行 2 分鐘 CPR 再離開打電話（先做 CPR）。",
+        "2025 年 AHA PALS 演算法 — 單人施救者處置順序", 10, () => "startCpr"),
+      opt("b", "無論如何都先打電話，之後才開始 CPR", "error",
+        "對於可能為窒息所致、未被目擊的兒童心臟停止，若你是單獨一人，應先進行約 2 分鐘 CPR 再離開打電話。若為突發且被目擊的倒下，則應先打電話／取得 AED。", "2025 年 AHA PALS 演算法", 20, () => "startCpr"),
+      opt("c", "無論 CPR 進行多久，都絕不離開孩童身邊", "error",
+        "你終究需要啟動緊急應變系統並取得去顫器——時機取決於是否被目擊及可能病因的判斷。", "2025 年 AHA PALS 演算法", 25, () => "startCpr")
+    ]);
+
+  nodes.startCpr = node("startCpr", "兒童高品質心肺復甦術", "PALS 演算法",
+    () => `開始進行 CPR。正確的按壓參數為何？`,
+    [
+      opt("a", `每分鐘 100–120 下，深度約${isInfant ? "1.5 吋（4 公分）" : "2 吋（5 公分）"}（約為前後胸徑的 1/3），確保完全回彈，單人施救者比例為 30:2（雙人施救者為 15:2），中斷時間應小於 10 秒`, "ideal",
+        "符合 2025 年更新之兒童 CPR 正確參數。", "2025 年 AHA 高品質 CPR 標準（兒童）", 10, () => "rhythmCheck1"),
+      opt("b", "不論年齡大小，一律採用成人的按壓深度與比例", "error",
+        "兒童按壓深度應約為前後胸徑的 1/3，而非成人的 2–2.4 吋目標，且雙人施救比例也不同（15:2）。", "2025 年 AHA 高品質 CPR 標準（兒童）", 12, () => "rhythmCheck1"),
+      opt("c", "為避免傷害孩童，只用很輕的力道按壓", "critical",
+        "按壓仍須有足夠深度（約前後胸徑 1/3）才能產生有效灌流——力道過輕將無效。", "2025 年 AHA 高品質 CPR 標準（兒童）", 15, () => "rhythmCheck1")
+    ]);
+  nodes.startCpr.category = "cpr";
+
+  nodes.rhythmCheck1 = node("rhythmCheck1", "第 1 次心律檢查", "PALS 演算法",
+    (s) => {
+      const shockable = chance(0.35); // pediatric arrest is more often non-shockable (respiratory etiology)
+      s.rhythmType = shockable ? pick(["vf_coarse", "vt_pulseless"]) : pick(["asystole", "pea_organized"]);
+      s.vitals.hr = null; s.vitals.bpSys = null; s.vitals.bpDia = null;
+      return `監視器已接上。請判讀心律。`;
+    },
+    [
+      opt("shock", "可電擊 → 充電，給予「一次」2 J/kg 的電擊，立即恢復 CPR",
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "正確——依體重計算之首次電擊劑量為 2 J/kg，之後立即恢復 CPR。" : "此心律其實是不可電擊的——電擊不會有幫助，反而會中斷 CPR。",
+        "2025 年 AHA PALS — 電擊劑量", 15,
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock1" : "epi1"),
+      opt("noshock", "不可電擊 → 不予電擊，恢復 CPR，優先處理呼吸道／給氧與 IV/IO 腎上腺素",
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "正確——不予電擊，恢復 CPR，優先處理通路／腎上腺素與呼吸道。" : "此心律其實是可電擊的（VF／無脈性 VT）——應予以電擊。",
+        "2025 年 AHA PALS 演算法", 8,
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "epi1" : "shock1")
+    ]);
+  nodes.rhythmCheck1.category = "rhythm";
+  nodes.wrongShock = infoNode("wrongShock", "錯誤", "PALS 演算法", () => "該心律其實是不可電擊的——恢復 CPR 並優先處理腎上腺素與呼吸道。", () => "epi1");
+  nodes.missedShock = infoNode("missedShock", "錯誤", "PALS 演算法", () => "該心律其實是可電擊的——應予以電擊。", () => "shock1");
+
+  nodes.shock1 = infoNode("shock1", "電擊去顫", "PALS 演算法",
+    (s) => { s.events.push({ t: s.timerSec, label: `已給予 2 J/kg 電擊（約 ${Math.round(2 * wt)} 焦耳）` }); s.flags.firstShockTime = s.timerSec; return `已給予 2 J/kg 電擊（約 ${Math.round(2 * wt)} 焦耳）。立即恢復按壓。`; },
+    () => "epi1");
+
+  nodes.epi1 = medNode("epi1", "給藥 — 腎上腺素（依體重計算）", "PALS 演算法",
+    (s) => `請下達腎上腺素醫囑。正確的兒童劑量為依體重計算：0.01 mg/kg IV/IO（單次上限 1 mg），每 3–5 分鐘重複一次。此病患體重約 ${wt} 公斤，劑量約為 ${(0.01 * wt).toFixed(2)} mg。`,
+    ["epinephrine_arrest", "atropine", "sodiumBicarb"], "epinephrine_arrest", [],
+    () => "hAndTsPeds");
+
+  nodes.hAndTsPeds = node("hAndTsPeds", "可逆病因", "PALS 演算法",
+    (s) => `兒童心臟停止經常是由可逆的呼吸道或代謝問題所導致。${scNote(s)} 團隊應優先檢查哪一項？`,
+    buildHTsOptions(state, () => "rhythmCheck2"));
+
+  nodes.rhythmCheck2 = node("rhythmCheck2", "第 2 次心律檢查", "PALS 演算法",
+    () => `重新評估心律。`,
+    [
+      opt("shock", "可電擊 → 電擊 4 J/kg（劑量升高），恢復 CPR",
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "正確——劑量升高至 4 J/kg，並立即恢復 CPR。" : "此心律其實是不可電擊的——電擊不會有幫助。",
+        "2025 年 AHA PALS — 電擊劑量", 12,
+        (s) => RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock2" : "wrongShock2"),
+      opt("noshock", "不可電擊 → 持續 CPR、重複給予腎上腺素、重新評估呼吸道",
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "ideal" : "critical",
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "正確——持續 CPR、重複腎上腺素、重新評估呼吸道。" : "此心律其實是可電擊的——應予以電擊。",
+        "2025 年 AHA PALS 演算法", 8,
+        (s) => !RHYTHM_LIBRARY[s.rhythmType].shockable ? "epi2" : "missedShock2")
+    ]);
+  nodes.rhythmCheck2.category = "rhythm";
+  nodes.wrongShock2 = infoNode("wrongShock2", "錯誤", "PALS 演算法", () => "不可電擊——持續 CPR 並給予腎上腺素。", () => "epi2");
+  nodes.missedShock2 = infoNode("missedShock2", "錯誤", "PALS 演算法", () => "該心律其實是可電擊的——應予以電擊。", () => "shock2");
+  nodes.shock2 = infoNode("shock2", "第 2 次電擊去顫", "PALS 演算法",
+    (s) => { s.rhythmType = pick(["vf_coarse", "asystole", "pea_organized", "sinus_normal"]); s.events.push({ t: s.timerSec, label: `已給予 4 J/kg 電擊` }); return `已給予 4 J/kg 電擊。恢復 CPR。`; },
+    () => "amioPeds");
+  nodes.amioPeds = medNode("amioPeds", "給藥 — 抗心律不整藥物（依體重計算）", "PALS 演算法",
+    (s) => `頑固性可電擊心律。依體重計算之 amiodarone 劑量為 5 mg/kg IV/IO（約 ${Math.round(5 * wt)} mg），最多可重複給予 3 劑；lidocaine 1 mg/kg 為替代方案。`,
+    ["amiodarone", "lidocaine", "sodiumBicarb"], "amiodarone", ["lidocaine"], () => "epi2");
+  nodes.epi2 = medNode("epi2", "給藥 — 重複給予腎上腺素", "PALS 演算法",
+    (s) => `現在請重複給予依體重計算之腎上腺素（0.01 mg/kg，上限 1 mg）。`,
+    ["epinephrine_arrest"], "epinephrine_arrest", [], () => "reassessPeds");
+  nodes.reassessPeds = infoNode("reassessPeds", "再評估", "PALS 演算法",
+    (s) => {
+      const converts = chance(0.5 + (s._qualityBonus || 0));
+      if (converts) { s.flags.rosc = true; s.rhythmType = "sinus_tachy"; s.vitals.hr = 128; s.vitals.bpSys = 92; s.vitals.bpDia = 58; s.vitals.spo2 = 95; s.vitals.etco2 = 38; s.vitals.rr = 22; return "脈搏與規則心律恢復——已達成 ROSC。"; }
+      s.rhythmType = pick(["asystole", "pea_organized", "vf_coarse"]);
+      return "尚未達成 ROSC——持續依 PALS 心臟停止演算法處置。";
+    },
+    (s) => s.flags.rosc ? "rosc" : (RHYTHM_LIBRARY[s.rhythmType].shockable ? "shock2" : "endArrestPeds"));
+  nodes.endArrestPeds = endNode("endArrestPeds", "案例結束 — 長時間復甦");
+  nodes.rosc = node("rosc", "ROSC 後優先處置", "心臟停止後照護（兒童）",
+    (s) => `已於 ${fmtTime(s.timerSec)} 達成 ROSC。目前的立即優先處置是？`,
+    [
+      opt("a", "調整給氧／通氣以避免過度給氧與過度通氣，依年齡維持適當血壓，並找出／處置根本病因", "ideal",
+        "符合兒童 ROSC 後正確的優先處置順序。", "2025 年 AHA 心臟停止後照護", 12, () => "endPeds"),
+      opt("b", "讓孩童過度換氣以維持清醒", "critical", "應避免過度通氣——可能使腦部灌流惡化。", "2025 年 AHA 心臟停止後照護", 12, () => "endPeds"),
+      opt("c", "沒有特別優先事項——單純觀察即可", "error", "ROSC 後仍需積極處置（給氧、血行動力學、找出病因）。", "2025 年 AHA 心臟停止後照護", 10, () => "endPeds")
+    ]);
+  nodes.endPeds = endNode("endPeds", "案例結束 — ROSC 與心臟停止後照護");
+
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 3: BRADYCARDIA (adult, with pulse)
+   ========================================================================= */
+function buildBradycardia(state) {
+  const nodes = {};
+  nodes.start = node("start", "評估", "心搏過緩演算法",
+    (s) => { s.rhythmType = pick(["sinus_brady", "heart_block_3rd", "heart_block_2", "junctional_brady"]); s.vitals.hr = randInt(28, 48); s.vitals.bpSys = randInt(76, 100); s.vitals.bpDia = randInt(44, 60); s.vitals.spo2 = randInt(90, 97); s.vitals.rr = randInt(14, 20);
+      return `${s.setting}，一名${ageDesc(s)}出現心搏過緩並有症狀（${pick(["頭暈", "意識混亂", "主訴胸部不適", "冒冷汗且無力"])}）。監視器顯示心律；生命徵象：${vitalsLine(s)}。你的第一步是？`; },
+    [
+      opt("a", "找出並處置根本病因，若缺氧則給氧，並判斷此心搏過緩是否已造成血行動力學不穩定（低血壓、意識狀態改變、休克徵象、缺血性胸痛、急性心衰竭）", "ideal",
+        "正確——應確認心搏過緩確實是造成不穩定的原因，並在治療前／同時處置可逆的促成因子。", "2025 年 AHA 成人心搏過緩演算法", 10, () => "unstableCheck"),
+      opt("b", "對所有心搏過緩病患一律立即開始體外節律調節", "error",
+        "體外節律調節應保留給不穩定或預期對 atropine 無反應的病患——應先評估。", "2025 年 AHA 成人心搏過緩演算法", 10, () => "unstableCheck"),
+      opt("c", "給予輸液，一小時後再評估", "error",
+        "有症狀之心搏過緩需要立即評估，並很可能需要藥物或電性治療，而非延後再評估。", "2025 年 AHA 成人心搏過緩演算法", 20, () => "unstableCheck")
+    ]);
+  nodes.unstableCheck = node("unstableCheck", "穩定度評估", "心搏過緩演算法",
+    (s) => `病患出現灌流不佳的徵象。此病患屬於穩定或不穩定？`,
+    [
+      opt("a", "不穩定——出現低血壓、意識狀態改變或休克徵象；應立即開始治療", "ideal",
+        "正確——此病患符合不穩定準則，需要立即治療。", "2025 年 AHA 成人心搏過緩演算法", 8, () => "atropineDecision"),
+      opt("b", "穩定——僅需監測與觀察，不需介入", "critical",
+        "此病患已出現不穩定的症狀／徵象，需要立即治療，而非僅止於觀察。", "2025 年 AHA 成人心搏過緩演算法", 25, () => "atropineDecision")
+    ]);
+  nodes.atropineDecision = medNode("atropineDecision", "給藥 — Atropine", "心搏過緩演算法",
+    (s) => {
+      const highGradeBlock = s.rhythmType === "heart_block_3rd";
+      s._highGradeBlock = highGradeBlock;
+      return `${highGradeBlock ? "注意：此心律看似為合併寬 QRS 逸脫心律之高度（第三度）房室傳導阻滯——atropine 對此常無效，應準備儘速改採體外節律調節。" : ""} 請下達你的第一線藥物醫囑。`;
+    },
+    ["atropine", "epinephrine_bradycardia", "dopamine"], "atropine", [],
+    (s) => "reassessBrady1");
+  nodes.reassessBrady1 = infoNode("reassessBrady1", "再評估", "心搏過緩演算法",
+    (s) => {
+      const improves = !s._highGradeBlock && chance(0.5);
+      if (improves) { s.vitals.hr = randInt(58, 75); s.vitals.bpSys = randInt(104, 120); s.vitals.bpDia = randInt(62, 76); s.flags.stabilized = true; return "給予 atropine 後心跳與血壓皆改善。"; }
+      return "給予 atropine 後幾乎沒有改善（符合高度傳導阻滯或頑固性心搏過緩的預期表現）。";
+    },
+    (s) => s.flags.stabilized ? "resolved" : "escalate");
+  nodes.escalate = node("escalate", "升級處置", "心搏過緩演算法",
+    () => `Atropine 無效或預期效果不佳。接下來該怎麼做？`,
+    [
+      opt("a", "開始體外節律調節（必要時給予止痛／鎮靜），並／或於安排節律調節的同時給予 dopamine 或 epinephrine 輸注；尋求專科會診", "ideal",
+        "正確——升級為體外節律調節並／或兒茶酚胺類藥物輸注，並針對頑固性心搏過緩尋求專科會診。", "2025 年 AHA 成人心搏過緩演算法", 15, () => "resolved"),
+      opt("b", "超過劑量上限，繼續多次重複給予 atropine", "error",
+        "Atropine 總量上限為 3 mg——超過此劑量（或遇高度傳導阻滯）應改為升級至體外節律調節／藥物輸注。", "2025 年 AHA 成人心搏過緩演算法", 20, () => "resolved"),
+      opt("c", "不再做任何處置，繼續等待", "critical",
+        "不穩定且頑固性的心搏過緩需要升級處置——應給予節律調節與／或輸注支持，而非僅觀察等待。", "2025 年 AHA 成人心搏過緩演算法", 30, () => "resolved")
+    ]);
+  nodes.resolved = endNode("resolved", "案例結束 — 心搏過緩已處置");
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 4: TACHYCARDIA (adult, with pulse)
+   ========================================================================= */
+function buildTachycardia(state) {
+  const nodes = {};
+  nodes.start = node("start", "評估", "心搏過速演算法",
+    (s) => {
+      const wide = chance(0.35);
+      const regular = chance(0.7);
+      s._wide = wide; s._regular = regular;
+      s.rhythmType = wide ? (regular ? "vt_mono_stable" : "torsades") : (regular ? pick(["svt", "sinus_tachy"]) : "afib_rvr");
+      s.vitals.hr = randInt(150, 190);
+      s.vitals.bpSys = randInt(84, 118); s.vitals.bpDia = randInt(50, 74); s.vitals.spo2 = randInt(92, 98); s.vitals.rr = randInt(18, 26);
+      return `${s.setting}，一名${ageDesc(s)}心跳快速且可觸及脈搏。生命徵象：${vitalsLine(s)}。第一步該怎麼做？`;
+    },
+    [
+      opt("a", "評估此心搏過速是否已造成不穩定徵象：低血壓、急性意識狀態改變、休克徵象、缺血性胸部不適，或急性心衰竭", "ideal",
+        "正確——是否存在不穩定徵象，將決定是否需直接進行心臟整流術。", "2025 年 AHA 成人心搏過速演算法", 8, () => "stableCheck"),
+      opt("b", "不論穩定與否，一律立即對所有心搏過速進行心臟整流術", "error",
+        "立即心臟整流術應保留給不穩定病患；穩定病患應先進一步評估。", "2025 年 AHA 成人心搏過速演算法", 10, () => "stableCheck"),
+      opt("c", "不論 QRS 寬度／規則性，一律給予 adenosine", "error",
+        "Adenosine 適用於穩定、規則的窄複合波（或特定規則單型性寬複合波）心搏過速——並非全面適用。", "2025 年 AHA 成人心搏過速演算法", 10, () => "stableCheck")
+    ]);
+  nodes.stableCheck = node("stableCheck", "穩定度評估", "心搏過速演算法",
+    (s) => `依生命徵象與理學檢查判斷，此病患屬於穩定或不穩定？`,
+    [
+      opt("unstable", "因心搏過速而不穩定 → 準備同步心臟整流術（若不延誤處置，可先給予鎮靜）", (s) => (s.vitals.bpSys < 90 ? "ideal" : "acceptable"),
+        "", "2025 年 AHA 成人心搏過速演算法", 12, () => "cardioversion"),
+      opt("stable", "穩定 → 進一步評估心律（十二導程心電圖、QRS 寬度／規則性）", (s) => (s.vitals.bpSys >= 90 ? "ideal" : "critical"),
+        "", "2025 年 AHA 成人心搏過速演算法", 8, () => "widthCheck")
+    ]);
+  nodes.cardioversion = infoNode("cardioversion", "同步心臟整流術", "心搏過速演算法",
+    (s) => { s.events.push({ t: s.timerSec, label: "已施行同步心臟整流術" }); const converts = chance(0.75); if (converts) { s.rhythmType = "sinus_normal"; s.vitals.hr = 84; s.vitals.bpSys = 118; s.vitals.bpDia = 74; s.flags.stabilized = true; } return converts ? "同步心臟整流術成功轉復心律；病患趨於穩定。" : "整流術後心律仍持續——請重新評估能量／電擊貼片位置，並考慮尋求專科會診以使用抗心律不整藥物。"; },
+    (s) => s.flags.stabilized ? "resolved" : "expertConsult");
+  nodes.expertConsult = node("expertConsult", "頑固性不穩定心搏過速", "心搏過速演算法",
+    () => `儘管已施行心臟整流術，心搏過速仍持續。現在該怎麼做？`,
+    [opt("a", "尋求專科會診，考慮抗心律不整藥物治療，並視情況重複心臟整流術", "ideal", "正確——頑固性不穩定心搏過速需要專科協助。", "2025 年 AHA 成人心搏過速演算法", 15, () => "resolved")]);
+  nodes.widthCheck = node("widthCheck", "QRS 寬度與規則性", "心搏過速演算法",
+    (s) => `已取得十二導程心電圖。QRS 為${s._wide ? "寬複合波（≥0.12 秒）" : "窄複合波"}，心律為${s._regular ? "規則" : "不規則"}。下一步該怎麼做？`,
+    []);
+
+  return { startNodeId: "start", nodes };
+}
+
+/* Tachycardia needs per-instance dynamic options since branch depends on
+   randomized wide/regular flags chosen at runtime; the engine calls
+   getDynamicOptions(node, state) when node.dynamicOptions is set. */
+function attachTachyDynamicOptions(nodes) {
+  nodes.widthCheck.dynamicOptions = (s) => {
+    if (!s._wide && s._regular) {
+      return [
+        opt("a", "先嘗試迷走神經刺激手法，若未轉復則給予 adenosine 6 mg 快速靜脈推注（可再重複一次 12 mg）", "ideal",
+          "對於穩定、規則的窄複合波心搏過速（如 SVT），此為正確做法。", "2025 年 AHA 成人心搏過速演算法", 12, () => "narrowRegularMed"),
+        opt("b", "即使病患穩定，仍直接進行同步心臟整流術", "error",
+          "心臟整流術應保留給不穩定病患，或藥物治療失敗後才使用——此情況應先嘗試迷走神經刺激手法／adenosine。", "2025 年 AHA 成人心搏過速演算法", 15, () => "narrowRegularMed"),
+        opt("c", "對穩定的窄複合波規則性 SVT 直接以 amiodarone 作為第一線用藥", "acceptable", "此情形下 adenosine（或迷走神經刺激手法）才是較優先之首選；amiodarone 通常並非此情況下的典型首選。", "2025 年 AHA 成人心搏過速演算法", 12, () => "narrowRegularMed")
+      ];
+    }
+    if (!s._wide && !s._regular) {
+      return [
+        opt("a", "考慮為心房顫動合併快速心室反應——依發作時間長短與危險因子控制心室反應／心律，考慮抗凝治療，並尋求專科／心臟科會診", "ideal",
+          "對於不規則窄複合波心搏過速（如合併快速心室反應之心房顫動），此為正確做法。", "2025 年 AHA 成人心搏過速演算法", 15, () => "resolved"),
+        opt("b", "給予 adenosine，期望能轉復心律", "error",
+          "Adenosine 通常無法轉復心房顫動／心房撲動，此情況下並非標準做法。", "2025 年 AHA 成人心搏過速演算法", 12, () => "resolved")
+      ];
+    }
+    if (s._wide && s._regular) {
+      return [
+        opt("a", "考慮為單型性心室頻脈（或伴隨異常傳導之 SVT）；以抗心律不整藥物輸注治療（如 procainamide 或 amiodarone），並尋求專科會診；僅在確定為規則且單型性時，才依規範考慮使用 adenosine", "ideal",
+          "對於穩定、規則之寬複合波心搏過速，此為合理且符合準則的處置方式。", "2025 年 AHA 成人心搏過速演算法", 15, () => "resolved"),
+        opt("b", "直接假設一律為伴隨異常傳導之 SVT，而忽略心室頻脈的可能性", "critical",
+          "病因不明的規則寬複合波心搏過速，應先視為心室頻脈處置，直到證實並非如此——不應逕自假設為良性異常傳導。", "2025 年 AHA 成人心搏過速演算法", 15, () => "resolved")
+      ];
+    }
+    // wide + irregular -> possible torsades/polymorphic VT or pre-excited AFib
+    return [
+      opt("a", "考慮為多型性心室頻脈／torsades——給予硫酸鎂、矯正電解質異常／導致 QT 延長之藥物，並避免使用房室結阻斷藥物，以防為預激症候群合併心房顫動", "ideal",
+        "正確——不規則寬複合波心搏過速應懷疑 torsades 或預激症候群合併心房顫動；給予鎂劑並避免房室結阻斷藥物皆為適當處置。", "2025 年 AHA 成人心搏過速演算法", 15, () => "resolved"),
+      opt("b", "給予 adenosine 或鈣離子通道阻斷劑以減緩心跳", "critical",
+        "對於不規則寬複合波、疑似預激症候群合併心房顫動的情形，房室結阻斷藥物可能造成危險——此情況應避免使用。", "2025 年 AHA 成人心搏過速演算法", 20, () => "resolved")
+    ];
+  };
+  nodes.narrowRegularMed = medNode("narrowRegularMed", "給藥 — Adenosine", "心搏過速演算法",
+    () => `僅施行迷走神經刺激手法未能轉復心律。請下達藥物醫囑。`,
+    ["adenosine", "amiodarone", "atropine"], "adenosine", [], () => "resolved");
+  nodes.resolved = endNode("resolved", "案例結束 — 心搏過速已處置");
+}
+
+/* =========================================================================
+   FAMILY 5: RESPIRATORY ARREST
+   ========================================================================= */
+function buildRespiratoryArrest(state) {
+  const nodes = {};
+  nodes.start = node("start", "評估", "呼吸停止",
+    (s) => { s.vitals.hr = randInt(50, 90); s.vitals.bpSys = randInt(96, 128); s.vitals.bpDia = randInt(58, 80); s.vitals.spo2 = randInt(70, 84); s.vitals.rr = 0; s.rhythmType = "sinus_brady"; s.flags.pulsePresent = true;
+      return `${s.setting}，一名${ageDesc(s)}呈現無反應、無呼吸，但可觸及脈搏（${s.vitals.hr}/分）。${scNote(s)} 你的第一步是？`; },
+    [
+      opt("a", "打開呼吸道並開始給予人工呼吸——成人每 6 秒一次（每分鐘 10 次）——同時持續監測脈搏", "ideal",
+        "正確——此為合併脈搏的呼吸停止；應給予通氣並頻繁重新檢查脈搏。", "2025 年 AHA 呼吸停止處置", 8, () => "reassessResp"),
+      opt("b", "既然病患無反應，立即開始胸外按壓", "error",
+        "目前仍可觸及脈搏——尚不需要按壓；應改為給予人工呼吸並密切監測脈搏。", "2025 年 AHA 呼吸停止處置", 10, () => "reassessResp"),
+      opt("c", "先等待觀察——病患或許會自行恢復呼吸", "critical",
+        "呼吸停止需要立即給予人工呼吸——等待將有導致缺氧性心臟停止的風險。", "2025 年 AHA 呼吸停止處置", 30, () => "reassessResp")
+    ]);
+  nodes.reassessResp = infoNode("reassessResp", "再評估（約每 2 分鐘一次）", "呼吸停止",
+    (s) => {
+      const pulseLost = chance(0.3);
+      if (pulseLost) { s.flags.pulsePresent = false; s.rhythmType = pick(["asystole", "pea_organized"]); s.vitals.hr = null; s.vitals.bpSys = null; return "重新檢查時脈搏已消失——已進展為心臟停止。"; }
+      s.vitals.spo2 = Math.min(98, s.vitals.spo2 + randInt(8, 14));
+      return "脈搏仍存在，且經通氣後血氧狀況改善。";
+    },
+    (s) => s.flags.pulsePresent ? "airwayCheck" : "progressToArrest");
+  nodes.progressToArrest = infoNode("progressToArrest", "病程進展", "呼吸停止 → 心臟停止",
+    () => "現在開始進行高品質 CPR，並依心臟停止演算法處置。", () => "endRespToArrest");
+  nodes.endRespToArrest = endNode("endRespToArrest", "案例結束 — 已進展為心臟停止");
+  nodes.airwayCheck = node("airwayCheck", "呼吸道通暢度評估", "呼吸停止",
+    () => `正在給予甦醒球面罩通氣，但胸廓起伏不穩定。你該怎麼做？`,
+    [
+      opt("a", "重新擺位呼吸道（壓額提下巴，考慮下顎前推、使用呼吸道輔助器具），並重新評估密合度／技巧，之後再考慮升級為進階呼吸道", "ideal",
+        "正確——應先優化基本技巧；若通氣仍不足，再升級為進階呼吸道。", "2025 年 AHA 呼吸道處置", 10, () => "resolvedResp"),
+      opt("b", "不嘗試改善基本技巧，直接升級為進階呼吸道", "acceptable",
+        "若基本手法明顯失敗，此做法合理，但通常應先嘗試優化甦醒球面罩技巧。", "2025 年 AHA 呼吸道處置", 12, () => "resolvedResp"),
+      opt("c", "儘管胸廓起伏不佳，仍維持原本做法不做改變", "critical",
+        "通氣不足必須予以矯正——不應持續無效的技巧。", "2025 年 AHA 呼吸道處置", 20, () => "resolvedResp")
+    ]);
+  nodes.resolvedResp = endNode("resolvedResp", "案例結束 — 呼吸停止已處置");
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 6: OPIOID-ASSOCIATED EMERGENCY (2025 algorithm)
+   ========================================================================= */
+function buildOpioidEmergency(state) {
+  const nodes = {};
+  nodes.start = node("start", "辨識", "鴉片類藥物相關緊急狀況演算法（2025）",
+    (s) => { s.vitals.hr = randInt(50, 80); s.vitals.bpSys = randInt(90, 120); s.vitals.bpDia = randInt(55, 75); s.vitals.spo2 = randInt(75, 88); s.vitals.rr = randInt(0, 6); s.rhythmType = "sinus_brady";
+      return `你${s.setting}，發現一名${ageDesc(s)}呈現無反應，呼吸緩慢或消失，且瞳孔呈針尖狀。附近可見相關用藥器具。你的第一步是？`; },
+    [
+      opt("a", "檢查反應與呼吸；啟動緊急應變系統，若呼吸消失或異常，立即開始人工呼吸／CPR——不等待 naloxone", "ideal",
+        "正確——2025 年鴉片類藥物緊急狀況演算法強調應優先給予通氣／CPR；絕不可為了 naloxone 而延遲這些處置。", "2025 年 AHA 鴉片類藥物相關緊急狀況演算法", 8, () => "naloxoneDecision"),
+      opt("b", "先找 naloxone，其他事之後再說", "critical",
+        "絕不可為了尋找或施打 naloxone 而延遲人工呼吸／CPR——通氣應優先進行。", "2025 年 AHA 鴉片類藥物相關緊急狀況演算法", 30, () => "naloxoneDecision"),
+      opt("c", "假設只是單純中毒，未檢查呼吸就直接擺成復甦姿勢", "critical",
+        "必須先評估呼吸／脈搏——呼吸消失或異常需要立即人工呼吸，而不只是擺位。", "2025 年 AHA 鴉片類藥物相關緊急狀況演算法", 25, () => "naloxoneDecision")
+    ]);
+  nodes.naloxoneDecision = medNode("naloxoneDecision", "給藥 — Naloxone", "鴉片類藥物相關緊急狀況演算法（2025）",
+    () => `在持續進行人工呼吸的同時，已備妥 naloxone。請予以施打。`,
+    ["naloxone"], "naloxone", [], () => "reassessOpioid");
+  nodes.reassessOpioid = infoNode("reassessOpioid", "再評估（每 2–3 分鐘一次）", "鴉片類藥物相關緊急狀況演算法（2025）",
+    (s) => {
+      const pulseCheck = chance(0.15);
+      if (pulseCheck) { s.flags.pulsePresent = false; s.rhythmType = pick(["asystole", "pea_organized"]); s.vitals.hr = null; return "重新檢查時已無脈搏——已進展為心臟停止。"; }
+      const responds = chance(0.55);
+      if (responds) { s.vitals.rr = randInt(12, 18); s.vitals.spo2 = randInt(93, 98); s.flags.stabilized = true; return "給予 naloxone 並持續通氣後，呼吸狀況改善。"; }
+      return "仍幾乎沒有自發呼吸——持續通氣；可考慮重複給予 naloxone。";
+    },
+    (s) => s.flags.pulsePresent === false ? "progressArrestOpioid" : (s.flags.stabilized ? "monitorOpioid" : "repeatNaloxone"));
+  nodes.progressArrestOpioid = infoNode("progressArrestOpioid", "病程進展", "心臟停止演算法", () => "開始完整 CPR 並依心臟停止演算法處置——一旦發生心臟停止，naloxone 無法取代 CPR。", () => "endOpioidArrest");
+  nodes.endOpioidArrest = endNode("endOpioidArrest", "案例結束 — 已進展為心臟停止");
+  nodes.repeatNaloxone = medNode("repeatNaloxone", "給藥 — 重複給予 Naloxone", "鴉片類藥物相關緊急狀況演算法（2025）",
+    () => `在持續通氣的同時，重複給予 naloxone。`,
+    ["naloxone"], "naloxone", [], () => "monitorOpioid");
+  nodes.monitorOpioid = node("monitorOpioid", "持續監測", "鴉片類藥物相關緊急狀況演算法（2025）",
+    () => `病患目前呼吸已足夠。下一步適當的處置是？`,
+    [
+      opt("a", "若呼吸已足夠，可擺成復甦姿勢，持續密切監測是否因 naloxone 藥效消退而再度呈現鎮靜，並安排後送轉介——naloxone 的藥效通常比多數鴉片類藥物更短", "ideal",
+        "正確——當 naloxone 藥效在鴉片類藥物之前消退時，可能再度出現鎮靜；持續監測與安排後送皆為必要處置。", "2025 年 AHA 鴉片類藥物相關緊急狀況演算法", 10, () => "endOpioidResolved"),
+      opt("b", "認為緊急狀況已完全解除，讓病患處於無人監測狀態", "critical",
+        "隨著 naloxone 藥效消退，再度鎮靜的情形相當常見——絕不可讓病患處於無人監測狀態。", "2025 年 AHA 鴉片類藥物相關緊急狀況演算法", 20, () => "endOpioidResolved")
+    ]);
+  nodes.endOpioidResolved = endNode("endOpioidResolved", "案例結束 — 鴉片類藥物緊急狀況已處置");
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 7: POST-CARDIAC-ARREST CARE (standalone entry, already at ROSC)
+   ========================================================================= */
+function buildPostArrestStandalone(state) {
+  const nodes = {};
+  nodes.start = node("start", "ROSC 後優先處置", "心臟停止後照護",
+    (s) => { s.flags.rosc = true; s.rhythmType = "sinus_tachy"; s.vitals.hr = randInt(95, 130); s.vitals.bpSys = randInt(78, 96); s.vitals.bpDia = randInt(45, 58); s.vitals.spo2 = randInt(88, 99); s.vitals.etco2 = randInt(20, 45); s.vitals.rr = randInt(8, 24);
+      return `${ageDesc(s)}${s.setting}經復甦後剛達成 ROSC。生命徵象：${vitalsLine(s)}。病患仍處於昏迷狀態。你的立即優先處置是？`; },
+    [
+      opt("a", "調整氧氣濃度以避免過度給氧、維持正常通氣目標（避免過度通氣）、進行十二導程心電圖，並處置低血壓", "ideal",
+        "正確的 ROSC 後首要處置組合。", "2025 年 AHA 心臟停止後照護", 12, () => "hemodynamics"),
+      opt("b", "將 FiO2 持續維持在 100%，並過度通氣以『排出』酸性物質", "critical",
+        "ROSC 後應避免持續過度給氧與過度通氣——兩者皆與較差預後相關。", "2025 年 AHA 心臟停止後照護", 15, () => "hemodynamics"),
+      opt("c", "只要確認有脈搏即可，沒有其他特別優先事項", "error",
+        "需要一套結構化的 ROSC 後處置組合（給氧、通氣、血行動力學、心電圖、找出病因）。", "2025 年 AHA 心臟停止後照護", 10, () => "hemodynamics")
+    ]);
+  nodes.hemodynamics = node("hemodynamics", "血行動力學支持", "心臟停止後照護",
+    (s) => `血壓為 ${s.vitals.bpSys}/${s.vitals.bpDia}。你該如何支持血行動力學？`,
+    [
+      opt("a", "給予輸液，若低血壓持續則開始使用升壓劑，並以維持適當平均動脈壓為目標", "ideal",
+        "正確——應積極處置 ROSC 後之低血壓。", "2025 年 AHA 心臟停止後照護", 10, () => "ecgCheck"),
+      opt("b", "既然已有脈搏，就不理會血壓", "critical",
+        "未經處置的 ROSC 後低血壓會加重次發性腦損傷——應予以治療。", "2025 年 AHA 心臟停止後照護", 15, () => "ecgCheck")
+    ]);
+  nodes.ecgCheck = node("ecgCheck", "找出病因", "心臟停止後照護",
+    () => `已取得十二導程心電圖，顯示 ST 段上升。接下來該怎麼做？`,
+    [
+      opt("a", "啟動心導管處置流程／依所屬機構的 STEMI 規範討論緊急冠狀動脈血管攝影", "ideal",
+        "正確——ROSC 後發現 STEMI，應依規範考慮緊急血管攝影。", "2025 年 AHA 心臟停止後照護", 12, () => "ttm"),
+      opt("b", "既然病患已從心臟停止中存活，就不理會此心電圖結果", "critical",
+        "找出並處置病因（如急性冠狀動脈阻塞）是心臟停止後照護的核心環節。", "2025 年 AHA 心臟停止後照護", 15, () => "ttm")
+    ]);
+  nodes.ttm = node("ttm", "目標體溫管理與預後評估", "心臟停止後照護",
+    () => `病患仍處於昏迷狀態。你該如何處置體溫並與家屬溝通預後？`,
+    [
+      opt("a", "積極預防發燒／將體溫控制在目標範圍內，並延遲神經預後評估（一般建議 ≥72 小時、採多模式評估），同時向家屬提供結構化的情緒支持", "ideal",
+        "正確——積極體溫控制，加上延遲、多模式的神經預後評估與家屬支持，符合 2025 年準則之優先處置方向。", "2025 年 AHA 心臟停止後照護", 15, () => "endPostArrest"),
+      opt("b", "根據這一次檢查，及早明確地告知家屬預後", "critical",
+        "應避免依單一早期檢查就下判斷——應採延遲、多模式的評估方式。", "2025 年 AHA 心臟停止後照護", 15, () => "endPostArrest")
+    ]);
+  nodes.endPostArrest = endNode("endPostArrest", "案例結束 — 心臟停止後照護");
+  return { startNodeId: "start", nodes };
+}
+
+/* =========================================================================
+   FAMILY 8: BLS → ALS TRANSITION
+   ========================================================================= */
+function buildBlsAlsTransition(state) {
+  const nodes = {};
+  nodes.start = node("start", "接手交班", "團隊導向復甦／BLS→ALS 轉銜",
+    (s) => `你是剛抵達的急救團隊／救護車人員。目擊者已對${ageDesc(s)}${s.setting}進行數分鐘的 CPR，並已使用 AED（${s.witnessed ? "已給予 1 次電擊" : "目前尚未偵測到建議電擊之心律"}）。接手時你的第一優先是？`,
+    [
+      opt("a", "在盡量不中斷目前按壓的情況下，快速取得結構化交班資訊（發生多久、是否有目擊、旁人 CPR 品質、已給予電擊次數、目前心律）", "ideal",
+        "正確——在持續按壓的同時進行簡短、結構化的交班（如 SBAR 形式），是最安全的轉銜方式。", "2025 年 AHA 團隊導向復甦", 10, () => "switchCompressor"),
+      opt("b", "立即停止按壓，先取得完整病史再繼續", "critical",
+        "不應為了詢問病史而停止按壓——應在持續 CPR 的同時取得簡短的結構化交班資訊。", "2025 年 AHA 高品質 CPR 標準", 25, () => "switchCompressor"),
+      opt("c", "完全不理會目擊者提供的資訊，從頭開始處置", "error",
+        "目擊者提供的資訊（發生多久、已電擊次數、心律）相當寶貴，會影響你接下來的處置——不應捨棄不用。", "2025 年 AHA 團隊導向復甦", 15, () => "switchCompressor")
+    ]);
+  nodes.switchCompressor = node("switchCompressor", "更換人員與設備", "團隊導向復甦",
+    () => `你需要換成自己的監視器／去顫器，並替換一位新的按壓者。你該怎麼做？`,
+    [
+      opt("a", "在簡短、規劃好的暫停時間內（或盡可能不暫停）接上自己的電擊貼片／監視器並更換按壓者，並將此時機安排在下次心律檢查前後，以避免額外中斷", "ideal",
+        "正確——協調設備／人員更換的時機，以將額外的按壓中斷降到最低。", "2025 年 AHA 高品質 CPR 標準", 12, () => "assignRoles"),
+      opt("b", "既然目擊者的處置可能有問題，就花多少時間都無所謂", "critical",
+        "過長的中斷會降低冠狀動脈灌流壓——應有效率地完成轉銜。", "2025 年 AHA 高品質 CPR 標準", 25, () => "assignRoles")
+    ]);
+  nodes.assignRoles = node("assignRoles", "團隊角色與閉環式溝通", "團隊導向復甦",
+    () => `你的團隊已各就各位。身為團隊領導者，你會如何下達下一個醫囑（例如 epinephrine 1 mg IV）？`,
+    [
+      opt("a", "將醫囑明確指派給特定人員，並使用清楚的閉環式溝通（對方需複述醫囑內容後才執行）", "ideal",
+        "正確——將醫囑以閉環式溝通方式指派給特定團隊成員，可降低錯誤發生率。", "2025 年 AHA 團隊導向復甦", 8, () => "continueAlgo"),
+      opt("b", "只是對著全場宣布醫囑，沒有指定任何人", "error",
+        "未指定對象的醫囑經常會被遺漏或重複執行——應將任務明確指派給特定人員。", "2025 年 AHA 團隊導向復甦", 10, () => "continueAlgo"),
+      opt("c", "身為團隊領導者，卻自己親自給藥而非交辦他人", "acceptable",
+        "在小型團隊中尚屬可行，但身為團隊領導者，通常應著重於指揮與監督整體復甦流程，而非親自執行每一項任務。", "2025 年 AHA 團隊導向復甦", 8, () => "continueAlgo")
+    ]);
+  nodes.continueAlgo = infoNode("continueAlgo", "轉銜完成", "ACLS 心臟停止演算法",
+    () => "轉銜已完成——請依標準 ACLS 心臟停止演算法繼續處置（每 2 分鐘檢查心律、單次電擊策略、每 3–5 分鐘給予腎上腺素、持續找尋可逆病因）。",
+    () => "endTransition");
+  nodes.endTransition = endNode("endTransition", "案例結束 — BLS→ALS 轉銜");
+  return { startNodeId: "start", nodes };
+}
+
+/* ---------- register all families ---------- */
+Object.assign(SCENARIO_FAMILIES, {
+  pediatric_cardiac_arrest: { label: "兒童心臟停止", ageGroups: ["child", "infant"], build: buildPedsArrest },
+  bradycardia: { label: "心搏過緩（有脈搏）", ageGroups: ["adult"], build: buildBradycardia },
+  tachycardia: { label: "心搏過速（有脈搏）", ageGroups: ["adult"], build: (s) => { const r = buildTachycardia(s); attachTachyDynamicOptions(r.nodes); return r; } },
+  respiratory_arrest: { label: "呼吸停止", ageGroups: ["adult", "child"], build: buildRespiratoryArrest },
+  opioid_emergency: { label: "鴉片類藥物相關緊急狀況", ageGroups: ["adult"], build: buildOpioidEmergency },
+  post_arrest_care: { label: "心臟停止後照護", ageGroups: ["adult", "child"], build: buildPostArrestStandalone },
+  bls_als_transition: { label: "BLS → ALS 轉銜", ageGroups: ["adult"], build: buildBlsAlsTransition }
+});
+
+/* ============================================================
+   FAMILY 9: RHYTHM RECOGNITION DRILL
+   A focused, rapid-fire rhythm classification practice mode that
+   reuses the same engine (monitor, scoring, debrief).
+   ============================================================ */
+function buildRhythmDrill(state) {
+  const nodes = {};
+  const pool = Object.keys(RHYTHM_LIBRARY);
+  const sequenceLength = 8;
+  const sequence = [];
+  while (sequence.length < sequenceLength) {
+    const t = pick(pool);
+    if (sequence.filter(x => x === t).length < 2) sequence.push(t);
+  }
+  function classify(type) {
+    const info = RHYTHM_LIBRARY[type];
+    if (info.category === "arrest") return info.shockable ? "shockable_arrest" : "nonshockable_arrest";
+    if (info.category === "brady") return "bradycardia";
+    if (info.category === "tachy_narrow" || info.category === "tachy_narrow_irregular") return "tachycardia_narrow";
+    if (info.category === "tachy_wide") return "tachycardia_wide";
+    return "perfusing_normal";
+  }
+  const CHOICES = [
+    { id: "shockable_arrest", label: "心臟停止，可電擊心律（VF／無脈性 VT）→ 予以電擊去顫" },
+    { id: "nonshockable_arrest", label: "心臟停止，不可電擊心律（心搏停止／PEA）→ CPR ＋ 腎上腺素，不予電擊" },
+    { id: "bradycardia", label: "心搏過緩（有脈搏）→ 評估穩定度，考慮 atropine／節律調節" },
+    { id: "tachycardia_narrow", label: "窄複合波心搏過速（有脈搏）→ 迷走神經刺激手法／adenosine 或控制心室反應" },
+    { id: "tachycardia_wide", label: "寬複合波心搏過速（有脈搏）→ 評估穩定度，考慮抗心律不整藥物／心臟整流術" },
+    { id: "perfusing_normal", label: "正常灌流心律 → 不需針對心律做特殊處置" }
+  ];
+  sequence.forEach((type, i) => {
+    const id = "q" + i;
+    const nextId = i === sequenceLength - 1 ? "end" : "q" + (i + 1);
+    const correct = classify(type);
+    const options = shuffleArr(CHOICES).slice(0, 4);
+    if (!options.find(o => o.id === correct)) options[0] = CHOICES.find(o => o.id === correct);
+    nodes[id] = {
+      id, stage: `第 ${i + 1} 個心律（共 ${sequenceLength} 個）`, algoTag: "心律辨識", category: "rhythm",
+      type: "decision",
+      prompt: (s) => { s.rhythmType = type; s.vitals.hr = RHYTHM_LIBRARY[type].category === "arrest" ? null : randInt(35, 190); return "請判讀此心律並選擇適當的初步處置。"; },
+      options: shuffleArr(options).map((o, idx) => opt(String(idx), o.label,
+        o.id === correct ? "ideal" : "critical",
+        o.id === correct ? `正確——此為${RHYTHM_LIBRARY[type].label}。` : `不太正確——此其實是${RHYTHM_LIBRARY[type].label}。`,
+        "2025 年 AHA 心律辨識", 6, () => nextId))
+    };
+  });
+  nodes.end = endNode("end", "訓練完成");
+  return { startNodeId: "q0", nodes };
+}
+function shuffleArr(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+Object.assign(SCENARIO_FAMILIES, {
+  rhythm_drill: { label: "心律辨識特訓", ageGroups: ["adult"], build: buildRhythmDrill, isDrill: true }
+});
+
+</script>
+<script>
+/* ============================================================
+   PROTOCOL MODE — static, no-time-pressure algorithm walkthroughs
+   Each algorithm: { label, startId, nodes: { id: { text, options:[{label,next}] } } }
+   ============================================================ */
+
+const PROTOCOLS = {
+  bls: {
+    label: "BLS 基本救命術演算法（成人）",
+    startId: "n1",
+    nodes: {
+      n1: { text: "確認現場安全。", options: [{ label: "現場安全 → 繼續", next: "n2" }] },
+      n2: { text: "檢查病患反應。呼叫求救／啟動緊急應變系統，並取得 AED（自動體外去顫器）（或請他人協助取得）。", options: [{ label: "無反應 → 繼續", next: "n3" }] },
+      n3: { text: "同時評估呼吸與脈搏，時間不超過 10 秒。", options: [
+        { label: "無正常呼吸、無脈搏 → 心臟停止", next: "n4" },
+        { label: "無正常呼吸、有脈搏 → 呼吸停止", next: "n_resp" },
+        { label: "呼吸正常、有脈搏 → 持續監測，必要時採復甦姿勢", next: "n_end_normal" }
+      ] },
+      n4: { text: "開始 CPR：每分鐘 100–120 下，深度 2–2.4 吋（成人），確保完全回彈，比例 30:2，盡量減少中斷。", options: [{ label: "AED／去顫器抵達 → 繼續", next: "n5" }] },
+      n5: { text: "在盡量不中斷按壓的情況下開啟 AED／接上去顫器，並分析心律。", options: [
+        { label: "可電擊心律", next: "n6" },
+        { label: "不可電擊心律", next: "n7" }
+      ] },
+      n6: { text: "給予「一次」電擊（單次電擊策略——不連續疊加電擊），隨即立刻恢復 CPR。持續每 2 分鐘檢查心律一次。當進階救護人員／設備抵達後，轉銜至 ACLS 心臟停止演算法。", options: [] },
+      n7: { text: "不予電擊——立即恢復 CPR。持續每 2 分鐘檢查心律一次。當進階救護人員／設備抵達後，轉銜至 ACLS 心臟停止演算法。", options: [] },
+      n_resp: { text: "給予人工呼吸：成人每 6 秒一次（每分鐘 10 次）。約每 2 分鐘重新檢查脈搏一次。若脈搏消失，立即開始 CPR。", options: [] },
+      n_end_normal: { text: "目前不需復甦處置——密切監測並持續再評估。", options: [] }
+    }
+  },
+  acls_arrest: {
+    label: "ACLS 成人心臟停止演算法",
+    startId: "a1",
+    nodes: {
+      a1: { text: "CPR 持續進行中。盡量不中斷按壓，接上監視器／去顫器。給予氧氣；建立 IV/IO 通路（若能迅速取得，以 IV 為優先）。", options: [{ label: "檢查心律 →", next: "a2" }] },
+      a2: { text: "心律檢查（≤10 秒）。", options: [{ label: "可電擊（VF/pVT）", next: "a3" }, { label: "不可電擊（心搏停止／PEA）", next: "a8" }] },
+      a3: { text: "給予「一次」電擊。立即恢復 CPR（不需暫停檢查脈搏／心律）。", options: [{ label: "持續 CPR 2 分鐘 →", next: "a4" }] },
+      a4: { text: "CPR 期間：確認 IV/IO 通路；若 VF/pVT 於第 2 次電擊後仍持續，給予 epinephrine 1 mg IV/IO，之後每 3–5 分鐘重複一次；考慮建立進階呼吸道／使用 capnography（呼氣末二氧化碳監測）。", options: [{ label: "檢查心律 →", next: "a5" }] },
+      a5: { text: "心律檢查。", options: [{ label: "仍為可電擊心律", next: "a6" }, { label: "規則心律 → 檢查脈搏", next: "a_pulsecheck" }, { label: "心搏停止／PEA", next: "a8" }] },
+      a6: { text: "再次電擊；恢復 CPR。針對頑固性 VF/pVT 給予 amiodarone 300 mg IV/IO（首劑）——或以 lidocaine 作為替代方案；amiodarone 第二劑為 150 mg。同時找出並處置可逆病因（H's & T's）。", options: [{ label: "持續循環／檢查心律 →", next: "a5" }, { label: "已達成 ROSC →", next: "a7" }] },
+      a7: { text: "開始心臟停止後照護：優化給氧與通氣（避免過度給氧與過度通氣）、處置低血壓、進行十二導程心電圖、若病患昏迷則執行目標體溫管理、延遲並採多模式神經預後評估、提供結構化的家屬／情緒支持。", options: [] },
+      a_pulsecheck: { text: "檢查脈搏。", options: [{ label: "有脈搏 → 達成 ROSC", next: "a7" }, { label: "無脈搏 → 依 PEA 處置", next: "a8" }] },
+      a8: { text: "不予電擊。立即恢復 CPR。優先建立 IV/IO 通路，並儘速給予 epinephrine 1 mg IV/IO，之後每 3–5 分鐘重複一次。找出並處置可逆病因（H's & T's）：血容不足、缺氧、氫離子（酸中毒）、高／低血鉀、低體溫、張力性氣胸、心包填塞、中毒、肺栓塞、冠狀動脈栓塞。", options: [{ label: "檢查心律 →", next: "a9" }] },
+      a9: { text: "心律檢查。", options: [{ label: "現為可電擊心律", next: "a3" }, { label: "仍為不可電擊心律", next: "a8" }, { label: "出現 ROSC 徵象（規則心律＋有脈搏）", next: "a7" }] }
+    }
+  },
+  bradycardia: {
+    label: "成人心搏過緩演算法（有脈搏）",
+    startId: "b1",
+    nodes: {
+      b1: { text: "找出並處置根本病因。維持呼吸道通暢，若缺氧則給氧，監測心律／血壓／血氧，建立 IV 通路，若可行則進行十二導程心電圖。", options: [{ label: "評估是否不穩定 →", next: "b2" }] },
+      b2: { text: "心搏過緩是否導致低血壓、急性意識狀態改變、休克徵象、缺血性胸部不適，或急性心衰竭？", options: [
+        { label: "否——病況穩定", next: "b_stable" },
+        { label: "是——病況不穩定", next: "b3" }
+      ] },
+      b_stable: { text: "持續監測與觀察；處置潛在／促成病因；暫不需立即藥物或電性治療。", options: [] },
+      b3: { text: "給予 atropine 1 mg IV 推注；每 3–5 分鐘重複一次，總量上限 3 mg。（對於合併寬 QRS 的高度房室傳導阻滯，atropine 通常效果不佳——此情況應盡快改採體外節律調節。）", options: [{ label: "再評估 →", next: "b4" }] },
+      b4: { text: "對 atropine 的反應是否充分？", options: [
+        { label: "是 → 已改善", next: "b_resolved" },
+        { label: "否／預期效果不佳", next: "b5" }
+      ] },
+      b5: { text: "開始體外節律調節（必要時給予止痛／鎮靜），並／或給予 dopamine（5–20 mcg/kg/min）或 epinephrine（2–10 mcg/min）輸注。尋求專科會診。", options: [{ label: "繼續 →", next: "b_resolved" }] },
+      b_resolved: { text: "持續監測、處置根本病因，並安排適當後續處置。", options: [] }
+    }
+  },
+  tachycardia: {
+    label: "成人心搏過速演算法（有脈搏）",
+    startId: "t1",
+    nodes: {
+      t1: { text: "評估此心律對臨床狀況是否合理。找出並處置根本病因。維持呼吸道通暢，若缺氧則給氧，監測心律／血壓／血氧，建立 IV 通路，若可行則進行十二導程心電圖。", options: [{ label: "評估是否不穩定 →", next: "t2" }] },
+      t2: { text: "病患是否因心搏過速而不穩定？（低血壓、急性意識狀態改變、休克徵象、缺血性胸部不適、急性心衰竭）", options: [
+        { label: "是 → 不穩定", next: "t3" },
+        { label: "否 → 穩定", next: "t4" }
+      ] },
+      t3: { text: "施行同步心臟整流術（若情況允許且不延誤處置，可先給予鎮靜）。若心律規則且為窄複合波，可考慮使用 adenosine。", options: [{ label: "心搏過速持續 →", next: "t_expert" }, { label: "已改善 →", next: "t_end" }] },
+      t_expert: { text: "尋求專科會診；視情況考慮抗心律不整藥物治療並重複心臟整流術。", options: [{ label: "繼續 →", next: "t_end" }] },
+      t4: { text: "QRS 波為窄（<0.12 秒）或寬（≥0.12 秒）？", options: [{ label: "窄複合波", next: "t5" }, { label: "寬複合波", next: "t6" }] },
+      t5: { text: "窄複合波心律是規則或不規則？", options: [{ label: "規則（例如 SVT）", next: "t5a" }, { label: "不規則（例如心房顫動／撲動）", next: "t5b" }] },
+      t5a: { text: "先嘗試迷走神經刺激手法；若未轉復，給予 adenosine 6 mg 快速靜脈推注（可再重複一次 12 mg）。若反覆發作，可考慮專科會診。", options: [{ label: "繼續 →", next: "t_end" }] },
+      t5b: { text: "依發作時間長短與危險因子控制心室反應／心律；考慮抗凝治療；尋求專科／心臟科會診。", options: [{ label: "繼續 →", next: "t_end" }] },
+      t6: { text: "寬複合波心律是規則或不規則？", options: [{ label: "規則", next: "t6a" }, { label: "不規則", next: "t6b" }] },
+      t6a: { text: "考慮為單型性心室頻脈（或伴隨異常傳導之 SVT）；給予抗心律不整藥物輸注治療（如 procainamide 或 amiodarone），並尋求專科會診。", options: [{ label: "繼續 →", next: "t_end" }] },
+      t6b: { text: "考慮為多型性心室頻脈／torsades，或預激症候群合併心房顫動。給予硫酸鎂、矯正電解質異常／導致 QT 延長之藥物，並避免使用房室結阻斷藥物（以防為預激症候群合併心房顫動）。若已無脈搏，應依心臟停止處置。", options: [{ label: "繼續 →", next: "t_end" }] },
+      t_end: { text: "持續監測、處置根本病因，並安排適當後續處置。", options: [] }
+    }
+  }
+};
+
+</script>
+<script>
+/* ============================================================
+   CORE ENGINE: state machine, timer, scoring, adaptive learning
+   ============================================================ */
+
+function rv(field, state) { return typeof field === "function" ? field(state) : field; }
+
+const DIFFICULTIES = {
+  beginner: { label: "初學者", hints: true, countdown: 0, complicationChance: 0, criticalPenalty: 8 },
+  intermediate: { label: "中階", hints: false, countdown: 0, complicationChance: 0.12, criticalPenalty: 10 },
+  advanced: { label: "進階", hints: false, countdown: 25, complicationChance: 0.28, criticalPenalty: 14 },
+  expert: { label: "專家", hints: false, countdown: 15, complicationChance: 0.42, criticalPenalty: 18 }
+};
+
+const COMPLICATIONS = [
+  "🔋 去顫貼片與皮膚接觸不良——下次電擊前需要重新黏貼。",
+  "💉 靜脈留置針似乎已滲漏——請重新評估你的靜脈通路。",
+  "😟 一位情緒激動的家屬進入房間，不斷詢問狀況。",
+  "📟 監視器警報故障並閃爍不停，暫時遮蔽了心律畫面。",
+  "🫁 甦醒球面罩密合度不佳，胸廓起伏不穩定。",
+  "🛏️ 附近另一名病患也急需處理，分散了團隊的注意力。",
+  "🔊 現場吵雜混亂，使閉環式溝通更加困難。",
+  "🧊 所需設備（背板／骨內針鑽／呼吸道推車）未即時備於床邊。"
+];
+
+const TEAM_ROLES = ["團隊領導者", "按壓者", "呼吸道處置", "去顫器／監視器", "靜脈／骨內通路與給藥", "紀錄員"];
+
+/* ---------- global app state ---------- */
+const App = {
+  screen: "home",
+  run: null,           // active single-case run
+  exam: null,          // active exam run
+  history: [],         // completed case summaries
+  adaptiveTags: {},     // tag -> count of error/critical occurrences
+  protocolState: null
+};
+
+/* ---------- patient / config generation ---------- */
+function familyDefaultAgeGroup(familyId) {
+  const fam = SCENARIO_FAMILIES[familyId];
+  return pick(fam.ageGroups);
+}
+
+function generateConfig(overrides) {
+  overrides = overrides || {};
+  const familyIds = Object.keys(SCENARIO_FAMILIES);
+  const family = overrides.family || pick(familyIds);
+  const ageGroup = overrides.ageGroup || familyDefaultAgeGroup(family);
+  let ageValue, weightKg;
+  if (ageGroup === "adult") { ageValue = randInt(19, 84); weightKg = randInt(55, 100); }
+  else if (ageGroup === "child") { ageValue = randInt(1, 11); weightKg = estimateChildWeightKg(ageValue); }
+  else { ageValue = randInt(1, 11); weightKg = estimateChildWeightKg(ageValue / 12); }
+  const setting = pick(ageGroup === "adult" ? SETTINGS_ADULT : SETTINGS_PEDS);
+  const witnessed = overrides.witnessed !== undefined ? overrides.witnessed : chance(0.5);
+  const specialCircumstance = overrides.specialCircumstance || weightedPick(SPECIAL_CIRCUMSTANCES).id;
+  const difficulty = overrides.difficulty || "intermediate";
+  const teamMode = overrides.teamMode || false;
+  return {
+    family, ageGroup, ageValue, weightKg,
+    sex: pick(["male", "female"]),
+    setting, witnessed, specialCircumstance, difficulty, teamMode
+  };
+}
+
+function freshVitals() {
+  return { hr: 80, bpSys: 118, bpDia: 74, spo2: 97, rr: 16, etco2: 35, temp: 37.0 };
+}
+
+function createRunState(config) {
+  const state = {
+    id: uid(),
+    config,
+    family: config.family,
+    ageGroup: config.ageGroup,
+    ageValue: config.ageValue,
+    weightKg: config.weightKg,
+    sex: config.sex,
+    setting: config.setting,
+    witnessed: config.witnessed,
+    specialCircumstance: config.specialCircumstance,
+    difficulty: config.difficulty,
+    teamMode: config.teamMode,
+    roles: config.roles || null,
+    vitals: freshVitals(),
+    rhythmType: "sinus_normal",
+    timerSec: 0,
+    events: [],
+    log: [],
+    flags: {},
+    tierCounts: { ideal: 0, acceptable: 0, error: 0, critical: 0 },
+    domainCounts: {}, // category -> {correct,total}
+    criticalErrors: [],
+    currentComplication: null,
+    currentNodeId: null,
+    nodes: null,
+    _qualityBonus: 0,
+    examMode: false,
+    finished: false
+  };
+  const built = SCENARIO_FAMILIES[config.family].build(state);
+  state.currentNodeId = built.startNodeId;
+  state.nodes = built.nodes;
+  return state;
+}
+
+function currentNode(state) { return state.nodes[state.currentNodeId]; }
+function getNodeOptions(node, state) { return node.dynamicOptions ? node.dynamicOptions(state) : (node.options || []); }
+
+function recordDomain(state, category, tier) {
+  if (!state.domainCounts[category]) state.domainCounts[category] = { correct: 0, total: 0 };
+  state.domainCounts[category].total++;
+  if (tier === "ideal" || tier === "acceptable") state.domainCounts[category].correct++;
+}
+
+function mistakeTagFor(node, tier) {
+  if (tier !== "error" && tier !== "critical") return null;
+  const cat = node.category || "general";
+  if (cat === "rhythm") return "rhythm_recognition";
+  if (cat === "medication") return "medication_dosing";
+  if (cat === "cpr") return "cpr_technique";
+  if ((node.algoTag || "").toLowerCase().includes("bradycardia")) return "bradycardia_management";
+  if ((node.algoTag || "").toLowerCase().includes("tachycardia")) return "tachycardia_management";
+  if ((node.algoTag || "").toLowerCase().includes("post-cardiac")) return "post_arrest_care";
+  return "protocol_timing_delay";
+}
+
+function applyDecision(state, node, option) {
+  const tier = rv(option.tier, state);
+  const feedback = rv(option.feedback, state);
+  const timeCost = option.timeCost || 5;
+  state.timerSec += timeCost;
+  if (option.vitalsEffect) option.vitalsEffect(state);
+  state.tierCounts[tier] = (state.tierCounts[tier] || 0) + 1;
+  const category = node.category || "general";
+  recordDomain(state, category, tier);
+  if (tier === "critical") {
+    state.criticalErrors.push({ stage: node.stage, text: option.text, feedback });
+    state._qualityBonus -= 0.06;
+  } else if (tier === "ideal") {
+    state._qualityBonus += 0.02;
+  }
+  const tag = mistakeTagFor(node, tier);
+  if (tag) App.adaptiveTags[tag] = (App.adaptiveTags[tag] || 0) + 1;
+  state.log.push({
+    t: state.timerSec, stage: node.stage, algoTag: node.algoTag,
+    choice: option.text, tier, feedback, ref: option.ref || ""
+  });
+  state.events.push({ t: state.timerSec, label: node.stage + ": " + option.text.slice(0, 60) });
+  const nextId = option.next(state);
+  return { tier, feedback, nextId };
+}
+
+function applyMedicationChoice(state, node, phase, key, doseOpt) {
+  // phase 'drug' returns tier for drug pick; phase 'dose' finalizes
+  if (phase === "drug") {
+    let tier;
+    if (key === node.correctKey) tier = "ideal";
+    else if ((node.acceptableKeys || []).includes(key)) tier = "acceptable";
+    else tier = "error";
+    return tier;
+  }
+}
+
+function finalizeMedication(state, node, drugKey, drugTier, doseTier) {
+  const finalTier = drugTier === "error" ? "error" : (doseTier === "ideal" ? drugTier : "error");
+  const ref = MED_REFERENCE[drugKey] ? MED_REFERENCE[drugKey].indication : "";
+  const timeCost = 12;
+  state.timerSec += timeCost;
+  state.tierCounts[finalTier] = (state.tierCounts[finalTier] || 0) + 1;
+  recordDomain(state, "medication", finalTier);
+  if (finalTier === "critical" || finalTier === "error") {
+    if (finalTier === "critical") state.criticalErrors.push({ stage: node.stage, text: "給藥醫囑", feedback: "此適應症的藥物／劑量選擇有誤。" });
+    App.adaptiveTags["medication_dosing"] = (App.adaptiveTags["medication_dosing"] || 0) + 1;
+  } else if (finalTier === "ideal") { state._qualityBonus += 0.02; }
+  const correctRef = MED_REFERENCE[node.correctKey];
+  const label = MED_REFERENCE[drugKey] ? MED_REFERENCE[drugKey].name : drugKey;
+  state.log.push({
+    t: state.timerSec, stage: node.stage, algoTag: node.algoTag,
+    choice: "已下達醫囑：" + label, tier: finalTier,
+    feedback: finalTier === "ideal" ? `正確——${correctRef.name} ${correctRef.dose}${correctRef.repeat ? "，" + correctRef.repeat : ""}。` :
+      `參考資訊：${correctRef.name} ${correctRef.dose}。${correctRef.notes || ""}`,
+    ref: "2025 年 AHA 藥物參考資料 — " + correctRef.indication
+  });
+  state.events.push({ t: state.timerSec, label: node.stage + "：已下達 " + label + " 醫囑" });
+  const nextId = node.next(state, finalTier);
+  return { tier: finalTier, nextId };
+}
+
+/* ---------- scoring & debrief ---------- */
+function computeScoreSummary(state) {
+  const total = Object.values(state.tierCounts).reduce((a, b) => a + b, 0) || 1;
+  const weight = { ideal: 100, acceptable: 70, error: 30, critical: 0 };
+  let sum = 0;
+  Object.keys(state.tierCounts).forEach(k => { sum += (state.tierCounts[k] || 0) * (weight[k] || 0); });
+  let score = sum / total;
+  const diffCfg = DIFFICULTIES[state.difficulty] || DIFFICULTIES.intermediate;
+  score -= state.criticalErrors.length * diffCfg.criticalPenalty;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const adherence = Math.round(((state.tierCounts.ideal || 0) + (state.tierCounts.acceptable || 0)) / total * 100);
+  const domain = {};
+  Object.keys(state.domainCounts).forEach(k => {
+    const d = state.domainCounts[k];
+    domain[k] = Math.round((d.correct / (d.total || 1)) * 100);
+  });
+  return { score, adherence, domain, total, criticalCount: state.criticalErrors.length };
+}
+
+function scoreLabel(score) {
+  if (score >= 90) return { text: "優異", cls: "good" };
+  if (score >= 75) return { text: "熟練", cls: "good" };
+  if (score >= 55) return { text: "尚在發展中", cls: "warn" };
+  return { text: "需要加強練習", cls: "bad" };
+}
+
+function buildDebrief(state) {
+  const summary = computeScoreSummary(state);
+  const good = state.log.filter(l => l.tier === "ideal").slice(0, 6);
+  const bad = state.log.filter(l => l.tier === "error" || l.tier === "critical");
+  const idealSteps = state.log.map(l => `${l.stage}：${l.tier === "ideal" ? l.choice : "（請複習：" + l.feedback + "）"}`);
+  const learningPoints = [];
+  const seenRefs = new Set();
+  state.log.forEach(l => { if ((l.tier === "error" || l.tier === "critical") && l.ref && !seenRefs.has(l.ref)) { seenRefs.add(l.ref); learningPoints.push(l.ref + " — " + l.feedback); } });
+  if (learningPoints.length < 3) {
+    state.log.filter(l => l.tier === "ideal").forEach(l => { if (learningPoints.length < 5 && l.ref && !seenRefs.has(l.ref)) { seenRefs.add(l.ref); learningPoints.push(l.ref); } });
+  }
+  const famLabel = SCENARIO_FAMILIES[state.family].label;
+  const summaryText = `${famLabel}案例 — ${ageDesc(state)}${state.setting}${state.specialCircumstance !== "none" ? "，合併" + (SPECIAL_CIRCUMSTANCES.find(x => x.id === state.specialCircumstance) || {}).label : ""}。總復甦時間：${fmtTime(state.timerSec)}。${state.flags.rosc ? "已達成 ROSC。" : "案例依你所選擇的分支路徑結束。"}`;
+  return {
+    summary, good, bad, idealSteps: idealSteps.slice(0, 12),
+    learningPoints: learningPoints.slice(0, 5), summaryText,
+    timeline: state.events.slice(0, 20)
+  };
+}
+
+function finalizeRun(state) {
+  state.finished = true;
+  const summary = computeScoreSummary(state);
+  App.history.push({
+    id: state.id, family: state.family, familyLabel: SCENARIO_FAMILIES[state.family].label,
+    difficulty: state.difficulty, score: summary.score, adherence: summary.adherence,
+    domain: summary.domain, criticalCount: summary.criticalCount, time: state.timerSec,
+    rosc: !!state.flags.rosc, date: new Date().toISOString()
+  });
+  return summary;
+}
+
+/* ---------- adaptive learning ---------- */
+const ADAPTIVE_INFO = {
+  rhythm_recognition: { label: "心律辨識", suggestion: "多練習以心律判讀為主的心臟停止案例，或進行心律辨識特訓。", families: ["adult_cardiac_arrest", "pediatric_cardiac_arrest", "tachycardia"] },
+  medication_dosing: { label: "藥物劑量／給藥時機", suggestion: "多練習給藥決策密集的案例（心臟停止與心搏過緩案例）。", families: ["adult_cardiac_arrest", "bradycardia", "pediatric_cardiac_arrest"] },
+  cpr_technique: { label: "CPR 基本技術", suggestion: "先複習流程演練模式中的 BLS 路徑，再重複練習心臟停止情境。", families: ["adult_cardiac_arrest", "pediatric_cardiac_arrest"] },
+  bradycardia_management: { label: "心搏過緩演算法", suggestion: "重複練習專門的心搏過緩案例。", families: ["bradycardia"] },
+  tachycardia_management: { label: "心搏過速演算法", suggestion: "重複練習專門的心搏過速案例（窄複合波與寬複合波、規則與不規則）。", families: ["tachycardia"] },
+  post_arrest_care: { label: "心臟停止後照護", suggestion: "重複練習 ROSC 後的處置案例。", families: ["post_arrest_care", "adult_cardiac_arrest"] },
+  protocol_timing_delay: { label: "時機／流程延遲", suggestion: "在進階／專家難度的時間壓力下練習，以加快反應速度。", families: ["adult_cardiac_arrest", "opioid_emergency", "respiratory_arrest"] }
+};
+
+function getTopWeakness() {
+  const entries = Object.entries(App.adaptiveTags).filter(([, v]) => v >= 2);
+  if (!entries.length) return null;
+  entries.sort((a, b) => b[1] - a[1]);
+  const [tag, count] = entries[0];
+  return { tag, count, info: ADAPTIVE_INFO[tag] };
+}
+
+</script>
+<script>
+/* ============================================================
+   UI RENDERING & EVENT WIRING
+   ============================================================ */
+function $(sel, root) { return (root || document).querySelector(sel); }
+function $all(sel, root) { return Array.from((root || document).querySelectorAll(sel)); }
+function esc(s) { const d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+
+let stripRenderer = null;
+let countdownInterval = null;
+let countdownRemaining = 0;
+const TEAMMATE_NAMES = ["家豪", "怡君", "俊傑", "雅婷", "志明", "淑芬"];
+let builderSel = { family: null, ageGroup: null, difficulty: "intermediate", teamMode: false };
+let protocolCurrentKey = "bls";
+let protocolPath = [];
+
+function showScreen(id) {
+  clearCountdown();
+  $all(".screen").forEach(s => s.classList.remove("active"));
+  const el = $("#screen-" + id);
+  if (el) el.classList.add("active");
+  $all("#topbar nav button").forEach(b => b.classList.toggle("active", b.dataset.nav === id));
+  App.screen = id;
+  if (id === "home") renderHomeAdaptive();
+  if (id === "dashboard") renderDashboard();
+  if (id === "about") renderAbout();
+  if (id === "protocol") renderProtocol();
+}
+
+/* ---------- HOME ---------- */
+function renderHomeAdaptive() {
+  const w = getTopWeakness();
+  const box = $("#adaptiveHomeBox");
+  if (!w || !w.info) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  $("#adaptiveHomeContent").innerHTML = `
+    <p>你最近在<b>${esc(w.info.label)}</b>方面出現了 <b>${w.count}</b> 次錯誤。${esc(w.info.suggestion)}</p>
+    <button class="btn primary" id="btnAdaptiveGo">開始針對性練習案例</button>`;
+  $("#btnAdaptiveGo").onclick = () => {
+    const fam = pick(w.info.families);
+    startSimWithConfig(generateConfig({ family: fam, difficulty: "intermediate" }));
+  };
+}
+
+/* ---------- BUILDER ---------- */
+function renderPills(containerId, items, selectedId, onSelect) {
+  const c = $("#" + containerId);
+  c.innerHTML = "";
+  items.forEach(it => {
+    const b = document.createElement("div");
+    b.className = "pill" + (it.id === selectedId ? " selected" : "");
+    b.textContent = it.label;
+    b.onclick = () => { onSelect(it.id); renderBuilder(); };
+    c.appendChild(b);
+  });
+}
+function renderBuilder() {
+  const famItems = Object.keys(SCENARIO_FAMILIES).filter(k => !SCENARIO_FAMILIES[k].isDrill).map(k => ({ id: k, label: SCENARIO_FAMILIES[k].label }));
+  if (!builderSel.family) builderSel.family = famItems[0].id;
+  renderPills("pillFamily", famItems, builderSel.family, (id) => { builderSel.family = id; builderSel.ageGroup = null; });
+
+  const fam = SCENARIO_FAMILIES[builderSel.family];
+  const ageLabels = { adult: "成人", child: "兒童", infant: "嬰兒" };
+  const ageItems = fam.ageGroups.map(g => ({ id: g, label: ageLabels[g] }));
+  if (!builderSel.ageGroup || !fam.ageGroups.includes(builderSel.ageGroup)) builderSel.ageGroup = fam.ageGroups[0];
+  renderPills("pillAge", ageItems, builderSel.ageGroup, (id) => { builderSel.ageGroup = id; });
+
+  const diffItems = Object.keys(DIFFICULTIES).map(k => ({ id: k, label: DIFFICULTIES[k].label }));
+  renderPills("pillDifficulty", diffItems, builderSel.difficulty, (id) => { builderSel.difficulty = id; });
+
+  const teamItems = [{ id: "solo", label: "單人" }, { id: "team", label: "團隊模式（分配角色）" }];
+  renderPills("pillTeam", teamItems, builderSel.teamMode ? "team" : "solo", (id) => { builderSel.teamMode = (id === "team"); });
+}
+
+/* ---------- ROLES ---------- */
+function renderRoleAssign(config) {
+  const shuffled = shuffleArr(TEAMMATE_NAMES);
+  const roles = {};
+  roles["團隊領導者"] = "你";
+  TEAM_ROLES.filter(r => r !== "團隊領導者").forEach((r, i) => { roles[r] = shuffled[i]; });
+  config.roles = roles;
+  const card = $("#roleAssignCard");
+  card.innerHTML = Object.entries(roles).map(([role, person]) =>
+    `<div class="kv"><span>${esc(role)}</span><b>${esc(person)}</b></div>`).join("");
+  $("#btnRolesContinue").onclick = () => startSimWithConfig(config);
+}
+
+/* ---------- SIM ---------- */
+function startSimWithConfig(config) {
+  App.run = createRunState(config);
+  showScreen("sim");
+  $("#examProgress").classList.add("hidden");
+  if (!stripRenderer) { stripRenderer = new RhythmStrip($("#stripCanvas")); stripRenderer.start(); }
+  enterNode(App.run);
+}
+
+function ageGroupLabel(g) { return { adult: "成人", child: "兒童", infant: "嬰兒" }[g] || g; }
+
+function renderPatientCard(state) {
+  $("#patientName").textContent = ageDesc(state);
+  $("#patientDifficultyBadge").textContent = (DIFFICULTIES[state.difficulty] || {}).label || "";
+  const sc = SPECIAL_CIRCUMSTANCES.find(x => x.id === state.specialCircumstance);
+  const chips = [
+    `<span class="tag info">${esc(SCENARIO_FAMILIES[state.family].label)}</span>`,
+    `<span class="tag">${esc(state.setting)}</span>`,
+    state.witnessed !== undefined ? `<span class="tag ${state.witnessed ? "good" : "warn"}">${state.witnessed ? "有目擊" : "無目擊"}</span>` : "",
+    (sc && sc.id !== "none") ? `<span class="tag warn">${esc(sc.label)}</span>` : "",
+    state.teamMode ? `<span class="tag info">團隊模式</span>` : ""
+  ].filter(Boolean).join(" ");
+  $("#patientMeta").innerHTML = chips;
+  const chipsBox = $("#roleChipsBox");
+  chipsBox.innerHTML = state.roles ? Object.entries(state.roles).map(([r, p]) => `<span class="roleChip">${esc(r)}: ${esc(p)}</span>`).join("") : "";
+}
+
+function renderMonitor(state) {
+  const v = state.vitals;
+  $("#vHR").textContent = v.hr === null || v.hr === undefined ? "--" : v.hr;
+  $("#vBP").textContent = (v.bpSys === null || v.bpSys === undefined) ? "--/--" : `${v.bpSys}/${v.bpDia}`;
+  $("#vSpO2").textContent = v.spo2 === null || v.spo2 === undefined ? "--" : v.spo2;
+  $("#vRR").textContent = v.rr === null || v.rr === undefined ? "--" : v.rr;
+  $("#vEtCO2").textContent = v.etco2 === null || v.etco2 === undefined ? "--" : v.etco2;
+  $("#vTemp").textContent = v.temp === null || v.temp === undefined ? "--" : v.temp.toFixed ? v.temp.toFixed(1) : v.temp;
+  if (stripRenderer) {
+    if (stripRenderer.type !== state.rhythmType) stripRenderer.setRhythm(state.rhythmType, v.hr || 60);
+    else stripRenderer.rate = v.hr || stripRenderer.rate;
+  }
+  const info = RHYTHM_LIBRARY[state.rhythmType] || {};
+  let pulseText;
+  if (info.category === "arrest") pulseText = "無脈搏 — 監視器顯示心臟停止心律";
+  else if (state.flags.pulsePresent === false) pulseText = "無脈搏";
+  else pulseText = "有脈搏";
+  $("#pulseStatus").textContent = "脈搏：" + pulseText;
+}
+
+function renderTimer(state) {
+  $("#timerDisplay").textContent = fmtTime(state.timerSec);
+  const last = state.events[state.events.length - 1];
+  $("#lastEventLabel").textContent = last ? last.label : "尚無事件";
+}
+
+function renderActionLog(state) {
+  const box = $("#actionLog");
+  if (!state.log.length) { box.innerHTML = '<p class="small muted">尚無任何處置。</p>'; return; }
+  box.innerHTML = state.log.slice().reverse().map(l => `
+    <div class="entry">
+      <div><span class="tm">${fmtTime(l.t)}</span><span class="tag ${tierClass(l.tier)}">${tierShort(l.tier)}</span></div>
+      <div>${esc(l.stage)}</div>
+      <div class="muted">${esc(l.choice)}</div>
+    </div>`).join("");
+}
+function tierClass(t) { return t === "ideal" ? "good" : t === "acceptable" ? "info" : t === "error" ? "warn" : "bad"; }
+function tierShort(t) { return t === "ideal" ? "理想" : t === "acceptable" ? "可接受" : t === "error" ? "錯誤" : "嚴重錯誤"; }
+function tierHeading(t) { return t === "ideal" ? "✅ 理想處置" : t === "acceptable" ? "🟦 可接受" : t === "error" ? "⚠️ 未達最佳" : "🛑 嚴重錯誤"; }
+
+function showFeedback(tier, feedback, ref) {
+  $("#feedbackContainer").innerHTML = `
+    <div class="feedbackBox ${tier}">
+      <h4>${tierHeading(tier)}</h4>
+      <p>${esc(feedback || "")}</p>
+      ${ref ? `<div class="ref">參考資料：${esc(ref)}</div>` : ""}
+    </div>`;
+}
+
+function clearCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  countdownInterval = null;
+  const box = $("#countdownBox");
+  if (box) box.classList.add("hidden");
+}
+
+function startCountdown(state, node, onTimeout) {
+  const cfg = DIFFICULTIES[state.difficulty] || {};
+  if (!cfg.countdown) return;
+  countdownRemaining = cfg.countdown;
+  const box = $("#countdownBox");
+  box.classList.remove("hidden");
+  const render = () => { box.innerHTML = `⏳ 請於 <b style="color:${countdownRemaining <= 5 ? "var(--bad)" : "var(--warn)"}">${countdownRemaining} 秒</b>內做出決定——真實的復甦現場不會暫停等你。`; };
+  render();
+  countdownInterval = setInterval(() => {
+    countdownRemaining--;
+    render();
+    if (countdownRemaining <= 0) { clearCountdown(); onTimeout(); }
+  }, 1000);
+}
+
+function renderComplication(state, node) {
+  const slot = $("#complicationSlot");
+  if ((node.type === "decision" || node.type === "medication") && state.difficulty !== "beginner" && chance((DIFFICULTIES[state.difficulty] || {}).complicationChance || 0)) {
+    state.currentComplication = pick(COMPLICATIONS);
+  } else {
+    state.currentComplication = null;
+  }
+  slot.innerHTML = state.currentComplication ? `<div class="complicationBanner">${esc(state.currentComplication)}</div>` : "";
+}
+
+function enterNode(state) {
+  const node = currentNode(state);
+  if (node.type === "end") { finishRun(state); return; }
+  state._currentPromptText = node.prompt ? node.prompt(state) : "";
+  renderComplication(state, node);
+  renderMonitor(state);
+  renderPatientCard(state);
+  renderTimer(state);
+  renderActionLog(state);
+  $("#stageTag").textContent = node.stage || "";
+  $("#algoTag").textContent = node.algoTag || "";
+  $("#scenarioPrompt").textContent = state._currentPromptText;
+  $("#feedbackContainer").innerHTML = "";
+  $("#continueRow").classList.add("hidden");
+  const optsBox = $("#optionsContainer");
+  optsBox.innerHTML = "";
+
+  if (node.type === "info") {
+    const btn = document.createElement("button");
+    btn.className = "btn primary lg block";
+    btn.textContent = "繼續 →";
+    btn.onclick = () => { const nextId = node.next(state); goToNext(state, nextId); };
+    optsBox.appendChild(btn);
+    return;
+  }
+
+  if (node.type === "medication") {
+    renderMedicationPhaseDrug(state, node);
+    startCountdown(state, node, () => handleMedTimeout(state, node));
+    return;
+  }
+
+  // decision node
+  if (DIFFICULTIES[state.difficulty] && DIFFICULTIES[state.difficulty].hints) {
+    const hint = document.createElement("p");
+    hint.className = "small muted";
+    hint.style.marginTop = "-6px";
+    hint.textContent = `💡 初學者提示：你目前處於「${node.algoTag || "演算法"}」中的「${node.stage}」階段。請先想想 2025 年 AHA 指引在此處優先強調的重點，再做出選擇。`;
+    $("#scenarioPrompt").after(hint);
+  }
+  const options = getNodeOptions(node, state);
+  options.forEach((option, i) => {
+    const btn = document.createElement("button");
+    btn.className = "optionBtn";
+    btn.innerHTML = `<span class="k">${String.fromCharCode(65 + i)}</span>${esc(option.text)}`;
+    btn.onclick = () => handleDecision(state, node, option);
+    optsBox.appendChild(btn);
+  });
+  startCountdown(state, node, () => handleTimeout(state, node));
+}
+
+function goToNext(state, nextId) { state.currentNodeId = nextId; enterNode(state); }
+
+function handleDecision(state, node, option) {
+  clearCountdown();
+  $all(".optionBtn", $("#optionsContainer")).forEach(b => b.classList.add("disabledOpt"));
+  const result = applyDecision(state, node, option);
+  renderMonitor(state); renderTimer(state); renderActionLog(state); renderPatientCard(state);
+  if (state.examMode) { setTimeout(() => goToNext(state, result.nextId), 300); return; }
+  showFeedback(result.tier, result.feedback, option.ref);
+  $("#continueRow").classList.remove("hidden");
+  $("#btnContinue").onclick = () => goToNext(state, result.nextId);
+}
+
+function handleTimeout(state, node) {
+  $all(".optionBtn", $("#optionsContainer")).forEach(b => b.classList.add("disabledOpt"));
+  const options = getNodeOptions(node, state);
+  const fallback = options[0];
+  const nextId = fallback.next(state);
+  state.timerSec += 20;
+  state.tierCounts.critical = (state.tierCounts.critical || 0) + 1;
+  recordDomain(state, node.category || "general", "critical");
+  const feedback = "時間已到但尚未做出決定。在真實的復甦現場，猶豫本身就會造成有害的延遲。";
+  state.criticalErrors.push({ stage: node.stage, text: "（未採取任何行動）", feedback });
+  App.adaptiveTags["protocol_timing_delay"] = (App.adaptiveTags["protocol_timing_delay"] || 0) + 1;
+  state.log.push({ t: state.timerSec, stage: node.stage, algoTag: node.algoTag, choice: "（猶豫——未能及時採取行動）", tier: "critical", feedback, ref: "2025 年 AHA — 時效關鍵練習" });
+  state.events.push({ t: state.timerSec, label: node.stage + "：未採取行動（逾時）" });
+  renderMonitor(state); renderTimer(state); renderActionLog(state);
+  if (state.examMode) { setTimeout(() => goToNext(state, nextId), 300); return; }
+  showFeedback("critical", feedback, "2025 年 AHA — 時效關鍵練習");
+  $("#continueRow").classList.remove("hidden");
+  $("#btnContinue").onclick = () => goToNext(state, nextId);
+}
+
+/* ---------- medication two-phase UI ---------- */
+function renderMedicationPhaseDrug(state, node) {
+  const optsBox = $("#optionsContainer");
+  optsBox.innerHTML = "";
+  const keys = shuffleArr(node.drugKeys);
+  keys.forEach((key, i) => {
+    const ref = MED_REFERENCE[key];
+    const btn = document.createElement("button");
+    btn.className = "optionBtn";
+    btn.innerHTML = `<span class="k">${String.fromCharCode(65 + i)}</span><b>${esc(ref.name)}</b><br><span class="small muted">${esc(ref.indication)}</span>`;
+    btn.onclick = () => {
+      clearCountdown();
+      $all(".optionBtn", optsBox).forEach(b => b.classList.add("disabledOpt"));
+      const drugTier = applyMedicationChoice(state, node, "drug", key);
+      if (drugTier === "error") {
+        const result = finalizeMedication(state, node, key, "error", "error");
+        renderMonitor(state); renderTimer(state); renderActionLog(state);
+        finishMedication(state, node, result);
+      } else {
+        renderMedicationPhaseDose(state, node, key, drugTier);
+      }
+    };
+    optsBox.appendChild(btn);
+  });
+}
+function renderMedicationPhaseDose(state, node, key, drugTier) {
+  const optsBox = $("#optionsContainer");
+  optsBox.innerHTML = "";
+  const ref = MED_REFERENCE[key];
+  const correctLabel = `${ref.dose}${ref.route ? "（" + ref.route.join("/") + "）" : ""}${ref.repeat ? "，" + ref.repeat : ""}`;
+  const distractors = (ref.distractors || []).slice(0, 3);
+  const choices = shuffleArr([{ label: correctLabel, correct: true }, ...distractors.map(d => ({ label: d, correct: false }))]);
+  choices.forEach((c, i) => {
+    const btn = document.createElement("button");
+    btn.className = "optionBtn";
+    btn.innerHTML = `<span class="k">${String.fromCharCode(65 + i)}</span>${esc(c.label)}`;
+    btn.onclick = () => {
+      $all(".optionBtn", optsBox).forEach(b => b.classList.add("disabledOpt"));
+      const doseTier = c.correct ? "ideal" : "error";
+      const result = finalizeMedication(state, node, key, drugTier, doseTier);
+      renderMonitor(state); renderTimer(state); renderActionLog(state);
+      finishMedication(state, node, result);
+    };
+    optsBox.appendChild(btn);
+  });
+}
+function finishMedication(state, node, result) {
+  if (state.examMode) { setTimeout(() => goToNext(state, result.nextId), 300); return; }
+  const logEntry = state.log[state.log.length - 1];
+  showFeedback(result.tier, logEntry.feedback, logEntry.ref);
+  $("#continueRow").classList.remove("hidden");
+  $("#btnContinue").onclick = () => goToNext(state, result.nextId);
+}
+function handleMedTimeout(state, node) {
+  $all(".optionBtn", $("#optionsContainer")).forEach(b => b.classList.add("disabledOpt"));
+  const result = finalizeMedication(state, node, node.correctKey, "error", "error");
+  renderMonitor(state); renderTimer(state); renderActionLog(state);
+  finishMedication(state, node, result);
+}
+
+/* ---------- DEBRIEF ---------- */
+function finishRun(state) {
+  if (state.examMode) { finishExamCase(state); return; }
+  const summary = finalizeRun(state);
+  const debrief = buildDebrief(state);
+  renderDebrief(state, summary, debrief);
+  showScreen("debrief");
+}
+
+function renderDebrief(state, summary, debrief) {
+  $("#debriefScore").textContent = summary.score + "%";
+  const lbl = scoreLabel(summary.score);
+  $("#debriefScoreLabel").className = "tag " + lbl.cls;
+  $("#debriefScoreLabel").textContent = lbl.text;
+  $("#debriefMetrics").innerHTML = `
+    <div class="metricRow"><span>流程依從度</span><span>${summary.adherence}%</span></div>
+    <div class="meter"><div style="width:${summary.adherence}%;background:var(--good)"></div></div>
+    <div class="metricRow"><span>嚴重錯誤次數</span><span>${summary.criticalCount}</span></div>
+    <div class="metricRow"><span>總花費時間</span><span>${fmtTime(state.timerSec)}</span></div>
+    ${Object.keys(summary.domain).map(k => `
+      <div class="metricRow"><span>${esc(domainLabel(k))}準確度</span><span>${summary.domain[k]}%</span></div>
+      <div class="meter"><div style="width:${summary.domain[k]}%;background:${summary.domain[k] >= 70 ? "var(--good)" : summary.domain[k] >= 40 ? "var(--warn)" : "var(--bad)"}"></div></div>
+    `).join("")}
+  `;
+  $("#debriefSummary").textContent = debrief.summaryText;
+  $("#debriefTimeline").innerHTML = debrief.timeline.map(e => `<div class="kv"><span>${fmtTime(e.t)}</span><span>${esc(e.label)}</span></div>`).join("") || '<p class="muted">沒有具時間戳記的事件。</p>';
+  $("#debriefGood").innerHTML = debrief.good.length ? debrief.good.map(l => `<li>${esc(l.stage)}：${esc(l.choice)}</li>`).join("") : "<li>繼續練習——小小的進步將會顯示在這裡。</li>";
+  $("#debriefBad").innerHTML = debrief.bad.length ? debrief.bad.map(l => `<li><b>${esc(l.stage)}：</b>${esc(l.choice)} — <span class="muted">${esc(l.feedback)}</span></li>`).join("") : "<li>沒有記錄到任何錯誤——表現得非常好！</li>";
+  $("#debriefIdeal").innerHTML = debrief.idealSteps.map(s => `<li>${esc(s)}</li>`).join("");
+  $("#debriefLearning").innerHTML = debrief.learningPoints.map(s => `<li>${esc(s)}</li>`).join("") || "<li>請於流程演練模式中複習此案例類型對應的 2025 年 AHA 演算法。</li>";
+
+  $("#btnAnotherCase").onclick = () => startSimWithConfig(generateConfig({ family: state.family, difficulty: state.difficulty, teamMode: state.teamMode }));
+  $("#btnToDashboard").onclick = () => showScreen("dashboard");
+  $("#btnDebriefHome").onclick = () => showScreen("home");
+}
+function domainLabel(k) {
+  return { rhythm: "心律辨識與電擊去顫", medication: "藥物治療", cpr: "CPR 技術", general: "整體臨床決策" }[k] || k;
+}
+
+/* ---------- PROTOCOL MODE ---------- */
+function renderProtocol() {
+  const picker = $("#protocolPicker");
+  picker.innerHTML = "";
+  Object.keys(PROTOCOLS).forEach(key => {
+    const p = document.createElement("div");
+    p.className = "pill" + (key === protocolCurrentKey ? " selected" : "");
+    p.textContent = PROTOCOLS[key].label;
+    p.onclick = () => { protocolCurrentKey = key; protocolPath = [PROTOCOLS[key].startId]; renderProtocol(); };
+    picker.appendChild(p);
+  });
+  if (!protocolPath.length) protocolPath = [PROTOCOLS[protocolCurrentKey].startId];
+  const proto = PROTOCOLS[protocolCurrentKey];
+  const nodeId = protocolPath[protocolPath.length - 1];
+  const node = proto.nodes[nodeId];
+  $("#protocolTitle").textContent = proto.label;
+  $("#protocolStepBadge").textContent = `第 ${protocolPath.length} 步`;
+  $("#protocolNodeText").textContent = node.text;
+  const optsBox = $("#protocolOptions");
+  optsBox.innerHTML = "";
+  if (!node.options.length) {
+    const done = document.createElement("div");
+    done.className = "tag good";
+    done.textContent = "此路徑已結束——請按「重新開始」以嘗試其他分支";
+    optsBox.appendChild(done);
+  }
+  node.options.forEach(o => {
+    const b = document.createElement("div");
+    b.className = "pill";
+    b.textContent = o.label;
+    b.onclick = () => { protocolPath.push(o.next); renderProtocol(); };
+    optsBox.appendChild(b);
+  });
+  $("#btnProtocolBack").onclick = () => { if (protocolPath.length > 1) { protocolPath.pop(); renderProtocol(); } };
+  $("#btnProtocolRestart").onclick = () => { protocolPath = [proto.startId]; renderProtocol(); };
+  $("#protocolFlow").innerHTML = protocolPath.map((id, i) => `
+    <span class="flowNode ${i === protocolPath.length - 1 ? "current" : ""}"><div class="t">第 ${i + 1} 步</div>${esc(proto.nodes[id].text.slice(0, 90))}${proto.nodes[id].text.length > 90 ? "…" : ""}</span>
+    ${i < protocolPath.length - 1 ? '<span class="flowArrow">→</span>' : ""}
+  `).join("");
+}
+
+/* ---------- DASHBOARD ---------- */
+function renderDashboard() {
+  const h = App.history;
+  const tiles = $("#dashboardTiles");
+  const avgScore = h.length ? Math.round(h.reduce((a, c) => a + c.score, 0) / h.length) : 0;
+  const totalCrit = h.reduce((a, c) => a + c.criticalCount, 0);
+  const arrestCases = h.filter(c => ["adult_cardiac_arrest", "pediatric_cardiac_arrest"].includes(c.family));
+  const roscRate = arrestCases.length ? Math.round(100 * arrestCases.filter(c => c.rosc).length / arrestCases.length) : 0;
+  tiles.innerHTML = `
+    <div class="statTile"><div class="n">${h.length}</div><div class="l">已完成案例數</div></div>
+    <div class="statTile"><div class="n">${avgScore}%</div><div class="l">平均分數</div></div>
+    <div class="statTile"><div class="n">${totalCrit}</div><div class="l">嚴重錯誤總次數</div></div>
+    <div class="statTile"><div class="n">${arrestCases.length ? roscRate + "%" : "—"}</div><div class="l">ROSC 達成率（心臟停止案例）</div></div>
+  `;
+  const domainAgg = {};
+  h.forEach(c => Object.keys(c.domain || {}).forEach(k => {
+    if (!domainAgg[k]) domainAgg[k] = [];
+    domainAgg[k].push(c.domain[k]);
+  }));
+  const meters = $("#dashboardMeters");
+  const keys = Object.keys(domainAgg);
+  meters.innerHTML = keys.length ? keys.map(k => {
+    const avg = Math.round(domainAgg[k].reduce((a, b) => a + b, 0) / domainAgg[k].length);
+    return `<div class="metricRow"><span>${esc(domainLabel(k))}</span><span>${avg}%</span></div><div class="meter"><div style="width:${avg}%;background:${avg >= 70 ? "var(--good)" : avg >= 40 ? "var(--warn)" : "var(--bad)"}"></div></div>`;
+  }).join("") : '<p class="muted small">完成一個案例後，即可在此查看各領域準確度。</p>';
+
+  const adaptiveBox = $("#dashboardAdaptive");
+  const entries = Object.entries(App.adaptiveTags).sort((a, b) => b[1] - a[1]);
+  adaptiveBox.innerHTML = entries.length ? entries.map(([tag, count]) => {
+    const info = ADAPTIVE_INFO[tag];
+    if (!info) return "";
+    return `<div style="margin-bottom:10px;"><b>${esc(info.label)}</b> — 共 ${count} 次<br><span class="muted">${esc(info.suggestion)}</span></div>`;
+  }).join("") : '<p class="muted">目前尚無重複出現的錯誤模式——請持續練習。</p>';
+
+  const histBox = $("#dashboardHistory");
+  histBox.innerHTML = h.length ? '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;">' +
+    '<tr class="muted"><th style="text-align:left;padding:4px;">日期</th><th style="text-align:left;">案例</th><th>難度</th><th>分數</th><th>嚴重錯誤</th></tr>' +
+    h.slice().reverse().map(c => `<tr style="border-top:1px solid var(--border);">
+      <td style="padding:4px;">${new Date(c.date).toLocaleString()}</td>
+      <td>${esc(c.familyLabel)}</td><td style="text-align:center;">${esc((DIFFICULTIES[c.difficulty] || {}).label || c.difficulty)}</td>
+      <td style="text-align:center;">${c.score}%</td><td style="text-align:center;">${c.criticalCount}</td></tr>`).join("") +
+    "</table></div>" : '<p class="muted small">尚未完成任何案例。</p>';
+}
+
+/* ---------- ABOUT ---------- */
+function renderAbout() {
+  const list = [
+    "以單一、統一的存活鏈取代原本分開的成人／兒童與院內／院外存活鏈：辨識與啟動緊急應變 → 高品質 CPR → 電擊去顫 → 進階復甦處置 → 心臟停止後照護 → 康復與存活者照護。",
+    "採單次電擊去顫策略（不連續疊加電擊），每次電擊後立即恢復胸外按壓。",
+    "優先建立 IV（靜脈）通路，僅在無法迅速取得 IV 通路時，才合理選擇 IO（骨內）通路。",
+    "對於病因未明的心臟停止，若無特定適應症，不建議常規給予碳酸氫鈉、鈣劑、鎂劑或類固醇。",
+    "新增面向一般民眾的鴉片類藥物過量處置演算法，包含一般民眾施救者使用 naloxone 的指引，且絕不可為了施打 naloxone 而延遲人工呼吸／CPR。",
+    "更新哽塞處置方式：成人／兒童交替進行 5 次背部拍擊與 5 次腹部推擠；嬰兒則採 5 次背部拍擊與 5 次胸部按壓。",
+    "心臟停止後照護強調應避免過度給氧／過度通氣、積極進行體溫管理、採延遲且多模式的神經預後評估，並提供結構化的家屬情緒支持。",
+    "12 歲以上兒童可被教導執行有效的 CPR 與電擊去顫。"
+  ];
+  $("#aboutChangesList").innerHTML = list.map(x => `<li>${x}</li>`).join("");
+}
+
+</script>
+<script>
+/* ============================================================
+   BOOT / EXAM MODE / WIRING
+   ============================================================ */
+
+const EXAM_CASE_COUNT = 10;
+const EXAM_PASS_SCORE = 75;
+
+function startExam() {
+  const families = Object.keys(SCENARIO_FAMILIES).filter(k => !SCENARIO_FAMILIES[k].isDrill);
+  const cases = [];
+  for (let i = 0; i < EXAM_CASE_COUNT; i++) {
+    cases.push(generateConfig({ family: pick(families), difficulty: "intermediate" }));
+  }
+  App.exam = { cases, index: 0, results: [] };
+  runExamCase(0);
+}
+
+function runExamCase(i) {
+  const config = App.exam.cases[i];
+  const state = createRunState(config);
+  state.examMode = true;
+  App.run = state;
+  showScreen("sim");
+  $("#examProgress").classList.remove("hidden");
+  if (!stripRenderer) { stripRenderer = new RhythmStrip($("#stripCanvas")); stripRenderer.start(); }
+  renderExamProgress();
+  enterNode(state);
+}
+
+function renderExamProgress() {
+  const box = $("#examProgress");
+  box.innerHTML = "";
+  for (let i = 0; i < App.exam.cases.length; i++) {
+    const d = document.createElement("div");
+    let cls = "dot";
+    if (i < App.exam.results.length) cls += App.exam.results[i].summary.score >= EXAM_PASS_SCORE ? " done-good" : " done-bad";
+    if (i === App.exam.index) cls += " current";
+    d.className = cls;
+    d.title = "第 " + (i + 1) + " 案例";
+    box.appendChild(d);
+  }
+  const timeEl = document.createElement("div");
+  timeEl.className = "small muted";
+  timeEl.style.marginLeft = "10px";
+  timeEl.textContent = `測驗案例 第 ${App.exam.index + 1} 題（共 ${App.exam.cases.length} 題）`;
+  box.appendChild(timeEl);
+}
+
+function finishExamCase(state) {
+  const summary = computeScoreSummary(state);
+  App.exam.results.push({ config: state.config, summary, familyLabel: SCENARIO_FAMILIES[state.family].label });
+  App.history.push({
+    id: state.id, family: state.family, familyLabel: SCENARIO_FAMILIES[state.family].label,
+    difficulty: state.difficulty, score: summary.score, adherence: summary.adherence,
+    domain: summary.domain, criticalCount: summary.criticalCount, time: state.timerSec,
+    rosc: !!state.flags.rosc, date: new Date().toISOString(), exam: true
+  });
+  App.exam.index++;
+  if (App.exam.index < App.exam.cases.length) runExamCase(App.exam.index);
+  else finishExam();
+}
+
+function finishExam() {
+  const results = App.exam.results;
+  const avgScore = Math.round(results.reduce((a, r) => a + r.summary.score, 0) / results.length);
+  const totalCritical = results.reduce((a, r) => a + r.summary.criticalCount, 0);
+  const passed = avgScore >= EXAM_PASS_SCORE && totalCritical === 0;
+  $("#examTiles").innerHTML = `
+    <div class="statTile"><div class="n">${avgScore}%</div><div class="l">平均分數</div></div>
+    <div class="statTile"><div class="n">${totalCritical}</div><div class="l">嚴重錯誤次數</div></div>
+    <div class="statTile"><div class="n">${results.filter(r => r.summary.score >= EXAM_PASS_SCORE).length}/${results.length}</div><div class="l">達到通過標準的案例數</div></div>
+    <div class="statTile"><div class="n" style="color:${passed ? "var(--good)" : "var(--bad)"}">${passed ? "通過" : "待複習"}</div><div class="l">整體結果（平均需達 ${EXAM_PASS_SCORE}%，且無嚴重錯誤）</div></div>
+  `;
+  $("#examBreakdown").innerHTML = results.map((r, i) => `
+    <div class="kv"><span>第 ${i + 1} 案例：${esc(r.familyLabel)}</span><span>${r.summary.score}% ${r.summary.criticalCount ? "⚠️ " + r.summary.criticalCount + " 次嚴重錯誤" : ""}</span></div>
+  `).join("");
+  showScreen("examresult");
+}
+
+/* ---------- boot ---------- */
+function initApp() {
+  $all("#topbar nav button").forEach(b => {
+    b.addEventListener("click", () => showScreen(b.dataset.nav));
+  });
+  $all(".mode-card[data-nav]").forEach(c => c.addEventListener("click", () => showScreen(c.dataset.nav)));
+  $all(".mode-card[data-start]").forEach(c => c.addEventListener("click", () => {
+    const kind = c.dataset.start;
+    if (kind === "random") {
+      startSimWithConfig(generateConfig({ difficulty: pick(["beginner", "intermediate", "intermediate", "advanced", "expert"]) }));
+    } else if (kind === "builder") {
+      renderBuilder();
+      showScreen("builder");
+    } else if (kind === "exam") {
+      startExam();
+    } else if (kind === "drill") {
+      startSimWithConfig(generateConfig({ family: "rhythm_drill", difficulty: "intermediate" }));
+    }
+  }));
+  $("#btnBuildStart").addEventListener("click", () => {
+    const config = generateConfig({ family: builderSel.family, ageGroup: builderSel.ageGroup, difficulty: builderSel.difficulty, teamMode: builderSel.teamMode });
+    if (config.teamMode) { renderRoleAssign(config); showScreen("roles"); }
+    else startSimWithConfig(config);
+  });
+  $("#btnExamHome").addEventListener("click", () => showScreen("home"));
+  protocolPath = [PROTOCOLS[protocolCurrentKey].startId];
+  showScreen("home");
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initApp);
+} else {
+  initApp();
+}
+
+</script>
+</body>
+</html>
