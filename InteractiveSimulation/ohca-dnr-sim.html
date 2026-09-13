@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OHCA‧DNR決策站</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+  :root{
+    --bg:#EEF2F0;
+    --surface:#FFFFFF;
+    --surface-2:#E2E8E5;
+    --surface-3:#D6DEDA;
+    --ink:#14201D;
+    --ink-muted:#57655F;
+    --rule:#D2DBD6;
+    --primary:#0F4C4A;
+    --primary-ink:#FFFFFF;
+    --primary-soft:#DCEBE9;
+    --gold:#8F6F2E;
+    --gold-soft:#F1E7CE;
+    --good:#2E7D5B;
+    --good-soft:#DEF0E6;
+    --warn:#9C6B1F;
+    --warn-soft:#F5E6CB;
+    --bad:#A9433A;
+    --bad-soft:#F6E1DE;
+    --shadow: 0 1px 2px rgba(15,30,27,0.06), 0 6px 20px -10px rgba(15,30,27,0.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E1613;
+      --surface:#152220;
+      --surface-2:#1C2B27;
+      --surface-3:#25352F;
+      --ink:#E7EEEA;
+      --ink-muted:#9CB0A9;
+      --rule:#2A3B36;
+      --primary:#5BC4B3;
+      --primary-ink:#06201C;
+      --primary-soft:#173430;
+      --gold:#D8B369;
+      --gold-soft:#2C2717;
+      --good:#5CBB8C;
+      --good-soft:#153327;
+      --warn:#D8A455;
+      --warn-soft:#332916;
+      --bad:#E0847A;
+      --bad-soft:#332019;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 24px -12px rgba(0,0,0,0.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E1613;
+    --surface:#152220;
+    --surface-2:#1C2B27;
+    --surface-3:#25352F;
+    --ink:#E7EEEA;
+    --ink-muted:#9CB0A9;
+    --rule:#2A3B36;
+    --primary:#5BC4B3;
+    --primary-ink:#06201C;
+    --primary-soft:#173430;
+    --gold:#D8B369;
+    --gold-soft:#2C2717;
+    --good:#5CBB8C;
+    --good-soft:#153327;
+    --warn:#D8A455;
+    --warn-soft:#332916;
+    --bad:#E0847A;
+    --bad-soft:#332019;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 24px -12px rgba(0,0,0,0.5);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; }
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+    line-height:1.75;
+    padding-inline:20px;
+    padding-block:0 56px;
+  }
+  ::selection{ background:var(--primary-soft); }
+  .wrap{ max-width:840px; margin:0 auto; }
+  h1,h2,h3{
+    font-family:'Noto Serif TC','Noto Sans TC',serif;
+    font-weight:700;
+    text-wrap:balance;
+    color:var(--ink);
+    margin:0;
+  }
+  .mono{ font-family:'IBM Plex Mono','Noto Sans TC',monospace; }
+  a{ color:var(--primary); }
+
+  /* ---------- Header ---------- */
+  header.top{ padding-block:36px 22px; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-size:12.5px; letter-spacing:.06em; font-weight:600;
+    color:var(--gold); background:var(--gold-soft);
+    border-radius:999px; padding:5px 12px 5px 10px;
+    margin-bottom:16px;
+  }
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--gold); flex:none; }
+  h1.title{ font-size:clamp(26px,4.6vw,36px); line-height:1.28; }
+  p.lede{
+    color:var(--ink-muted); font-size:16px; max-width:62ch; margin:14px 0 0;
+  }
+  .meta-row{
+    display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center;
+    margin-top:22px; padding-top:18px; border-top:1px solid var(--rule);
+    font-size:13.5px; color:var(--ink-muted);
+  }
+  .meta-row strong{ color:var(--ink); font-weight:600; }
+  .progress-pill{
+    display:inline-flex; align-items:center; gap:9px;
+    background:var(--surface); border:1px solid var(--rule); border-radius:999px;
+    padding:6px 14px 6px 6px; box-shadow:var(--shadow);
+  }
+  .progress-ring{ position:relative; width:26px; height:26px; flex:none; }
+  .progress-ring svg{ transform:rotate(-90deg); }
+  .progress-ring circle{ fill:none; stroke-width:3; }
+  .progress-ring .track{ stroke:var(--surface-3); }
+  .progress-ring .bar{ stroke:var(--primary); stroke-linecap:round; transition:stroke-dashoffset .4s ease; }
+  #resetBtn{
+    border:1px solid var(--rule); background:transparent; color:var(--ink-muted);
+    font:inherit; font-size:13px; border-radius:999px; padding:6px 13px; cursor:pointer;
+  }
+  #resetBtn:hover{ color:var(--ink); border-color:var(--ink-muted); }
+
+  /* ---------- Chain of survival ---------- */
+  .chain-section{ margin-top:8px; }
+  .chain{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:4px;
+    position:relative; padding-top:6px;
+  }
+  .chain::before{
+    content:"";
+    position:absolute; top:34px; left:10%; right:10%; height:2px;
+    background:linear-gradient(90deg,var(--rule),var(--primary),var(--rule));
+    opacity:.55; z-index:0;
+  }
+  .link{ position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; }
+  .link .ic{
+    width:52px; height:52px; border-radius:50%; background:var(--surface);
+    border:1.5px solid var(--rule); display:flex; align-items:center; justify-content:center;
+    color:var(--primary); box-shadow:var(--shadow);
+  }
+  .link .ic svg{ width:24px; height:24px; }
+  .link .lbl{ font-size:12px; color:var(--ink-muted); line-height:1.4; padding:0 2px; }
+  .ecg{ margin-top:14px; height:34px; width:100%; overflow:hidden; }
+  .ecg path{
+    fill:none; stroke:var(--primary); stroke-width:1.6; opacity:.65;
+    stroke-dasharray:340; stroke-dashoffset:0;
+    animation:ecg-move 3.6s linear infinite;
+  }
+  @keyframes ecg-move{ from{ stroke-dashoffset:340; } to{ stroke-dashoffset:0; } }
+  @media (prefers-reduced-motion:reduce){ .ecg path{ animation:none; } }
+
+  /* ---------- Filter bar ---------- */
+  .filterbar{
+    position:sticky; top:0; z-index:20;
+    background:var(--bg);
+    padding-block:14px 12px;
+    margin-top:30px;
+    border-bottom:1px solid var(--rule);
+  }
+  .filterbar::before{
+    content:""; position:absolute; inset:0 -20px auto -20px; height:100%;
+    background:var(--bg); z-index:-1;
+  }
+  .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{
+    font:inherit; font-size:13.5px; font-weight:500; cursor:pointer;
+    border:1px solid var(--rule); background:var(--surface); color:var(--ink-muted);
+    border-radius:999px; padding:7px 14px; display:inline-flex; align-items:center; gap:7px;
+    transition:background .15s,color .15s,border-color .15s;
+  }
+  .chip .n{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; opacity:.75; }
+  .chip:hover{ border-color:var(--primary); color:var(--ink); }
+  .chip.active{ background:var(--primary); border-color:var(--primary); color:var(--primary-ink); }
+  .chip.active .n{ opacity:.85; }
+
+  /* ---------- Case list ---------- */
+  .cases{ margin-top:22px; display:flex; flex-direction:column; gap:12px; }
+  details.case{
+    background:var(--surface); border:1px solid var(--rule); border-radius:14px;
+    box-shadow:var(--shadow); overflow:hidden;
+  }
+  details.case[open]{ border-color:var(--surface-3); }
+  summary.case-head{
+    list-style:none; cursor:pointer; padding:16px 18px;
+    display:flex; align-items:center; gap:14px;
+  }
+  summary.case-head::-webkit-details-marker{ display:none; }
+  summary.case-head:focus-visible{ outline:2px solid var(--primary); outline-offset:-2px; }
+  .case-code{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600;
+    color:var(--primary); background:var(--primary-soft); border-radius:6px;
+    padding:4px 7px; flex:none; letter-spacing:.02em;
+  }
+  .case-cat{
+    font-size:11.5px; font-weight:600; color:var(--gold); background:var(--gold-soft);
+    border-radius:6px; padding:4px 8px; flex:none; white-space:nowrap;
+  }
+  .case-title{ font-weight:700; font-size:16px; flex:1; min-width:0; }
+  .case-done{
+    flex:none; width:22px; height:22px; border-radius:50%;
+    border:1.5px solid var(--rule); display:flex; align-items:center; justify-content:center;
+    color:var(--good); opacity:0; transform:scale(.6); transition:opacity .2s,transform .2s;
+  }
+  .case-done.show{ opacity:1; transform:scale(1); border-color:var(--good); background:var(--good-soft); }
+  .case-done svg{ width:13px; height:13px; }
+  .chevron{ flex:none; width:18px; height:18px; color:var(--ink-muted); transition:transform .2s; }
+  details[open] .chevron{ transform:rotate(180deg); }
+
+  .case-body{ padding:0 18px 20px; border-top:1px solid var(--rule); }
+  .scenario{
+    background:var(--surface-2); border-radius:10px; padding:14px 16px; margin:16px 0 18px;
+    font-size:15px; color:var(--ink);
+  }
+  .scenario .k{
+    display:block; font-size:11.5px; font-weight:700; letter-spacing:.08em;
+    color:var(--ink-muted); margin-bottom:6px;
+  }
+  .choices{ display:flex; flex-direction:column; gap:8px; }
+  button.choice{
+    font:inherit; text-align:left; font-size:14.5px; color:var(--ink);
+    background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+    padding:12px 14px; cursor:pointer; display:flex; gap:10px; align-items:flex-start;
+    transition:border-color .15s, background .15s;
+  }
+  button.choice:hover{ border-color:var(--primary); }
+  button.choice:focus-visible{ outline:2px solid var(--primary); outline-offset:1px; }
+  button.choice .tag{
+    flex:none; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700;
+    color:var(--ink-muted); width:20px; height:20px; border-radius:50%; border:1px solid var(--rule);
+    display:flex; align-items:center; justify-content:center; margin-top:1px;
+  }
+  button.choice.selected{ background:var(--primary-soft); border-color:var(--primary); }
+  button.choice.selected .tag{ background:var(--primary); border-color:var(--primary); color:var(--primary-ink); }
+
+  .result{ margin-top:16px; border-radius:12px; overflow:hidden; border:1px solid var(--rule); }
+  .result-head{
+    display:flex; align-items:center; gap:10px; padding:12px 16px; font-weight:700; font-size:14.5px;
+  }
+  .result-head svg{ width:18px; height:18px; flex:none; }
+  .result.good .result-head{ background:var(--good-soft); color:var(--good); }
+  .result.warn .result-head{ background:var(--warn-soft); color:var(--warn); }
+  .result.bad  .result-head{ background:var(--bad-soft); color:var(--bad); }
+  .result-body{ padding:4px 16px 16px; background:var(--surface); display:flex; flex-direction:column; gap:14px; }
+  .field .k{
+    font-size:11.5px; font-weight:700; letter-spacing:.06em; color:var(--ink-muted);
+    display:flex; align-items:center; gap:6px; margin-bottom:5px;
+  }
+  .field .k .sw{ width:7px; height:7px; border-radius:2px; background:var(--primary); flex:none; }
+  .field p{ margin:0; font-size:14.5px; color:var(--ink); }
+  .field.law .k .sw{ background:var(--gold); }
+  .field.aha .k .sw{ background:var(--primary); }
+  .field.pitfall .k .sw{ background:var(--bad); }
+
+  .note{
+    margin-top:16px; border:1px dashed var(--rule); border-radius:10px;
+    padding:13px 15px; background:var(--gold-soft); font-size:14px; color:var(--ink);
+  }
+  .note b{ color:var(--gold); }
+
+  .empty{ text-align:center; padding:40px 0; color:var(--ink-muted); }
+
+  /* ---------- Reference appendix ---------- */
+  .appendix{ margin-top:52px; }
+  .appendix h2{ font-size:21px; margin-bottom:6px; }
+  .appendix .sub{ color:var(--ink-muted); font-size:14.5px; margin-bottom:20px; }
+  .lawgrid{ display:flex; flex-direction:column; gap:10px; }
+  .lawcard{
+    background:var(--surface); border:1px solid var(--rule); border-radius:12px;
+    padding:15px 17px; box-shadow:var(--shadow);
+  }
+  .lawcard h3{ font-size:15.5px; margin-bottom:6px; display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+  .lawcard h3 .tag2{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-muted); font-weight:500; }
+  .lawcard p{ margin:0; font-size:14px; color:var(--ink-muted); }
+
+  footer.disclaimer{
+    margin-top:44px; padding-top:20px; border-top:1px solid var(--rule);
+    font-size:13px; color:var(--ink-muted);
+  }
+
+  @media (max-width:560px){
+    .chain{ grid-template-columns:repeat(5,1fr); }
+    .link .lbl{ font-size:10.5px; }
+    .link .ic{ width:40px; height:40px; }
+    .link .ic svg{ width:19px; height:19px; }
+    summary.case-head{ flex-wrap:wrap; }
+    .case-title{ order:3; flex-basis:100%; }
+  }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+  <header class="top">
+    <span class="eyebrow"><span class="dot"></span>教育與模擬訓練用途</span>
+    <h1 class="title">OHCA 與 DNR 臨床決策模擬</h1>
+    <p class="lede">15 個院外心跳停止與不施行心肺復甦術之互動案例，依 2025 年美國心臟協會（AHA）CPR &amp; ECC 指引與台灣現行相關法規編寫，供醫療與救護人員教育訓練使用。</p>
+    <div class="meta-row">
+      <span class="progress-pill">
+        <span class="progress-ring">
+          <svg width="26" height="26" viewBox="0 0 26 26">
+            <circle class="track" cx="13" cy="13" r="11"></circle>
+            <circle id="ringBar" class="bar" cx="13" cy="13" r="11" stroke-dasharray="69.1" stroke-dashoffset="69.1"></circle>
+          </svg>
+        </span>
+        <span><strong id="doneCount">0</strong> / 15 個案例已檢視</span>
+      </span>
+      <button id="resetBtn" type="button">重設練習紀錄</button>
+      <span>資料來源：Circulation 2025 AHA Guidelines for CPR &amp; ECC；安寧緩和醫療條例；病人自主權利法；醫療法；緊急醫療救護法；性騷擾防治法</span>
+    </div>
+  </header>
+
+  <section class="chain-section" aria-label="到院外心跳停止存活鏈">
+    <div class="chain">
+      <div class="link">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 4h3l1.5 4-2 1.3a11 11 0 0 0 5.2 5.2L16 12.5l4 1.5v3a2 2 0 0 1-2.2 2A16 16 0 0 1 5 5.2 2 2 0 0 1 7 4Z"/></svg></span>
+        <span class="lbl">辨識與求救</span>
+      </div>
+      <div class="link">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 4v6M9 7l3 3 3-3"/><path d="M5 15h14M7 19h10"/></svg></span>
+        <span class="lbl">高品質CPR</span>
+      </div>
+      <div class="link">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 3 5 14h5l-1 7 8-11h-5l1-7Z" stroke-linejoin="round"/></svg></span>
+        <span class="lbl">快速去顫</span>
+      </div>
+      <div class="link">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M12 9v6M9 12h6"/></svg></span>
+        <span class="lbl">高級救護</span>
+      </div>
+      <div class="link">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8.5"/><path d="M7 12h2.2l1.3-3 2 6 1.3-3H17"/></svg></span>
+        <span class="lbl">復甦後照護</span>
+      </div>
+    </div>
+    <svg class="ecg" viewBox="0 0 400 34" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 17 H140 L152 4 L164 30 L176 17 H210 L222 9 L234 25 L246 17 H400"/>
+    </svg>
+  </section>
+
+  <nav class="filterbar" aria-label="案例分類篩選">
+    <div class="chips" id="chips"></div>
+  </nav>
+
+  <main class="cases" id="caseList"></main>
+
+  <section class="appendix" aria-label="法規與指引對照">
+    <h2>法規與指引對照表</h2>
+    <p class="sub">以下為本頁案例引用之主要法規與指引重點整理，僅摘錄與 OHCA／DNR 情境相關之條文精神，完整條文請以最新公布之全國法規資料庫內容為準。</p>
+    <div class="lawgrid" id="lawgrid"></div>
+  </section>
+
+  <footer class="disclaimer">
+    本網頁為教育與模擬訓練用途之互動式案例集，內容整理自 2025 年美國心臟協會（AHA）CPR 與 ECC 指引，以及台灣安寧緩和醫療條例、病人自主權利法、醫療法、緊急醫療救護法、性騷擾防治法等現行法規之公開資訊，並經簡化與情境化改寫，<strong style="color:var(--ink)">不構成正式醫療或法律意見</strong>。實際個案之處置與責任判斷，應以最新公告法規、所屬機構之作業程序，並諮詢專業醫療與法律意見為準。
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var CATS = {
+    ohca:        { label:"OHCA 到院前心跳停止" },
+    dnr:         { label:"DNR 不施行心肺復甦術" },
+    conflict:    { label:"DNR 衝突案例" },
+    process:     { label:"CPR 決策流程" },
+    harassment:  { label:"急救現場性騷擾情境" },
+    liability:   { label:"不當CPR 法律責任" }
+  };
+
+  var VERDICT = {
+    good: { label:"建議做法", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7"/></svg>' },
+    warn: { label:"尚可，非最佳做法", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 4.5 2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.5a2 2 0 0 0-3.4 0Z"/></svg>' },
+    bad:  { label:"不建議做法", icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg>' }
+  };
+
+  var CASES = [
+  {
+    id:"ohca-1", code:"OHCA-01", cat:"ohca",
+    title:"機場目擊倒地",
+    setting:"45歲男性於機場候機室突然倒地、無反應、無正常呼吸（僅喘息）。你是第一位到場的旁觀者，機場設有AED，119救護車預估8分鐘後抵達。",
+    choices:[
+      { label:"先打119並在旁觀察生命徵象，避免「隨便亂動」病人", verdict:"bad",
+        outcome:"病人在等待期間持續處於無血流狀態，腦部與心臟缺氧時間延長，存活機會隨每分鐘下降約7至10%。",
+        analysis:"生存鏈的核心是「立即辨識、立即行動」，任何延誤都會直接犧牲存活率與神經學預後；旁觀者不施救的最大風險不是「做錯」，而是「什麼都不做」。",
+        aha:"2025 AHA指引持續強調公眾第一目擊者應立即啟動胸部按壓、呼吸道與呼吸的處置流程，並儘速取得AED，不應等待救護人員到場。",
+        law:"緊急醫療救護法第14條之2：非救護人員為免除他人生命之急迫危險而施予急救措施者，適用民法、刑法緊急避難免責之規定，善意施救原則上不負賠償與刑事責任。",
+        pitfall:"常見迷思：「不是醫護人員不能碰」「怕壓斷肋骨要負責」，兩者皆與現行法規之保障不符。" },
+      { label:"立即打119、開始胸部按壓，並請他人取得AED依語音指示使用", verdict:"good",
+        outcome:"病人在倒地後短時間內即獲得有效灌流與去顫機會，統計上可將OHCA存活率提高2至3倍。",
+        analysis:"同時完成「呼叫協助」與「立即介入」兩件事，並善用最近的AED資源，是教科書級的標準反應。",
+        aha:"2025 AHA指引建議目擊猝倒應立即施行高品質胸部按壓（速率每分鐘100至120次、深度至少5公分），並持續支持擴大公眾可近性去顫與社區反應網絡。",
+        law:"緊急醫療救護法第14條之2善意施救免責規定完整適用；使用機場公共AED屬合法且受鼓勵之行為。",
+        pitfall:"常見誤解：AED會電到「還有心跳」的人造成危險——AED會自動分析心律，僅在可電擊心律時才建議電擊，不會誤擊有效心跳之病人。" },
+      { label:"只做胸部按壓，因不確定病人狀況先不做人工呼吸也不用AED以免用錯", verdict:"warn",
+        outcome:"病人獲得部分灌流支持，優於完全不作為，但可能因未能及早去顫而錯失恢復自發循環的黃金時間。",
+        analysis:"「只做按壓」對未受訓練旁觀者是合理的簡化建議，但不應成為「不使用AED」的理由，兩者是互補而非替代關係。",
+        aha:"2025 AHA指引仍將Hands-Only CPR列為未受訓練旁觀者的可接受選項，但同時強調「按壓加上盡速去顫」才是完整流程，AED操作全程有語音引導，一般民眾即可安全使用。",
+        law:"緊急醫療救護法第14條之2對使用AED之免責保障與徒手CPR相同，不會因「用錯AED」而加重法律責任。",
+        pitfall:"常見迷思：AED操作困難、需要專業訓練——實際上AED專為未受訓練者設計，開機後會以語音一步步指示。" }
+    ]
+  },
+  {
+    id:"ohca-2", code:"OHCA-02", cat:"ohca",
+    title:"現場處置或立即後送",
+    setting:"救護技術員到達OHCA現場，已完成2輪CPR、電擊1次，仍未恢復自發循環。家屬情緒激動要求「趕快送醫院」，現場無創傷、無低體溫、無懷孕跡象、環境安全。",
+    choices:[
+      { label:"尊重家屬意願，邊做CPR邊立即後送最近醫院", verdict:"bad",
+        outcome:"救護車移動中難以維持穩定深度與頻率的胸部按壓，中斷與品質波動增加，實證上到院前恢復自發循環之比例反而優於「邊送邊救」。",
+        analysis:"「移動中CPR」直覺上像是在爭取時間，但生理與力學限制使按壓品質下降，且到院後才開始的介入通常已延遲過久。",
+        aha:"2025 AHA指引重申：除非有特殊情況（如創傷、低體溫、孕婦、現場不安全等），OHCA應優先於現場持續高品質復甦，而非例行以CPR進行中之運送，因運送中的照護成效較差、風險較高。",
+        law:"現場處置屬救護技術員之專業判斷範疇，依緊急醫療救護法相關規定及核定之救護作業程序執行；若不當屈從情緒而犧牲復甦品質並可歸責延誤，仍可能涉及作業疏失之檢討。",
+        pitfall:"常見誤解：「醫院有更多資源，送到醫院一定比較好」——OHCA的黃金處置在現場立即且不中斷的高品質CPR與電擊，而非移動本身。" },
+      { label:"向家屬說明現場持續復甦的醫學理由，依協定完成標準流程（含聯繫線上醫療指導），無特殊禁忌則不貿然移動", verdict:"good",
+        outcome:"病人獲得品質穩定的持續復甦，家屬因獲得清楚說明而較能配合，衝突也隨之降低。",
+        analysis:"兼顧臨床實證與溝通倫理：不是不理會家屬，而是說明並堅持專業判斷。",
+        aha:"2025 AHA指引明確建議：無特殊情況者，OHCA復甦應在現場完成，僅在創傷、低體溫、孕婦、現場不安全或需要現場無法提供之處置等特殊情況，才考慮於持續CPR下轉送。",
+        law:"救護技術員執行救護作業程序，以及是否終止或轉送之判斷，依緊急醫療救護法及各縣市救護作業程序（含線上醫療指導機制）辦理，屬合法之專業裁量範圍。",
+        pitfall:"常見錯誤：把「不立刻送醫院」誤解為「不積極」或「消極放棄」，兩者本質不同。" },
+      { label:"因家屬強烈情緒壓力，中止原有流程改採即刻運送以求「比較保險」", verdict:"warn",
+        outcome:"短期內緩解現場衝突，但復甦品質可能因移動而下降，且未依標準流程執行，日後如生爭議，反而較難以「已依規定履行專業判斷」作為說明依據。",
+        analysis:"因情緒壓力偏離專業判斷雖可理解，但長期而言對病人與救護人員自身都非最佳選擇。",
+        aha:"2025 AHA指引之倫理章節強調，復甦決策應建立在臨床實證與既定流程上，並將末期照護、家屬溝通等倫理考量正式納入救護通訊協定，而非臨場迎合情緒。",
+        law:"依現場專業判斷所為之合法救護行為，原則上受緊急醫療救護法相關免責與救護作業程序保障；反之，明知不符流程仍照做，若造成損害，較不利於後續究責時的說明。",
+        pitfall:"常見迷思：「順著家屬的要求做」等於「降低糾紛風險」——實務上程序偏離造成的爭議往往更多。" }
+    ]
+  },
+  {
+    id:"ohca-3", code:"OHCA-03", cat:"ohca",
+    title:"機械式CPR裝置的使用時機",
+    setting:"社區大樓電梯故障，OHCA病人須經4層樓梯搬運至救護車，過程中預期按壓品質將受影響。救護人員配有機械式CPR裝置（如LUCAS）。",
+    choices:[
+      { label:"常規為所有OHCA病人裝上機械式CPR裝置，取代人工按壓以求標準化", verdict:"warn",
+        outcome:"裝置操作與轉換過程本身也會造成按壓中斷，若非必要情境常規使用，並無明確證據顯示可提升整體存活率或神經學預後。",
+        analysis:"機械式CPR裝置是情境工具而非常規升級，其價值在特定困難場景中才會顯現。",
+        aha:"2025 AHA指引指出，機械式CPR裝置常規使用並未顯示優於高品質人工按壓，不建議作為例行標準；但在人工高品質按壓困難或危險之情境（如樓梯搬運、救護車行進間、長時間復甦、施救人力有限）可考慮使用。",
+        law:"裝置使用屬醫療器材於救護作業程序中之應用，須依核定之作業程序與訓練資格操作；非因情境需要而常規使用，若因裝設延誤影響按壓品質致生損害，仍可能涉及作業疏失之檢討。",
+        pitfall:"常見誤解：機械裝置一定比人工按壓好——實證顯示兩者存活率相近，裝置的價值在於維持特定困難情境下的按壓品質，而非全面取代人工。" },
+      { label:"評估搬運過程確實難以維持高品質人工按壓，於此情境下使用機械式裝置以維持按壓穩定", verdict:"good",
+        outcome:"於樓梯搬運等高幹擾情境中，維持接近穩定之按壓頻率與深度，減少因人力與地形限制造成的按壓品質下降。",
+        analysis:"精準把握情境合適性，是正確使用此類裝置的關鍵，而非裝置本身好壞的問題。",
+        aha:"2025 AHA指引明確將樓梯搬運、救護車移動、長時間復甦、施救人力有限等，列為可考慮使用機械式CPR裝置的合理情境。",
+        law:"於核定之救護作業程序範圍內、依訓練資格使用醫療器材執行救護，屬合法之專業裁量。",
+        pitfall:"常見錯誤：裝設過程本身動作生疏、導致長時間中斷按壓，反而抵銷其效益，使用前應熟練操作流程，裝設應力求快速無縫接軌。" },
+      { label:"因擔心裝置操作生疏延誤時間，全程堅持人工按壓搬運下樓，即使按壓品質明顯下降", verdict:"warn",
+        outcome:"避免了裝置操作可能的延誤風險，但在困難地形中人工按壓品質確實容易下降，可能仍非最佳選擇。",
+        analysis:"兩種做法各有取捨，關鍵在於團隊對裝置操作的熟悉度與情境判斷，而非單純二選一的絕對答案。",
+        aha:"2025 AHA指引的重點在於情境合適性判斷，若團隊對裝置操作熟練，於此類情境使用可維持按壓品質；若操作生疏，堅持人工按壓待熟練後再導入裝置亦屬合理過渡做法。",
+        law:"兩種做法均屬合法救護作業程序範圍內之專業裁量，重點在於過程紀錄與事後檢討精進。",
+        pitfall:"常見迷思：認為裝置一定比較快、或人工一定比較安全，實際上取決於團隊訓練與情境本身。" }
+    ]
+  },
+  {
+    id:"ohca-4", code:"OHCA-04", cat:"ohca",
+    title:"疑似鴉片類藥物過量之OHCA",
+    setting:"25歲男性於公園長椅上被路人發現倒地、無呼吸，旁邊有針筒與藥物包裝。救護人員與旁觀者皆在場，車上備有納洛酮鼻噴劑。",
+    choices:[
+      { label:"優先給予納洛酮，觀察反應後才決定是否需要CPR", verdict:"bad",
+        outcome:"若病人已進入心跳停止狀態，單靠納洛酮無法立即恢復循環，延誤胸部按壓與電擊將降低存活與神經學預後機會。",
+        analysis:"納洛酮可逆轉鴉片類藥物造成的呼吸抑制，但對已發生之心跳停止本身不具直接復甦效果，順序不可顛倒。",
+        aha:"2025 AHA指引支持對疑似鴉片類藥物過量之OHCA使用納洛酮，但明確定位其為CPR與去顫的輔助措施，不得取代或延後標準心肺復甦流程。",
+        law:"依救護作業程序使用納洛酮屬合法救護措施；若因誤判給藥順序而延誤標準急救致生損害，仍可能涉及作業疏失檢討。",
+        pitfall:"常見迷思：「先解毒再急救」——對於已無呼吸心跳者，復甦流程（按壓、去顫）永遠優先於藥物介入。" },
+      { label:"立即開始高品質CPR並儘速取得AED，同時由具資格人員視情況併行給予納洛酮", verdict:"good",
+        outcome:"病人同時獲得循環支持與潛在病因處理，兼顧當下心跳停止與可能之呼吸抑制病因。",
+        analysis:"CPR優先、納洛酮並行，是同時處理立即威脅生命問題與潛在可逆病因的正確順序。",
+        aha:"2025 AHA指引支持將納洛酮納入疑似鴉片類藥物相關OHCA之處置流程，並持續倡議擴大公眾可近性納洛酮與去顫資源，惟強調CPR與電擊仍是核心，不可被取代。",
+        law:"依核定救護作業程序執行CPR併同給予納洛酮，屬合法救護行為；此類情境亦得適用緊急醫療救護法善意施救相關免責原則。",
+        pitfall:"常見誤解：認為納洛酮對心跳停止沒用所以不用給——即使心跳已停止，若後續恢復自發循環，及早給予納洛酮仍有助於逆轉呼吸抑制、避免再次惡化。" },
+      { label:"因懷疑吸毒情境複雜而猶豫，先觀察或僅通報，未立即施行CPR", verdict:"bad",
+        outcome:"因猶豫而延遲介入，錯失OHCA急救黃金時間，病人存活機會顯著下降。",
+        analysis:"病人之藥物使用史或行為不應成為是否施救的判斷因素；急救義務與倫理著眼於當下生命危急狀態本身。",
+        aha:"2025 AHA指引之倫理章節強調復甦決策不應受病人背景、社會標籤等因素影響而產生照護落差。",
+        law:"如現場評估確有立即人身安全疑慮（如暴力現場），得優先確保自身安全後再行施救，但單純因懷疑吸毒而猶豫並非合理之不施救理由；善意施救受緊急醫療救護法第14條之2保障。",
+        pitfall:"常見迷思與偏見：對特定族群的預設印象，可能不自覺地影響施救意願，此為需要被指認與避免的照護落差來源。" }
+    ]
+  },
+  {
+    id:"ohca-5", code:"OHCA-05", cat:"ohca",
+    title:"高品質CPR的中斷與團隊管理",
+    setting:"急診室內對OHCA病人持續復甦已15分鐘，多次更換按壓者，團隊討論是否於節律分析時延長暫停以「順便」完成插管等處置。",
+    choices:[
+      { label:"為完成氣管內插管與其他處置，允許節律分析暫停延長至20至30秒", verdict:"bad",
+        outcome:"冠狀動脈灌流壓於中斷期間迅速下降，需再次多次按壓才能恢復，整體復甦效率下降。",
+        analysis:"任何非必要的按壓中斷都會直接削弱復甦成效，「順便處理其他事」的心態是常見的品質陷阱。",
+        aha:"2025 AHA指引持續強調將胸部按壓中斷時間降至最低，節律分析與電擊之暫停應盡量控制在10秒以內；插管等進階呼吸道處置應在不中斷按壓或僅極短暫中斷的前提下進行。",
+        law:"若因非必要之延長中斷導致復甦成效受影響並造成損害，於醫療糾紛鑑定中，是否符合當時之醫療常規與臨床裁量，屬醫療法第82條過失判斷之重要依據。",
+        pitfall:"常見錯誤：把節律分析暫停視為順便完成其他工作的空檔，忽略每一秒中斷都有生理代價。" },
+      { label:"嚴格控制暫停時間在10秒以內，插管等處置盡量於按壓不中斷情況下進行，並每2分鐘輪替按壓者", verdict:"good",
+        outcome:"團隊維持較穩定之冠狀動脈與腦部灌流壓，復甦品質獲得最佳保障。",
+        analysis:"明確分工、嚴格計時、規律輪替，是高品質復甦團隊運作的核心原則。",
+        aha:"2025 AHA指引持續要求將按壓中斷最小化（原則上少於10秒），並建議每2分鐘左右輪替按壓者以避免疲勞造成按壓品質下降。",
+        law:"依臨床常規與教育訓練標準執行復甦流程，屬醫療法第82條所稱未違反醫療上必要之注意義務且未逾越合理臨床裁量之典型情形。",
+        pitfall:"常見誤解：認為資深人員撐久一點比較好——按壓者體力下降會不自覺降低按壓深度與頻率，規律輪替是實證支持的做法。" },
+      { label:"未特別留意暫停時間長短，團隊各自依經驗執行，缺乏統一計時與輪替機制", verdict:"warn",
+        outcome:"復甦品質可能因團隊默契與經驗而參差不齊，難以確保每次暫停都控制在建議範圍內。",
+        analysis:"個人經驗雖有價值，但缺乏結構化流程容易在高壓情境下出現品質落差。",
+        aha:"2025 AHA指引新增之復甦後團隊「即時與延遲debriefing」建議，正是為了讓團隊能系統性檢視包括中斷時間在內的復甦品質，並持續改善流程與心理調適。",
+        law:"建議透過院內品質改善機制（如復甦後檢討會議）建立標準作業程序，以降低個案間之品質落差與潛在法律風險。",
+        pitfall:"常見盲點：仰賴個人經驗而非團隊結構化流程，長期而言難以維持一致的復甦品質水準，也不利於事後之過程重建與說明。" }
+    ]
+  },
+  {
+    id:"dnr-1", code:"DNR-01", cat:"dnr",
+    title:"末期病人在宅OHCA與健保卡DNR註記",
+    setting:"78歲肺癌末期病人於家中心跳停止，家屬電話呼叫119並表示「他有簽DNR」。救護人員到場時，家屬出示健保卡並稱已註記，另有一份紙本預立安寧緩和醫療暨維生醫療抉擇意願書。",
+    choices:[
+      { label:"一聽到家屬說「有簽DNR」就立即不施行任何急救措施", verdict:"bad",
+        outcome:"若健保卡實際上並未完成註記，或文件不符法定要件，逕自不施救將使病人陷入無法回復之風險，且救護人員可能面臨未依規定確認即放棄急救之爭議。",
+        analysis:"口頭陳述不等於法定有效文件，DNR的效力建立在明確、可查證的意思表示上，程序要件不可省略。",
+        aha:"2025 AHA指引倫理章節強調，尊重病人預立意願（含DNR、POLST）是復甦倫理的核心，但同時要求EMS須有明確協定以「確認」文件效力，而非僅憑口頭陳述行事。",
+        law:"安寧緩和醫療條例第7條要求不施行心肺復甦術須符合末期病人二位醫師診斷、意願人簽署意願書或最近親屬同意書等要件；救護人員應依所屬單位之到院前DNR執行流程確認文件或健保卡註記後，始得不施行急救。",
+        pitfall:"常見錯誤：把家屬口頭轉述直接等同於合法有效的DNR，忽略確認文件真偽與程序要件的步驟。" },
+      { label:"依到院前DNR執行流程，當場確認健保卡註記與紙本意願書內容，必要時聯繫線上醫療指導後依規定不施行心肺復甦術", verdict:"good",
+        outcome:"病人之自主意願獲得尊重，救護人員之判斷有明確依據，過程亦有紀錄可供事後檢視。",
+        analysis:"兼顧尊重病人自主與程序正當性——不是不假思索地服從，也不是不假思索地施救，而是依程序確認後執行。",
+        aha:"2025 AHA指引持續將DNR、POLST等預立醫療決定之落實列為EMS倫理協定應明確處理之項目，強調事先建立清楚的確認與執行流程。",
+        law:"安寧緩和醫療條例第7條；健保卡DNR註記為衛生福利部建置之查詢機制，可輔助救護人員快速核對意願人身分與意願書存在與否；各縣市消防局訂有到院前不施行心肺復甦術之標準作業程序，通常包含線上醫療指導之確認機制。",
+        pitfall:"常見混淆：誤以為DNR一經簽署即終身有效、任何情況都適用——DNR僅於末期病人符合診斷要件之情境下生效，仍須現場評估診斷是否相符。" },
+      { label:"因文件看起來齊全，未進一步確認診斷是否符合末期病人要件，即依家屬要求不施行急救", verdict:"warn",
+        outcome:"若病人實際上並非因末期疾病自然進程導致心跳停止，逕自不施救可能造成不可回復之遺憾且缺乏正當性基礎。",
+        analysis:"文件形式齊全與當下情境是否符合DNR適用要件，是兩個必須同時滿足的條件，不能只看其一。",
+        aha:"2025 AHA指引強調復甦決策應綜合臨床情境與病人既有意願，而非僅憑文件表面完整性機械式套用。",
+        law:"安寧緩和醫療條例第3條就末期病人定義為經醫師診斷不可治癒、近期內病程進行至死亡不可避免者；DNR意願書之效力繫於此一臨床要件是否成立，而非文件本身。",
+        pitfall:"常見錯誤：忽略DNR意願書與末期病人臨床要件之間的連動關係，將簽署文件本身誤解為無條件的不施救授權。" }
+    ]
+  },
+  {
+    id:"dnr-2", code:"DNR-02", cat:"dnr",
+    title:"病人自主權利法適用範圍：永久植物人狀態",
+    setting:"52歲女性車禍後呈永久植物人狀態已2年，非「末期病人」。她在意外前已完成預立醫療照護諮商並簽署預立醫療決定，註記於健保卡，明確表示此類狀態下不願接受心肺復甦術與維生治療。某次於安養機構發生心跳停止，家屬到場後情緒激動要求「一定要救」。",
+    choices:[
+      { label:"因病人並非安寧緩和醫療條例定義之末期病人，且家屬堅持，判斷預立醫療決定不適用而積極施行心肺復甦術", verdict:"bad",
+        outcome:"病人明確、合法有效之預立意願未被尊重，事後若家屬或病人代理人主張醫療機構未依法尊重該決定，恐須面對民事責任爭議。",
+        analysis:"誤將安寧緩和醫療條例的末期病人要件套用到病人自主權利法的適用情境，是實務上常見的法規混淆。",
+        aha:"2025 AHA指引倫理章節明確將預立醫療決定與POLST的尊重列為復甦倫理核心原則之一，並要求跨照護連續體（院前、院內）一致落實。",
+        law:"病人自主權利法第14條規定，除末期病人外，永久植物人狀態等5款臨床條件之病人，若已依法完成預立醫療照護諮商並簽署經公證或見證之預立醫療決定，醫療機構或醫事人員依其專業或病人預立醫療決定不施行維持生命治療，不負刑事與行政責任。",
+        pitfall:"常見誤解：認為不施行心肺復甦術只能引用安寧緩和醫療條例——病人自主權利法涵蓋範圍更廣，包含非末期但符合特定臨床條件（不可逆昏迷、永久植物人、極重度失智等）且已完成合法預立醫療決定之病人。" },
+      { label:"確認健保卡註記與預立醫療決定內容，向家屬說明此為病人本人依法完成之預立決定，依法不施行心肺復甦術，並提供家屬情緒支持", verdict:"good",
+        outcome:"病人之自主意願獲得尊重，家屬雖仍需時間調適情緒，但透過清楚說明較能理解決策依據，降低衝突升高之風險。",
+        analysis:"尊重合法有效之預立醫療決定並非忽視家屬感受，而是在說明與同理的前提下，堅守病人本人明確表達之意願。",
+        aha:"2025 AHA指引強調將病人自主意願、家屬溝通、以及醫療團隊之情緒支持皆納入復甦倫理協定，三者並不互斥。",
+        law:"病人自主權利法第14條、第3條（預立醫療決定、預立醫療照護諮商定義）；預立醫療決定一經完成法定程序並註記，除有事證顯示病人已變更意願，家屬原則上不得片面推翻本人合法有效之預立決定。",
+        pitfall:"常見錯誤：認為家屬情緒激烈就必須順從——法律保障的是病人本人之自主權，而非到場家屬之當下情緒。" },
+      { label:"因擔心家屬提告，先施行CPR以策安全，事後再向家屬解釋文件內容並討論是否撤除維生治療", verdict:"warn",
+        outcome:"短期內降低現場衝突，但已對病人身體造成非其意願之侵入性處置，且與病人明確預立之意願相違背，仍可能面臨後續之倫理與法律檢討。",
+        analysis:"先做了再說看似降低眼前風險，實際上是以規避責任的心態犧牲病人自主權，且未必真的降低法律風險。",
+        aha:"2025 AHA指引提醒，復甦與否之決策應建立在既有之預立意願與臨床判斷上，而非基於施救者對自身責任之擔憂而搖擺。",
+        law:"病人自主權利法第14條之免責保障，前提是依其專業或病人預立醫療決定不施行，若因擔心究責而違反已知之合法預立醫療決定逕行施救，該行為本身之正當性即與立法意旨相違，仍可能於事後受到質疑。",
+        pitfall:"常見迷思：「先救再說比較不會被告」——實務上，違反明確合法之病人預立意願而施行侵入性醫療處置，同樣存在被檢視是否侵害病人自主權與人格權之風險。" }
+    ]
+  },
+  {
+    id:"dnr-3", code:"DNR-03", cat:"dnr",
+    title:"最近親屬簽署順位與事後異議",
+    setting:"68歲肝癌末期病人意識昏迷、未曾簽署意願書。到院時，病人之弟（兄弟姊妹）在場並簽署最近親屬同意書同意不施行心肺復甦術，醫療團隊已載明病歷。翌日，病人配偶自國外返台，得知後在心肺功能惡化前反對此決定。",
+    choices:[
+      { label:"因同意書已簽署且已載明病歷，告知配偶「文件已生效、無法變更」", verdict:"bad",
+        outcome:"忽略配偶依法為最近親屬順位最高之人，其於執行前提出之異議應受重視，逕行維持原決定可能引發後續之倫理申訴或法律爭議。",
+        analysis:"同意書已簽署不等於不容更動，安寧緩和醫療條例本身即設有不同順位親屬意見不一致時之處理機制。",
+        aha:"2025 AHA指引之倫理章節強調家屬意見溝通與衝突處理應納入照護流程，而非以程序已完成為由拒絕再溝通。",
+        law:"安寧緩和醫療條例第7條規定最近親屬之範圍與順位為配偶、成年子女及孫子女、父母、兄弟姊妹、祖父母、曾祖父母或三親等內旁系血親、一親等直系姻親；同一順位以一人出具同意書為已足，但不同順位意見不一致時，後順位已出具同意者，若先順位親屬於未執行前以書面反對，應予尊重。",
+        pitfall:"常見誤解：把有人簽了同意書視為程序終局，忽略法律對親屬順位與異議時點的具體規定。" },
+      { label:"說明配偶依法為最近親屬中順位最高者，其於執行前提出之書面異議依法應予尊重，重新評估病情與最佳利益並協調家庭意見", verdict:"good",
+        outcome:"決策程序回歸法定順位與正當程序，同時保留與病人最有情感連結之配偶參與決策之空間，有助於降低家庭衝突。",
+        analysis:"法律設計親屬順位機制之目的，正是為了在病人本人意願不明時，讓最了解病人、與其關係最密切之人有優先發言權，同時容許在執行前修正。",
+        aha:"2025 AHA指引之倫理章節提出跨照護連續體之家屬溝通原則，鼓勵醫療團隊在意見分歧時主動促成溝通與共識，而非機械式套用先簽先贏。",
+        law:"安寧緩和醫療條例第7條第3項親屬同意書規定與相關順位規定；配偶為最近親屬順位最高者，於心肺復甦術或維生醫療尚未執行完畢前提出之書面異議，依法應予尊重並重新評估。",
+        pitfall:"常見錯誤：忽略執行前後的時間點差異——法律著重的是異議提出時，該措施是否已實際執行完畢。" },
+      { label:"為避免家屬衝突擴大，直接依配偶要求恢復急救，不再評估病人病情變化與整體最佳利益", verdict:"warn",
+        outcome:"雖然回應了配偶之異議，但若未同時重新評估病人當下之臨床狀況，可能造成病人承受不必要之侵入性處置。",
+        analysis:"尊重異議與重新評估臨床情境應同時進行，而非以順從最新發聲者取代專業判斷。",
+        aha:"2025 AHA指引強調復甦決策仍須立基於臨床實證與病人整體利益，家屬溝通是決策過程的一部分，而非決策本身的替代。",
+        law:"安寧緩和醫療條例賦予親屬順位發言權，但醫療團隊仍應依專業評估病人當下病情與最終之最佳利益作成決定，並完整記錄溝通與評估過程。",
+        pitfall:"常見盲點：把解決家屬衝突等同於做出正確醫療決定，兩者需要同時兼顧而非互相取代。" }
+    ]
+  },
+  {
+    id:"dnr-4", code:"DNR-04", cat:"dnr",
+    title:"DNR意願書與可逆急性病況",
+    setting:"70歲病人曾於3年前因慢性阻塞性肺病末期診斷簽署DNR意願書並註記健保卡。本次因嚴重氣喘急性發作合併呼吸衰竭送醫，家屬出示3年前之意願書，主張「他有簽DNR，不要急救」。醫師評估此次為急性可逆病況，非末期病程之自然進展。",
+    choices:[
+      { label:"因病人持有效DNR意願書，直接不施行氣管內插管與心肺復甦術", verdict:"bad",
+        outcome:"病人可能因未及時處置一個可逆的急性呼吸衰竭而死亡，然而該死亡並非其原先簽署DNR時所預期之末期自然病程情境。",
+        analysis:"這是實務上常見且後果嚴重的誤用——將DNR意願書視為任何情況下都不予急救的萬用文件，忽略其成立要件。",
+        aha:"2025 AHA指引倫理章節強調復甦決策應結合病人預立意願與當下臨床情境之綜合判斷，預立意願之適用範圍需對應其原始情境與條件。",
+        law:"安寧緩和醫療條例第3條明定末期病人係指經醫師診斷不可治癒，且有醫學上證據近期內病程進行至死亡不可避免者；DNR意願書之效力，繫於當下是否符合末期病人之臨床要件，而非單純持有文件本身。",
+        pitfall:"常見錯誤：忽略DNR意願書簽署時之疾病脈絡與當下就醫原因是否相同、是否為可逆病況。" },
+      { label:"向家屬說明此次為急性可逆病況、非原先意願書所預期之末期自然進程情境，積極治療呼吸衰竭，並於病情穩定後再討論照護方向", verdict:"good",
+        outcome:"病人獲得適當治療呼吸衰竭之機會，避免因誤用DNR文件而喪失可逆轉之生機，同時保留日後依病情變化重新討論末期照護之空間。",
+        analysis:"正確理解DNR的核心在於情境對應：文件是為了避免病人在末期自然死亡過程中承受無效之侵入性急救，而非放棄治療所有可逆病況。",
+        aha:"2025 AHA指引持續強調臨床判斷在復甦決策中之核心地位，預立意願是重要參考，但不能取代對當下病況是否為可逆之專業評估。",
+        law:"安寧緩和醫療條例第3條末期病人定義；醫療法第60條規定醫院於危急病人應予以救治或採取必要措施，不得無故拖延；於可逆病況下援引DNR文件拒絕必要治療，恐與前開規定意旨相悖。",
+        pitfall:"常見迷思：認為DNR一旦簽署即永久適用於所有醫療情境——實際上DNR意願書之適用有其臨床條件限制。" },
+      { label:"因不確定文件是否仍然有效，先擱置討論、直接依家屬情緒反應決定處置方向", verdict:"warn",
+        outcome:"缺乏明確的臨床判斷依據，處置方向可能隨情緒波動而搖擺，難以確保決策的一致性與正當性。",
+        analysis:"面對複雜的文件適用爭議時，應回歸臨床評估與法規要件，而非單純依賴當下溝通氣氛決定。",
+        aha:"2025 AHA指引建議醫療團隊在複雜倫理情境下，可召開臨床倫理諮詢或團隊討論，以結構化方式釐清病人當下病況與預立意願之適用關係。",
+        law:"面對DNR文件適用性爭議，醫療機構得依內部臨床倫理委員會機制進行諮詢，並完整記錄評估過程與理由，以利後續說明。",
+        pitfall:"常見盲點：把複雜的法律與臨床判斷問題簡化為誰的情緒比較強烈，而未回歸專業評估架構。" }
+    ]
+  },
+  {
+    id:"dnr-5", code:"DNR-05", cat:"dnr",
+    title:"CPR進行中出示DNR文件要求終止",
+    setting:"到院前救護人員已對OHCA病人施行CPR約5分鐘，家屬情緒激動出示一份看似正式的預立安寧緩和醫療暨維生醫療抉擇意願書影本，要求「立刻停止」。健保卡因故無法立即讀取確認註記。",
+    choices:[
+      { label:"見文件即刻停止心肺復甦術，不再進一步確認或聯繫線上醫療指導", verdict:"bad",
+        outcome:"若文件實際上有瑕疵（如非正本、簽署人資格不符、病人當時是否符合末期病人要件不明），逕行終止急救而未經確認之程序將使該決定欠缺正當性基礎。",
+        analysis:"已施行之心肺復甦術得予終止在法律上有明確要件，並非任何人出示任何文件即可片面決定終止。",
+        aha:"2025 AHA指引之終止復甦原則要求依循既定準則與線上醫療指導或既定通訊協定，而非僅憑現場文件外觀逕自決定。",
+        law:"安寧緩和醫療條例2013年修正後允許已施行之心肺復甦術或維生醫療於符合法定要件時終止或撤除，惟仍須符合第7條之診斷與同意（或意願書）要件；到院前終止通常另依各縣市救護作業程序，需聯繫線上醫療指導確認。",
+        pitfall:"常見錯誤：把家屬出示文件直接等同於已完成法定確認程序，忽略正本查核與線上醫療指導之角色。" },
+      { label:"持續進行心肺復甦術，同時請同仁協助確認文件真偽、聯繫線上醫療指導，並嘗試以其他方式確認DNR註記，依醫療指導決定是否終止", verdict:"good",
+        outcome:"病人在文件效力未明前持續獲得必要之循環支持，程序上兼顧了病人可能之預立意願，待確認後再由具權責之醫療指導決定後續處置。",
+        analysis:"疑則先救、同時查證，是在資訊不完整情境下兼顧病人安全與自主權的合理做法。",
+        aha:"2025 AHA指引強調到院前終止復甦之決策應建立在明確協定與必要之醫療指導確認上，而非現場人員片面判斷。",
+        law:"各縣市消防局訂定之到院前心肺復甦術終止或不施行標準作業程序，通常要求聯繫線上醫療指導確認相關要件後，方得終止或不施行；安寧緩和醫療條例第7條之診斷與文件要件仍為判斷基礎。",
+        pitfall:"常見迷思：認為持續急救與尊重病人意願互相矛盾——在文件效力未確認前持續必要之急救，正是為了在確認後仍保有依病人真實意願處置的可能性。" },
+      { label:"因擔心被家屬指責「見死不救」而堅持繼續急救到院，完全不理會家屬提供的文件，也未安排任何查證", verdict:"warn",
+        outcome:"病人可能因此承受了與其真實預立意願相違背之持續侵入性急救，即便到院後文件經確認為有效，中間之延遲仍可能造成病人不必要之痛苦與家屬之不諒解。",
+        analysis:"完全不理會與片面立即終止是兩個極端，正確做法是在持續必要處置的同時，積極啟動查證機制，而非消極擱置文件不予理會。",
+        aha:"2025 AHA指引之倫理原則要求，即使在維持標準復甦流程的同時，也應積極納入病人與家屬提供之預立意願資訊並儘速查證，而非予以忽略。",
+        law:"到院前救護作業程序通常明定收到DNR相關文件或訊息時之查證與通報流程，救護人員負有依程序處理而非逕行忽略之義務。",
+        pitfall:"常見盲點：把依法定程序持續急救並同時查證誤解為不理會家屬與文件，兩者應予區分。" }
+    ]
+  },
+  {
+    id:"conflict-1", code:"CONFLICT-01", cat:"conflict",
+    title:"手足意見不一致",
+    setting:"85歲失智症合併多重器官衰竭末期病人，兩名成年子女（同一順位之最近親屬）皆在場。長子情緒平靜表示同意不施行心肺復甦術，次女情緒激動反對並揚言若不施救要提告。",
+    choices:[
+      { label:"因長子已簽署同意書，依同一順位一人簽署即為已足逕行不施行心肺復甦術，不再理會次女之強烈反對", verdict:"warn",
+        outcome:"雖形式上符合法律一人簽署已足之規定，但完全忽視同一順位另一位親屬之強烈情緒與異議，容易升高家庭衝突與後續申訴風險。",
+        analysis:"法律上有效不等於妥適，同一順位一人可簽署雖為法定最低要件，但面對明顯之家庭內部歧異，逕行執行而不試圖溝通協調，並非最佳實務。",
+        aha:"2025 AHA指引倫理章節強調在復甦與末期照護決策中，家庭衝突處理與溝通應被視為照護流程的一部分，而非法定門檻滿足後即可略過的環節。",
+        law:"安寧緩和醫療條例第7條規定同一順位親屬一人出具同意書為已足，形式上長子之同意已符合要件；惟法律未禁止醫療機構在執行前先行協調溝通，以降低爭議並確保決策妥適性。",
+        pitfall:"常見錯誤：將法律最低要件已滿足直接等同於無需再處理家庭歧異，忽略倫理上妥善溝通之重要性。" },
+      { label:"召集醫療團隊與兩位子女進行家庭會議，說明病情與照護選項，釐清病人過往表達之意願與最佳利益，必要時提請臨床倫理諮詢", verdict:"good",
+        outcome:"透過結構化溝通，家庭成員較有機會理解病情全貌並達成較一致之共識，即使無法完全消弭歧異，決策過程亦更具正當性。",
+        analysis:"面對同一順位親屬意見不一致，法律雖設有一人簽署即為已足之底線機制以避免僵局，但實務上更佳的做法是優先嘗試溝通協調，以病人過往表達之意願與整體最佳利益為核心。",
+        aha:"2025 AHA指引明確將家庭溝通與衝突處理、必要時之倫理諮詢，列為復甦與末期照護倫理原則之一環，適用於院內外之照護連續體。",
+        law:"安寧緩和醫療條例第7條；醫療機構得依內部規範設置臨床倫理委員會或個案討論機制，於親屬意見分歧時提供諮詢，過程建議完整記錄於病歷。",
+        pitfall:"常見盲點：把法律程序與倫理溝通視為互斥選項，忽略兩者其實可以並行——先溝通協調，若仍有歧異，再回歸法定順位機制處理。" },
+      { label:"為避免捲入家庭紛爭，選擇「多做一點總比少做安全」，不理會長子已表達之同意，逕行施行完整心肺復甦術", verdict:"bad",
+        outcome:"忽視已依法有效表達同意之長子意見，也未必真正符合病人最佳利益，僅是以自保心態迴避決策，可能使病人承受非必要之侵入性處置。",
+        analysis:"多做總比少做安全是常見但未必正確的防禦性醫療心態，忽略了病人自主權與已完成之法定同意程序。",
+        aha:"2025 AHA指引提醒，防禦性醫療心態本身即是復甦倫理需要正視與檢討的偏誤來源之一。",
+        law:"若長子之同意已符合安寧緩和醫療條例第7條要件，逕行忽視而施行心肺復甦術，雖動機為求自保，仍可能與病人及已表達同意之親屬意願相違，於事後之倫理與法律檢視中未必站得住腳。",
+        pitfall:"常見迷思：認為做越多醫療處置法律風險越低——實際上違反已合法表達之病人或家屬意願本身，也可能構成責任來源。" }
+    ]
+  },
+  {
+    id:"conflict-2", code:"CONFLICT-02", cat:"conflict",
+    title:"手機照片與現場緊急狀況之衝突",
+    setting:"到院前救護人員初次接觸一名OHCA病人，無病歷資料。家屬情緒激動出示手機中一張意願書照片（非正本），健保卡亦因故無法即時查詢，病人是否符合末期病人要件無法當場確認。",
+    choices:[
+      { label:"基於尊重病人自主意願，僅憑手機照片內容即認定DNR有效並不施行任何急救措施", verdict:"bad",
+        outcome:"若照片內容不完整、非最終有效版本，或病人當下病況並不符合意願書預設之末期情境，逕行不施救將使該決定完全缺乏可查證之正當性基礎。",
+        analysis:"手機照片作為可能存在的證據雖具參考價值，但無法取代正本查核與法定診斷要件之確認，不能作為唯一依據逕行放棄急救。",
+        aha:"2025 AHA指引強調到院前終止或不施行復甦之決策須有明確可依循之協定與確認機制，非正式或無法查證之文件不足以單獨作為決策基礎。",
+        law:"安寧緩和醫療條例第7條要求之診斷與意願書（或親屬同意書）要件，須以可查證之正式文件與診斷為基礎；健保卡DNR註記機制之設計目的即在於提供可即時查核之管道，單張未經查證之手機照片尚不足以取代前述要件。",
+        pitfall:"常見錯誤：將有文件的樣子等同於文件已生效且可據以放棄急救，忽略查證正本與臨床要件之必要性。" },
+      { label:"依「疑則先救」原則先施行必要之心肺復甦術，同時聯繫線上醫療指導、嘗試以其他管道查證意願文件效力，並儘速後送醫院確認", verdict:"good",
+        outcome:"病人在文件效力未明前獲得必要之循環支持，查證程序同步進行，若確認文件有效且符合要件，仍可依規定於執行前或到院後由醫療團隊評估後續處置。",
+        analysis:"在資訊不完整、無法即時查證的緊急情境下，先維持必要處置、同步查證，是兼顧病人安全與尊重可能之自主意願的合理做法，避免消極不作為之風險。",
+        aha:"2025 AHA指引之終止復甦與預立意願落實原則，均以可驗證之明確依據為前提，在缺乏即時查證管道時，建議依既定協定繼續必要處置並儘速釐清。",
+        law:"各縣市到院前救護作業程序通常明定於文件效力無法即時確認時之處理方式；消極不作為若導致病人喪失非其真實意願下之急救機會，亦可能涉及過失或遺棄責任之討論（刑法第294條、第276條參照）。",
+        pitfall:"常見迷思：認為等文件確認清楚再決定與立即依現有資訊放棄急救是唯二選項——實務上先維持必要處置、同步積極查證才是化解此類不確定情境的正確路徑。" },
+      { label:"因不確定如何處理，暫時停下所有動作與家屬爭論文件真偽，耽誤現場處置時間", verdict:"bad",
+        outcome:"無論最終判斷為何，現場爭論本身即耗費寶貴的急救時間，對病人存活與神經學預後皆屬不利。",
+        analysis:"面對文件效力不明之爭議，正確做法是邊做邊查，而非停下所有處置去釐清爭議本身。",
+        aha:"2025 AHA指引一貫強調時間就是腦組織與心肌組織，任何非必要之處置延誤都應盡量避免，包含因倫理或文件爭議而暫停必要救護。",
+        law:"救護人員之核心義務在於依專業判斷儘速提供必要救護，文件真偽之查證應與救護行為同步進行而非取代之；長時間停滯不作為若造成病人損害，亦可能面臨究責。",
+        pitfall:"常見盲點：把處理倫理與文件爭議與持續必要救護視為互斥的兩件事，實際上兩者應同步進行。" }
+    ]
+  },
+  {
+    id:"process-1", code:"PROCESS-01", cat:"process",
+    title:"到院前終止復甦之決策",
+    setting:"線上醫療指導醫師接到救護車回報：OHCA病人已施行心肺復甦術約20分鐘，無旁觀者目擊倒地、無旁觀者CPR、初始心律為心電圖無心跳、AED全程未建議電擊，迄今仍無自發循環恢復跡象。救護人員詢問是否可終止復甦。",
+    choices:[
+      { label:"僅依「已進行20分鐘仍無自發循環」單一時間因素，直接指示終止復甦", verdict:"warn",
+        outcome:"雖然本案其餘因素也支持終止復甦之判斷，但若團隊養成僅以單一時間長短作為終止依據之習慣，日後可能在其他因素不支持終止的情境下做出不當判斷。",
+        analysis:"終止復甦之判斷應為多因素之綜合評估，而非單一時間門檻的機械套用，即使本案結論可能相同，其決策邏輯仍應被檢視與修正。",
+        aha:"2025 AHA指引重申，到院前終止復甦之決策應依循既定準則，綜合考量是否有目擊者、是否有旁觀者CPR、初始心律、到院前是否曾恢復自發循環、AED電擊建議與否等多項因素，而非單一時間長短。",
+        law:"各縣市消防局訂定之到院前終止心肺復甦術作業程序，通常明列多項綜合判斷因素並要求經線上醫療指導確認後始得終止，非由現場人員或指導醫師憑單一因素逕自決定。",
+        pitfall:"常見錯誤：將已經做了很久當作終止復甦的主要甚至唯一理由，忽略其他同樣重要的臨床與情境因素。" },
+      { label:"綜合評估無目擊者、無旁觀者CPR、初始心律為心電圖無心跳、AED未建議電擊、已持續高品質復甦仍無自發循環等多項因素，依終止復甦準則指示終止並指導家屬通知流程", verdict:"good",
+        outcome:"決策依循明確、可覆核之多因素準則作成，過程有據可查，同時兼顧對家屬之妥適溝通與心理支持。",
+        analysis:"以既定、實證支持之多因素準則為依據，而非個別因素或直覺判斷，是到院前終止復甦決策的標準做法。",
+        aha:"2025 AHA指引持續肯認到院前終止復甦準則之實證基礎，並新增對急救人員之死亡告知訓練建議，協助團隊更妥適地與家屬溝通此類消息。",
+        law:"到院前終止復甦之判斷與執行，依各縣市救護作業程序須由線上醫療指導確認並下達指示，現場救護人員依指示執行，並完整記錄評估之各項因素與時間點，作為事後複核與法律說明之依據。",
+        pitfall:"常見盲點：終止復甦後之家屬溝通與死亡告知同樣重要，處理不當可能引發家屬對急救過程本身之不必要質疑。" },
+      { label:"因擔心終止復甦後家屬情緒反應或潛在爭議，指示無論如何都繼續復甦並將病人後送至醫院，交由醫院端決定", verdict:"bad",
+        outcome:"對於已符合終止復甦準則之個案持續進行低效益之復甦與運送，除了徒增病人組織進一步損傷外，也可能延誤救護車資源投入其他有存活機會之案件。",
+        analysis:"一律送醫院決定看似規避風險，實際上迴避了到院前醫療指導本應承擔之專業判斷責任，也不必然真的降低法律或倫理爭議。",
+        aha:"2025 AHA指引肯認到院前終止復甦準則之目的，正是為了避免對無存活可能之個案進行低效益之運送，並將醫療與資源效益一併納入考量。",
+        law:"到院前線上醫療指導之角色即在於依專業與既定準則作成終止或繼續復甦之判斷，一律規避判斷、無條件後送，未必符合救護作業程序之專業裁量要求，且可能影響其他勤務之資源調度。",
+        pitfall:"常見迷思：認為送到醫院讓醫院決定永遠是最保守、最安全的選擇——實際上到院前之專業判斷本身即受法規與準則保障，逃避判斷並非零風險的選項。" }
+    ]
+  },
+  {
+    id:"harassment-1", code:"HARASSMENT-01", cat:"harassment",
+    title:"急救現場之身體暴露與界線",
+    setting:"一名30歲女性於路跑活動中倒地、疑似OHCA，需使用AED，貼片位置需暴露前胸。現場有多名路人圍觀，一名男性路人自願協助施救，猶豫是否該直接剪開或掀開患者上衣與內衣以利貼片黏貼。",
+    choices:[
+      { label:"為求貼片黏貼確實，直接完全剪開並移除上衣與內衣，未考慮遮蔽或請人協助維護隱私", verdict:"warn",
+        outcome:"AED貼片得以順利黏貼並完成急救之技術目的，但過程對病人隱私與尊嚴之維護不足，若有旁觀者拍照散布等後續問題，亦可能衍生其他爭議。",
+        analysis:"急救之技術有效性與病人尊嚴之維護並非互斥，應盡量兼顧，而非僅著眼於貼片貼得上這單一目標。",
+        aha:"2025 AHA指引新增建議：為AED貼片暴露胸部時，建議優先嘗試調整內衣位置而非直接完全移除，在能確保貼片有效接觸皮膚之前提下，盡量以最小必要之暴露完成急救。",
+        law:"善意施救行為本身依緊急醫療救護法第14條之2受免責保障；惟施救過程中之隱私維護仍屬醫療倫理與人性尊嚴之基本考量，建議施救者於情況允許下仍盡量兼顧病人尊嚴。",
+        pitfall:"常見誤解：認為為了救命，隱私與尊嚴可以完全不用考慮——多數情況下，稍加留意並不會犧牲急救之有效性。" },
+      { label:"說明必須暴露前胸才能使AED正確運作，優先嘗試調整而非完全移除內衣，同時請其他在場人員協助以外套稍作遮蔽，並儘量請女性在場者協助或見證", verdict:"good",
+        outcome:"AED得以有效使用、急救未被延誤，同時病人之隱私與尊嚴在能力所及範圍內獲得適當維護，也降低了旁觀者對施救過程之疑慮。",
+        analysis:"急救有效性與人性尊嚴維護可以並行不悖，這也降低了施救者事後遭受不實指控的風險。",
+        aha:"2025 AHA指引具體建議：貼片黏貼時可調整而非完全移除內衣，若情境允許可請他人協助以物品短暫遮蔽非必要暴露之部位，同時強調此類措施不應延誤AED之使用時機。",
+        law:"緊急醫療救護法第14條之2之善意施救免責保障，適用於依現場合理判斷、以救人為目的之必要處置；有其他在場人員見證或協助，亦有助於還原施救過程之全貌，保障施救者與病人雙方權益。",
+        pitfall:"常見迷思：擔心碰觸病人身體會被誤會性騷擾而不敢施救——基於救命目的、無性意圖之必要醫療處置，依其性質與目的並不構成性騷擾。" },
+      { label:"因擔心被誤會或事後遭指控性騷擾，猶豫不決、遲遲不敢碰觸病人身體貼上AED貼片", verdict:"bad",
+        outcome:"因猶豫而延誤AED使用時機，病人喪失早期去顫之黃金時間，存活機會顯著下降。",
+        analysis:"對善意必要醫療處置與性騷擾之混淆，是實務上確實存在但可以透過清楚說明加以化解的迷思，不應成為延誤救命處置的理由。",
+        aha:"2025 AHA指引強調公眾去顫之可近性與即時性至關重要，任何非必要之猶豫都會直接犧牲病人存活機會。",
+        law:"性騷擾防治法所規範者為意圖性騷擾而乘人不及抗拒觸摸隱私部位等行為（第25條），其構成要件核心在於行為人之性騷擾意圖；基於救命目的、依現場合理判斷所為之必要醫療處置，並不具備此等意圖要件，且受緊急醫療救護法第14條之2免責規定保障。",
+        pitfall:"常見迷思：把所有碰觸異性身體隱私部位之行為一概視為有性騷擾風險——法律判斷之核心在於行為人之意圖與行為之必要性、正當性，而非單純之身體接觸事實本身。" }
+    ],
+    note:"延伸提醒：若已確保生命徵象無虞、AED已完成分析且無需再觸碰隱私部位時，仍持續或另行為不必要之觸摸胸部、臀部等隱私處之行為，且行為人主觀上具性騷擾意圖、被害人不及抗拒，則可能構成性騷擾防治法第25條之強制觸摸罪，最高處2年以下有期徒刑、拘役或新臺幣10萬元以下罰金；若行為人利用醫療、救護等業務上之權勢或機會為之，依同條規定加重其刑至二分之一，且屬告訴乃論。真正的急救行為與假借急救之名的性騷擾行為，法律上以「必要性」與「主觀意圖」作為核心區分標準。"
+  },
+  {
+    id:"liability-1", code:"LIABILITY-01", cat:"liability",
+    title:"違反病人合法預立意願之CPR",
+    setting:"90歲極重度失智症病人，已完成預立醫療照護諮商並簽署預立醫療決定，明確載明此類臨床條件下不願接受心肺復甦術，並已註記健保卡。某次於安養機構突發心跳停止，值班醫師確認文件內容無誤，但擔心家屬情緒反應與可能之醫療糾紛，仍決定施行心肺復甦術，過程中造成病人多處肋骨骨折，短暫恢復自發循環後於3日後仍因多重器官衰竭死亡。",
+    choices:[
+      { label:"醫師之作法屬於「保守起見、多做總比少做安全」的合理防禦性醫療，不生任何法律或倫理問題", verdict:"bad",
+        outcome:"家屬事後得知病人生前已明確簽署預立醫療決定拒絕此類處置，對醫師違反病人意願施行心肺復甦術表達強烈不滿，並質疑病人於臨終前承受了非其所願之痛苦。",
+        analysis:"防禦性醫療的直覺常被誤認為零風險，但違反病人明確合法之預立意願本身，就是一種可能招致法律與倫理責任的行為，而非單純的臨床保守做法。",
+        aha:"2025 AHA指引倫理章節明確將尊重病人預立醫療決定列為復甦倫理核心原則，並指出違反此類明確意願之復甦處置，本身即構成倫理上之侵害，不因醫師出於善意或恐懼糾紛之動機而免除。",
+        law:"病人自主權利法第14條規定，醫療機構或醫師依病人預立醫療決定不施行維持生命治療，不負刑事與行政責任；反面言之，違反病人合法有效之預立醫療決定而逕行施以心肺復甦術等處置，該處置本身可能構成對病人身體權、自主決定權之侵害，病人或其遺族得依民法第184條、第195條主張損害賠償（含精神慰撫金）。",
+        pitfall:"常見迷思：「有做總比沒做安全」——此案清楚顯示，違反病人明確合法意願之積極醫療處置，同樣可能構成法律上之侵害行為，而非天然的安全選項。" },
+      { label:"醫師依病人合法有效之預立醫療決定不施行心肺復甦術，於病歷完整記載確認過程與理由，並主動向家屬清楚說明病人本人之預立意願與法律依據", verdict:"good",
+        outcome:"病人之自主意願獲得尊重，過程有完整紀錄可供說明，家屬雖可能仍需要時間調適情緒，但決策本身具備明確之法律與倫理正當性。",
+        analysis:"這是病人自主權利法立法目的之具體實踐：讓病人在意識清楚時預先表達之意願，能在其無法表達時仍獲得尊重，同時醫療團隊亦因此獲得明確之法律保障。",
+        aha:"2025 AHA指引持續強調醫療團隊應建立清楚之預立醫療決定確認與落實流程，並將此類決策之家屬溝通視為照護品質之一環。",
+        law:"病人自主權利法第14條第5項明定，醫療機構、醫師依其專業或病人預立醫療決定不施行維持生命治療，不負刑事與行政責任；因此所生之損害，除有故意或重大過失且違反病人預立醫療決定者外，不負賠償責任。完整之病歷記載為落實此一免責保障之重要基礎。",
+        pitfall:"常見錯誤：擔心不做處置比做了處置更容易被究責——本案顯示，依法尊重合法有效之病人預立意願，反而是法律明確保障、且風險相對較低之選項。" },
+      { label:"先詢問到場家屬意見，家屬表示「不確定，你們專業判斷就好」，醫師因此逕自施行心肺復甦術，未特別說明預立醫療決定內容或提供選擇機會", verdict:"warn",
+        outcome:"雖然家屬並未強烈反對，但醫師在明知病人已有合法有效預立醫療決定的情況下，仍以家屬模糊授權為由施行心肺復甦術，實質上仍規避了對病人預立意願之直接處理。",
+        analysis:"當病人本人已有明確合法之預立醫療決定時，醫師之核心義務是向家屬清楚說明並依循該決定，而非以家屬未明確反對作為施行處置之理由。",
+        aha:"2025 AHA指引強調醫療團隊在此類情境中，應主動、清楚地將病人預立意願告知家屬並作為決策核心依據，而非被動等待家屬表態後決定是否提及。",
+        law:"病人自主權利法第14條之免責保障範圍為依病人預立醫療決定不施行，若醫師明知內容卻未主動依循、亦未清楚說明即逕行施以相反之處置，其行為之正當性基礎較為薄弱，日後如生爭議，較難完全援引第14條第5項之免責規定。",
+        pitfall:"常見盲點：把家屬沒有明確反對等同於可以不理會病人本人已表達之合法意願，忽略病人自主權利法保障的核心是病人本人之意願，而非家屬之被動態度。" }
+    ],
+    note:"延伸提醒（相反情境）：若醫事人員在診斷不明確、病人不符合安寧緩和醫療條例或病人自主權利法所定要件（例如非末期病人、未完成合法預立醫療決定）之情況下，僅憑臆測即不施行原應施行之心肺復甦術，導致原本可救治之病人死亡，則可能面臨刑法第276條過失致死罪、第294條遺棄罪，或醫療法相關規定之過失責任探討。兩種情境所凸顯的共同核心，是「醫學適應症」與「病人真實合法意願」的正確辨識，才是決定是否施行心肺復甦術的關鍵，而非醫事人員對自身法律風險的主觀揣測。"
+  }
+  ];
+
+  var LAWS = [
+    { name:"安寧緩和醫療條例", tag:"民國89年公布，歷經多次修正", body:"規範末期病人得預立意願書拒絕心肺復甦術或維生醫療。第3條定義末期病人、心肺復甦術與維生醫療；第7條規定不施行或終止心肺復甦術之診斷、簽署與最近親屬順位等要件；2013年修正後並允許已施行之急救措施予以終止或撤除。" },
+    { name:"病人自主權利法", tag:"105年公布，108年施行，亞洲第一部病人自主專法", body:"適用範圍較安寧緩和醫療條例更廣，涵蓋末期病人、不可逆轉昏迷、永久植物人狀態、極重度失智等5款臨床條件。第14條規定病人須經預立醫療照護諮商並簽署經公證或見證之預立醫療決定，醫療機構或醫師依其執行不施行維持生命治療者，不負刑事與行政責任。" },
+    { name:"醫療法", tag:"第60條、第82條", body:"第60條規定醫院對危急病人應予救治或採取必要措施，不得無故拖延；第82條規定醫療過失須同時符合「違反醫療上必要之注意義務」及「逾越合理臨床專業裁量」二要件，並應綜合當時當地之醫療常規、醫療水準、設施條件與緊急迫切等客觀情況判斷。" },
+    { name:"緊急醫療救護法", tag:"第14條之2", body:"非救護人員為免除他人生命之急迫危險，使用緊急救護設備或施予急救措施者，適用民法、刑法緊急避難免責之規定；救護人員於非值勤期間亦同，為善意施救提供明確之法律保障。" },
+    { name:"性騷擾防治法", tag:"第2條、第25條", body:"第25條規定意圖性騷擾、乘人不及抗拒而觸摸其臀部、胸部或其他身體隱私處者，處2年以下有期徒刑、拘役或併科10萬元以下罰金；利用醫療、教育等權勢或機會犯之者，加重其刑至二分之一，須告訴乃論。" },
+    { name:"刑法與民法相關規定", tag:"刑法第276、284、294條；民法第184、195條", body:"刑法規定過失致死罪、過失傷害罪與遺棄罪，可能於不當施行或不當拒絕施行急救之情境中作為究責依據；民法第184條、第195條則為侵害病人身體權、人格權時之損害賠償（含精神慰撫金）請求基礎。" },
+    { name:"2025年美國心臟協會CPR與ECC指引", tag:"Circulation, 2025 · 5年一次全面更新", body:"新增獨立之倫理指引章節，涵蓋預立醫療決定與家屬溝通；重申到院前OHCA以現場處置為原則、避免例行運送中CPR；就機械式CPR裝置、疑似鴉片類藥物過量之納洛酮併用、AED貼片之尊嚴考量、復甦後即時與延遲debriefing等提出具體建議。" }
+  ];
+
+  /* ---------- Render ---------- */
+  var chipsEl = document.getElementById("chips");
+  var listEl = document.getElementById("caseList");
+  var lawgridEl = document.getElementById("lawgrid");
+  var doneCountEl = document.getElementById("doneCount");
+  var ringBar = document.getElementById("ringBar");
+  var TOTAL = CASES.length;
+  var CIRC = 69.1;
+
+  var progress = {};
+  try{
+    var raw = localStorage.getItem("ohca-dnr-sim-progress-v1");
+    if(raw) progress = JSON.parse(raw) || {};
+  }catch(e){ progress = {}; }
+
+  function saveProgress(){
+    try{ localStorage.setItem("ohca-dnr-sim-progress-v1", JSON.stringify(progress)); }catch(e){}
+  }
+
+  var currentFilter = "all";
+
+  function countFor(cat){
+    if(cat === "all") return CASES.length;
+    return CASES.filter(function(c){ return c.cat === cat; }).length;
+  }
+
+  function buildChips(){
+    var defs = [["all","全部"]].concat(Object.keys(CATS).map(function(k){ return [k, CATS[k].label.split(" ")[0]]; }));
+    chipsEl.innerHTML = "";
+    defs.forEach(function(d){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip" + (d[0] === currentFilter ? " active" : "");
+      b.dataset.cat = d[0];
+      b.innerHTML = d[1] + ' <span class="n">' + countFor(d[0]) + "</span>";
+      b.addEventListener("click", function(){
+        currentFilter = d[0];
+        buildChips();
+        renderCases();
+      });
+      chipsEl.appendChild(b);
+    });
+  }
+
+  function verdictBlock(choice){
+    var v = VERDICT[choice.verdict];
+    var html = '<div class="result ' + choice.verdict + '">';
+    html += '<div class="result-head">' + v.icon + '<span>' + v.label + '</span></div>';
+    html += '<div class="result-body">';
+    html += fieldHtml("結果", choice.outcome, "sw");
+    html += fieldHtml("法律與倫理分析", choice.analysis, "sw");
+    html += fieldHtml("2025 AHA指引對應", choice.aha, "aha");
+    html += fieldHtml("台灣法規依據", choice.law, "law");
+    html += fieldHtml("常見錯誤與迷思", choice.pitfall, "pitfall");
+    html += "</div></div>";
+    return html;
+  }
+  function fieldHtml(label, text, cls){
+    return '<div class="field ' + cls + '"><div class="k"><span class="sw"></span>' + label + '</div><p>' + text + "</p></div>";
+  }
+
+  function caseHtml(c, idx){
+    var catLabel = CATS[c.cat].label;
+    var isDone = !!progress[c.id];
+    var choicesHtml = c.choices.map(function(ch, i){
+      return '<button type="button" class="choice" data-case="' + idx + '" data-choice="' + i + '">' +
+             '<span class="tag">' + String.fromCharCode(65 + i) + '</span><span>' + ch.label + '</span></button>';
+    }).join("");
+    var noteHtml = c.note ? '<div class="note"><b>延伸提醒　</b>' + c.note.replace(/^延伸提醒（相反情境）：|^延伸提醒：/, "") + '</div>' : "";
+    return (
+      '<details class="case" data-idx="' + idx + '">' +
+        '<summary class="case-head">' +
+          '<span class="case-code mono">' + c.code + '</span>' +
+          '<span class="case-cat">' + catLabel + '</span>' +
+          '<span class="case-title">' + c.title + '</span>' +
+          '<span class="case-done' + (isDone ? " show" : "") + '" data-role="done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg></span>' +
+          '<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</summary>' +
+        '<div class="case-body">' +
+          '<div class="scenario"><span class="k">情境描述</span>' + c.setting + '</div>' +
+          '<div class="choices">' + choicesHtml + '</div>' +
+          '<div class="result-slot" data-role="result"></div>' +
+          noteHtml +
+        '</div>' +
+      '</details>'
+    );
+  }
+
+  function renderCases(){
+    var filtered = CASES.map(function(c, i){ return { c:c, i:i }; })
+      .filter(function(o){ return currentFilter === "all" || o.c.cat === currentFilter; });
+    if(!filtered.length){
+      listEl.innerHTML = '<p class="empty">此分類目前沒有案例。</p>';
+      return;
+    }
+    listEl.innerHTML = filtered.map(function(o){ return caseHtml(o.c, o.i); }).join("");
+  }
+
+  function updateProgressUI(){
+    var doneKeys = Object.keys(progress).filter(function(k){ return progress[k]; });
+    doneCountEl.textContent = doneKeys.length;
+    var offset = CIRC - (CIRC * (doneKeys.length / TOTAL));
+    ringBar.style.strokeDashoffset = offset;
+  }
+
+  listEl.addEventListener("click", function(e){
+    var btn = e.target.closest(".choice");
+    if(!btn) return;
+    var caseIdx = parseInt(btn.dataset.case, 10);
+    var choiceIdx = parseInt(btn.dataset.choice, 10);
+    var c = CASES[caseIdx];
+    var ch = c.choices[choiceIdx];
+    var details = btn.closest("details.case");
+    var group = details.querySelectorAll(".choice");
+    group.forEach(function(g){ g.classList.remove("selected"); });
+    btn.classList.add("selected");
+    var slot = details.querySelector('[data-role="result"]');
+    slot.innerHTML = verdictBlock(ch);
+
+    if(!progress[c.id]){
+      progress[c.id] = true;
+      saveProgress();
+      updateProgressUI();
+      var doneBadge = details.querySelector('[data-role="done"]');
+      if(doneBadge) doneBadge.classList.add("show");
+      buildChips();
+    }
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function(){
+    progress = {};
+    saveProgress();
+    updateProgressUI();
+    buildChips();
+    renderCases();
+  });
+
+  function buildLawGrid(){
+    lawgridEl.innerHTML = LAWS.map(function(l){
+      return '<div class="lawcard"><h3>' + l.name + '<span class="tag2">' + l.tag + '</span></h3><p>' + l.body + '</p></div>';
+    }).join("");
+  }
+
+  buildChips();
+  renderCases();
+  buildLawGrid();
+  updateProgressUI();
+
+  function start(){}
+  if(window.claude && window.claude.hot){
+    window.claude.hot.ready ? window.claude.hot.ready(start) : start();
+  }
+})();
+</script>
+
+</body>
+</html>
